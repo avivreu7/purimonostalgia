@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דשבורד נהלי פורימון | Purimon Ops Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- עיצוב חדשני - פרימיום (ללא גרפים) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Rubik', 'sans-serif'],
+                    },
+                    colors: {
+                        purim: {
+                            dark: '#0f172a',
+                            purple: '#7c3aed', // Vibrant Violet
+                            pink: '#ec4899',   // Vibrant Pink
+                            orange: '#f59e0b', // Amber
+                            teal: '#14b8a6',   // Teal
+                            light: '#f8fafc'
+                        }
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.05)',
+                        'glow': '0 0 20px rgba(124, 58, 237, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* אנימציות רקע מתקדמות */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        /* אפקטים לכרטיסיות */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hover-lift:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: rgba(124, 58, 237, 0.3);
+        }
+        
+        .timeline-dot::before {
+            content: '';
+            position: absolute;
+            right: -25px;
+            top: 24px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.5);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased relative overflow-x-hidden selection:bg-purim-purple selection:text-white">
+
+    <!-- אלמנטים צבעוניים מרחפים ברקע -->
+    <div class="fixed w-full h-full top-0 left-0 pointer-events-none -z-10 overflow-hidden">
+        <div class="absolute top-[-10%] right-[-5%] w-96 h-96 bg-purple-400 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob"></div>
+        <div class="absolute top-[20%] left-[-10%] w-96 h-96 bg-pink-400 rounded-full mix-blend-multiply filter blur-[100px] opacity-40 animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-[-20%] right-[20%] w-[30rem] h-[30rem] bg-orange-300 rounded-full mix-blend-multiply filter blur-[120px] opacity-30 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <!-- Header Section -->
+    <header class="relative pt-20 pb-16">
+        <div class="container mx-auto px-4 text-center z-10 relative">
+            <span class="inline-block py-1.5 px-4 rounded-full bg-gradient-to-r from-purim-purple to-purim-pink text-white text-sm font-bold tracking-wider mb-6 shadow-glow">מבצע פורימון</span>
+            <h1 class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-l from-purim-dark via-purim-purple to-purim-pink mb-4 drop-shadow-sm pb-2">דשבורד נהלים ועבודה</h1>
+            <p class="text-xl md:text-2xl text-slate-600 font-medium max-w-2xl mx-auto">מיישרים קו. עובדים חכם. <span class="text-purim-purple font-bold">שומרים על בטיחות.</span></p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 space-y-16 max-w-7xl">
+
+        <!-- SECTION 1: CORE VALUES -->
+        <section>
+            <div class="mb-10 text-center md:text-right">
+                <h2 class="text-3xl font-black text-purim-dark mb-2">ערכי הליבה והמסגרת <span class="text-purim-pink">.</span></h2>
+                <p class="text-lg text-slate-500">הבסיס לעבודה תקינה: ללא עמידה בערכים אלו, לא נוכל לקיים פורימון מוצלח.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-card p-8 rounded-3xl hover-lift relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100 to-transparent rounded-bl-full -z-10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purim-purple to-indigo-500 flex items-center justify-center text-2xl text-white shadow-lg shadow-purple-500/30 mb-6">⏱️</div>
+                    <h3 class="text-xl font-bold mb-3 text-purim-dark">עמידה בזמנים</h3>
+                    <p class="text-slate-600 leading-relaxed">כבוד לזמן של כולנו הוא הבסיס. איחורים מעכבים את כולם.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover-lift relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-100 to-transparent rounded-bl-full -z-10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purim-teal to-emerald-400 flex items-center justify-center text-2xl text-white shadow-lg shadow-teal-500/30 mb-6">🛡️</div>
+                    <h3 class="text-xl font-bold mb-3 text-purim-dark">מרחב בטוח</h3>
+                    <p class="text-slate-600 leading-relaxed">שמירה על אווירה נעימה ומכבדת לכל המשתתפים לאורך כל היום.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover-lift relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-100 to-transparent rounded-bl-full -z-10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purim-orange to-yellow-400 flex items-center justify-center text-2xl text-white shadow-lg shadow-orange-500/30 mb-6">🤝</div>
+                    <h3 class="text-xl font-bold mb-3 text-purim-dark">תקשורת ואמון</h3>
+                    <p class="text-slate-600 leading-relaxed">אפס הסתרה. אם קרתה טעות - מדווחים מיד ולוקחים אחריות.</p>
+                </div>
+                <div class="glass-card p-8 rounded-3xl hover-lift relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-100 to-transparent rounded-bl-full -z-10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purim-pink to-rose-400 flex items-center justify-center text-2xl text-white shadow-lg shadow-pink-500/30 mb-6">⛔</div>
+                    <h3 class="text-xl font-bold mb-3 text-purim-dark">קווים אדומים</h3>
+                    <p class="text-slate-600 leading-relaxed">אלימות וונדליזם הם מחוץ לתחום. <strong class="text-purim-pink">אין פשרות בנושאים אלו.</strong></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: SAFETY & DISCIPLINE (Visual Information Design) -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Left Col: Safety Protocols -->
+            <div class="glass-card p-8 rounded-3xl shadow-glass flex flex-col justify-between">
+                <div class="mb-8 border-r-4 border-purim-teal pr-4">
+                    <h2 class="text-2xl font-black text-purim-dark">בטיחות מעל הכל 👷‍♀️</h2>
+                    <p class="text-sm text-slate-500 mt-2">חובה לשמור על נהלי הבטיחות כדי למנוע פגיעה בגוף או ברכוש.</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="bg-white/60 p-5 rounded-2xl flex items-start gap-4 hover:bg-white/90 transition-colors border border-slate-100">
+                        <div class="w-12 h-12 rounded-full bg-purim-teal/20 text-purim-teal flex items-center justify-center text-xl flex-shrink-0">🥾</div>
+                        <div>
+                            <h4 class="font-bold text-purim-dark text-lg">ציוד אישי חובה</h4>
+                            <p class="text-slate-600 text-sm mt-1">הקפדה על נעליים סגורות וחבישת כובע בהתאם לדרישות. בנוסף, חובה להקפיד על שתיית מים מרובה.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white/60 p-5 rounded-2xl flex items-start gap-4 hover:bg-white/90 transition-colors border border-slate-100">
+                        <div class="w-12 h-12 rounded-full bg-purim-orange/20 text-purim-orange flex items-center justify-center text-xl flex-shrink-0">🪜</div>
+                        <div>
+                            <h4 class="font-bold text-purim-dark text-lg">עבודה בגובה</h4>
+                            <p class="text-slate-600 text-sm mt-1">אין לעלות על סולם ללא אדם נוסף שמחזיק ומאבטח. איסור מוחלט לעלות על גגות ללא אישור וליווי צמוד של איש צוות.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/60 p-5 rounded-2xl flex items-start gap-4 hover:bg-white/90 transition-colors border border-slate-100">
+                        <div class="w-12 h-12 rounded-full bg-purim-pink/20 text-purim-pink flex items-center justify-center text-xl flex-shrink-0">⚡</div>
+                        <div>
+                            <h4 class="font-bold text-purim-dark text-lg">כלי עבודה חשמליים</h4>
+                            <p class="text-slate-600 text-sm mt-1">שימוש במברגה, מקדחה, ג'יגסו וכו' ייעשה אך ורק בליווי ובהשגחה של מבוגר.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Col: Discipline Process -->
+            <div class="glass-card p-8 rounded-3xl shadow-glass flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute -right-20 -top-20 w-64 h-64 bg-purim-purple/5 rounded-full blur-3xl"></div>
+                
+                <div class="relative z-10">
+                    <div class="mb-8">
+                        <h2 class="text-2xl font-black text-purim-dark mb-2">משמעת ותגובה <span class="text-purim-purple">.</span></h2>
+                        <p class="text-slate-500">תגובות משמעתיות לחניכה או חניך שעברו על הנהלים (כל מקרה לגופו).</p>
+                    </div>
+
+                    <!-- Process Escalation Ladder -->
+                    <div class="space-y-4">
+                        <div class="flex items-center p-5 bg-white/60 rounded-2xl border-l-4 border-l-transparent hover:border-l-purim-teal border border-slate-100 transition-all">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-purim-teal/10 flex items-center justify-center text-purim-teal font-black text-xl mr-5">1</div>
+                            <div class="pr-5 border-r-2 border-slate-200 w-full">
+                                <h4 class="font-bold text-purim-dark text-lg">תגובה אישית</h4>
+                                <p class="text-slate-600 mt-1 text-sm">חניכה/חניך שיעברו על הנהלים יקבלו תגובה מותאמת.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center p-5 bg-white/60 rounded-2xl border-l-4 border-l-transparent hover:border-l-purim-orange border border-slate-100 transition-all">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-purim-orange to-yellow-400 flex items-center justify-center text-white font-black text-xl mr-5 shadow-lg shadow-orange-500/20">2</div>
+                            <div class="pr-5 border-r-2 border-slate-200 w-full">
+                                <h4 class="font-bold text-purim-dark text-lg">"ביבילה" (מערכת חלופית)</h4>
+                                <p class="text-slate-600 mt-1 text-sm">תפעל כמערכת לימודים חלופית עבור חניכים שלא לוקחים חלק פעיל, או כתגובה לאירועי משמעת.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center p-5 bg-white/60 rounded-2xl border-l-4 border-l-transparent hover:border-l-purim-pink border border-slate-100 transition-all">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-purim-pink to-rose-500 flex items-center justify-center text-white font-black text-xl mr-5 shadow-lg shadow-pink-500/20">3</div>
+                            <div class="pr-5 border-r-2 border-slate-200 w-full">
+                                <h4 class="font-bold text-purim-dark text-lg">אחריות שכבתית (עצירה מוחלטת)</h4>
+                                <p class="text-slate-600 mt-1 text-sm">במקרה חמור: עצירת יום העבודה וכינוס כל השכבה (צעד דרמטי שייעשה במידת הצורך).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: PAINTING LOGISTICS (Card Grid instead of Graph) -->
+        <section class="glass-card p-8 md:p-10 rounded-3xl shadow-glass">
+            <div class="text-center mb-10">
+                <span class="inline-block py-1 px-4 rounded-full bg-purim-purple/10 text-purim-purple font-bold mb-3">צבע וציוד</span>
+                <h2 class="text-3xl font-black text-purim-dark mb-4">הכלל המנחה: "צובעים – מנקים!" 🎨</h2>
+                <div class="w-24 h-1 bg-purim-orange mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Painting Area Rules -->
+                <div class="bg-gradient-to-br from-white to-slate-50 p-8 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 class="text-xl font-bold text-purim-dark mb-6 flex items-center gap-2">
+                        <span class="text-purim-pink">📌</span> היכן ואיך צובעים?
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="text-purim-teal font-black text-lg ml-3 mt-0.5">✓</div>
+                            <p class="text-slate-700"><strong>מיקום:</strong> אך ורק במבנים (כיתות או מבואות) ועל הרצפה. <strong class="text-purim-pink">אסור לצבוע בחוץ!</strong></p>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="text-purim-teal font-black text-lg ml-3 mt-0.5">✓</div>
+                            <p class="text-slate-700"><strong>שוליים:</strong> חובה להשתמש ב"שוליים" (נייר משומש) סביב אזור הצביעה.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="text-purim-pink font-black text-lg ml-3 mt-0.5">✗</div>
+                            <p class="text-slate-700"><strong>שולחנות:</strong> אסור להניח צבע או מכחולים על השולחנות (תמיד על נייר תפאורה).</p>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="text-purim-teal font-black text-lg ml-3 mt-0.5">✓</div>
+                            <p class="text-slate-700"><strong>ניקיון בזמן אמת:</strong> איש צוות או חניך יסתובב עם סמרטוט לנגב כתמי צבע בעודם רטובים.</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Equipment Room Rules -->
+                <div class="bg-gradient-to-br from-white to-slate-50 p-8 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 class="text-xl font-bold text-purim-dark mb-6 flex items-center gap-2">
+                        <span class="text-purim-purple">📦</span> חדר ציוד (החדר של דגנית)
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 rounded bg-purim-purple/20 text-purim-purple flex items-center justify-center font-bold text-sm ml-3 mt-0.5">1</div>
+                            <p class="text-slate-700"><strong>אחריות:</strong> החדר באחריות נועה ומספר חניכים מצומצם בלבד.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 rounded bg-purim-purple/20 text-purim-purple flex items-center justify-center font-bold text-sm ml-3 mt-0.5">2</div>
+                            <p class="text-slate-700"><strong>הכנת צבע:</strong> הוצאת פיגמנטים, הכנה וערבוב נעשים אך ורק שם (רוב הצבע יהיה גואש).</p>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-6 h-6 rounded bg-purim-purple/20 text-purim-purple flex items-center justify-center font-bold text-sm ml-3 mt-0.5">3</div>
+                            <p class="text-slate-700"><strong>רישום:</strong> כל ציוד שיוצא דורש רישום וחובה להחזירו בסיום השימוש.</p>
+                        </li>
+                        <li class="flex items-start mt-4 bg-purim-orange/10 p-3 rounded-lg">
+                            <p class="text-purim-dark font-bold">🧹 חובה לנקות את המרחבים בסוף היום, גם אם עייפים!</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: SCHEDULE (Beautiful CSS Timeline instead of Graph) -->
+        <section class="glass-card p-8 md:p-12 rounded-3xl shadow-glass mb-8">
+            <div class="mb-12 text-center">
+                <h2 class="text-3xl md:text-4xl font-black text-purim-dark mb-2">לו"ז ומבנה ימי העבודה 🗓️</h2>
+                <p class="text-lg text-slate-500">שגרת יום קבועה: שיחת פתיחה וחלוקת משימות ➔ עבודה ➔ 30 דק' ניקיונות חובה בסוף (בחמישי 40 דק').</p>
+            </div>
+
+            <!-- CSS Grid Timeline -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <!-- Day 1: Tuesday -->
+                <div class="relative pt-6">
+                    <!-- Top Ribbon -->
+                    <div class="absolute top-0 right-0 bg-purim-dark text-white font-bold py-1 px-4 rounded-b-lg shadow-md z-10">שלישי 24.2</div>
+                    <div class="bg-white/80 p-6 rounded-2xl border-t-8 border-t-purim-dark shadow-sm h-full border border-slate-100 hover:shadow-md transition-shadow">
+                        <div class="space-y-6 mt-4 relative border-r-2 border-slate-200 pr-4">
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(1)::before { background-color: #0f172a; }</style>
+                                <span class="font-bold text-purim-dark bg-slate-100 px-2 py-0.5 rounded text-sm">שעה 1</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">בוקר טוב!</h4>
+                                <p class="text-slate-600 text-sm">שיחת פתיחת עבודה שכבתית באודיטוריום.</p>
+                            </div>
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(2)::before { background-color: #0f172a; }</style>
+                                <span class="font-bold text-purim-dark bg-slate-100 px-2 py-0.5 rounded text-sm">המשך היום</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">זמן עבודה</h4>
+                                <p class="text-slate-600 text-sm">יציאה לעבודה אינטנסיבית במרחבים.</p>
+                            </div>
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(3)::before { background-color: #0f172a; }</style>
+                                <span class="font-bold text-purim-dark bg-slate-100 px-2 py-0.5 rounded text-sm">12:25</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">סיום וכינוס</h4>
+                                <p class="text-slate-600 text-sm">כינוס בכיתות, תחילת קיפולים וניקיונות.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day 2: Wednesday -->
+                <div class="relative pt-6">
+                    <!-- Top Ribbon -->
+                    <div class="absolute top-0 right-0 bg-purim-purple text-white font-bold py-1 px-4 rounded-b-lg shadow-md z-10">רביעי 25.2</div>
+                    <div class="bg-white/80 p-6 rounded-2xl border-t-8 border-t-purim-purple shadow-sm h-full border border-slate-100 hover:shadow-md transition-shadow">
+                        <div class="space-y-6 mt-4 relative border-r-2 border-slate-200 pr-4">
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(1)::before { background-color: #7c3aed; }</style>
+                                <span class="font-bold text-purim-purple bg-purple-50 px-2 py-0.5 rounded text-sm">בוקר</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">מפגש כיתות</h4>
+                                <p class="text-slate-600 text-sm">חלוקת משימות ותזכורת נהלי עבודה.</p>
+                            </div>
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(2)::before { background-color: #7c3aed; }</style>
+                                <span class="font-bold text-purim-purple bg-purple-50 px-2 py-0.5 rounded text-sm">המשך היום</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">זמן עבודה</h4>
+                                <p class="text-slate-600 text-sm">המשך עבודה על הפרויקטים.</p>
+                            </div>
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(3)::before { background-color: #7c3aed; }</style>
+                                <span class="font-bold text-purim-purple bg-purple-50 px-2 py-0.5 rounded text-sm">שעה 5</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">ניקיונות</h4>
+                                <p class="text-slate-600 text-sm">זמן קבוע לסידור וניקיון.</p>
+                            </div>
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(4)::before { background-color: #7c3aed; }</style>
+                                <span class="font-bold text-purim-purple bg-purple-50 px-2 py-0.5 rounded text-sm">שעה 6</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">תחפושת כיתתית</h4>
+                                <p class="text-slate-600 text-sm">זמן ייעודי לעבודה על התחפושת.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day 3: Thursday -->
+                <div class="relative pt-6">
+                    <!-- Top Ribbon -->
+                    <div class="absolute top-0 right-0 bg-purim-pink text-white font-bold py-1 px-4 rounded-b-lg shadow-md z-10">חמישי 26.2</div>
+                    <div class="bg-white/80 p-6 rounded-2xl border-t-8 border-t-purim-pink shadow-sm h-full border border-slate-100 hover:shadow-md transition-shadow">
+                        <div class="space-y-6 mt-4 relative border-r-2 border-slate-200 pr-4">
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(1)::before { background-color: #ec4899; }</style>
+                                <span class="font-bold text-purim-pink bg-pink-50 px-2 py-0.5 rounded text-sm">בוקר</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">רענון וחלוקה</h4>
+                                <p class="text-slate-600 text-sm">רענון נהלי עבודה וחלוקת משימות להמשך.</p>
+                            </div>
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(2)::before { background-color: #ec4899; }</style>
+                                <span class="font-bold text-purim-pink bg-pink-50 px-2 py-0.5 rounded text-sm">שעה 1</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">תחפושת כיתתית</h4>
+                                <p class="text-slate-600 text-sm">זמן השלמות לתחפושות.</p>
+                            </div>
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(3)::before { background-color: #ec4899; }</style>
+                                <span class="font-bold text-purim-pink bg-pink-50 px-2 py-0.5 rounded text-sm">שעה 2 ואילך</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">זמן עבודה</h4>
+                                <p class="text-slate-600 text-sm">פוש אחרון של עבודה.</p>
+                            </div>
+                            
+                            <div class="relative timeline-dot">
+                                <style>.timeline-dot:nth-child(4)::before { background-color: #ec4899; }</style>
+                                <span class="font-bold text-purim-pink bg-pink-50 px-2 py-0.5 rounded text-sm">שעה 6</span>
+                                <h4 class="font-bold text-lg mt-1 text-slate-800">ניקיון יסודי!</h4>
+                                <p class="text-slate-600 text-sm"><strong class="text-purim-pink">40 דקות מלאות</strong> של ניקיונות סיום.</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-300 py-12 mt-12 border-t border-slate-800 text-center relative overflow-hidden">
+        <div class="absolute top-[-50%] left-[20%] w-96 h-96 bg-purim-purple rounded-full filter blur-[150px] opacity-20"></div>
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-4xl mb-4">🎭</div>
+            <p class="font-black text-2xl text-white mb-2">עבודה נעימה, בטוחה ופורים שמח!</p>
+            <p class="text-sm opacity-60">הופק ע"י צוות הובלה • 2026</p>
+        </div>
+    </footer>
+
+</body>
+</html>
