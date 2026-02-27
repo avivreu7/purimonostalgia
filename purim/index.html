@@ -5,13 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>פורימונוסטלגיה - מערכת שעות אינטראקטיבית</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- הוספת קונפיגורציה למצב כהה ב-Tailwind -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- הוספת ספריית קונפטי -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap');
         
         body {
             font-family: 'Rubik', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         ::-webkit-scrollbar {
@@ -21,9 +28,15 @@
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
@@ -42,12 +55,24 @@
             color: #2563eb;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
+        .dark .tab-active {
+            background-color: #1e293b;
+            color: #60a5fa;
+            border-color: #3b82f6;
+        }
         .tab-inactive {
             color: #64748b;
+        }
+        .dark .tab-inactive {
+            color: #94a3b8;
         }
         .tab-inactive:hover {
             color: #334155;
             background-color: rgba(255,255,255,0.5);
+        }
+        .dark .tab-inactive:hover {
+            color: #e2e8f0;
+            background-color: rgba(30,41,59,0.5);
         }
 
         @keyframes pulse-slow {
@@ -69,6 +94,9 @@
             background: #e2e8f0;
             border-radius: 2px;
             z-index: 0;
+        }
+        .dark .vertical-timeline::before {
+            background: #334155;
         }
         
         @media (max-width: 768px) {
@@ -94,6 +122,10 @@
             color: #475569;
             transition: all 0.3s;
         }
+        .dark .map-cell {
+            background-color: #334155;
+            color: #cbd5e1;
+        }
         .map-cell.active-loc {
             background-color: #e0e7ff;
             border-color: #6366f1;
@@ -102,46 +134,57 @@
             transform: scale(1.05);
             animation: pulse-slow 2s infinite;
         }
+        .dark .map-cell.active-loc {
+            background-color: #3730a3;
+            border-color: #818cf8;
+            color: #e0e7ff;
+        }
 
         @media print {
             header, .bg-gradient-to-r, button, select, input[type="range"], .border-b { display: none !important; }
-            body { background-color: white !important; padding: 0 !important; }
-            .timeline-card { border: 2px solid #cbd5e1 !important; box-shadow: none !important; break-inside: avoid; transform: none !important; }
-            #interactive-schedule { box-shadow: none !important; border: none !important; }
+            body { background-color: white !important; padding: 0 !important; color: black !important; }
+            .timeline-card { border: 2px solid #cbd5e1 !important; box-shadow: none !important; break-inside: avoid; transform: none !important; background-color: white !important; }
+            #interactive-schedule { box-shadow: none !important; border: none !important; background-color: white !important; }
             .container { max-width: 100% !important; padding: 0 !important; }
             .vertical-timeline::before { display: none; }
             .map-container { display: none; }
+            * { color: black !important; border-color: #ccc !important; }
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col font-sans">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300">
 
     <!-- Header Section -->
-    <header class="bg-white shadow-sm sticky top-0 z-50 border-b border-slate-200">
+    <header class="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-50 border-b border-slate-200 dark:border-slate-700 transition-colors duration-300">
         <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="text-center md:text-right flex flex-col md:flex-row items-center gap-3">
                 <div class="w-12 h-12 bg-gradient-to-br from-fuchsia-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md">
                     🎭
                 </div>
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">פורימונוסטלגיה שכבות ז' - ט'</h1>
-                    <p class="text-sm font-medium text-slate-500">מערכת דיגיטלית לניהול תחנות - חג פורים שמח!</p>
+                    <h1 class="text-2xl md:text-3xl font-black tracking-tight flex items-center gap-2">
+                        פורימונוסטלגיה ז' - ט'
+                        <button onclick="toggleDarkMode()" class="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors text-lg" title="החלף תצוגה (מצב שמש/לילה)">
+                            🌗
+                        </button>
+                    </h1>
+                    <p class="text-sm font-medium text-slate-500 dark:text-slate-400">מערכת דיגיטלית לניהול תחנות - חג פורים שמח!</p>
                 </div>
             </div>
             
             <!-- Simulation Control -->
-            <div class="flex flex-col items-center bg-slate-100/80 p-3 rounded-2xl border border-slate-200 w-full md:w-auto shadow-inner">
+            <div class="flex flex-col items-center bg-slate-100/80 dark:bg-slate-700/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-600 w-full md:w-auto shadow-inner transition-colors duration-300">
                 <div class="flex justify-between items-center w-full mb-2 gap-4">
-                    <label for="timeSlider" class="text-xs font-bold text-slate-600 flex items-center gap-2">
+                    <label for="timeSlider" class="text-xs font-bold flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         ⏱️ שעה במערכת: 
-                        <span id="timeDisplay" class="text-indigo-600 font-black text-lg bg-white px-2 py-0.5 rounded shadow-sm">09:40</span>
+                        <span id="timeDisplay" class="text-indigo-600 dark:text-indigo-400 font-black text-lg bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm transition-colors duration-300">09:40</span>
                     </label>
-                    <button id="liveTimeBtn" class="text-[10px] font-bold px-2 py-1 rounded-md transition-colors bg-slate-200 text-slate-500 cursor-default">
+                    <button id="liveTimeBtn" class="text-[10px] font-bold px-2 py-1 rounded-md transition-colors bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-300 cursor-default">
                         📅 ממתין ל-1.3
                     </button>
                 </div>
-                <input type="range" id="timeSlider" min="580" max="790" value="580" step="1" class="w-full md:w-64 h-2.5 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-indigo-600">
-                <div class="flex justify-between w-full text-[10px] font-bold text-slate-400 mt-1.5 px-1">
+                <input type="range" id="timeSlider" min="580" max="790" value="580" step="1" class="w-full md:w-64 h-2.5 bg-slate-300 dark:bg-slate-500 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                <div class="flex justify-between w-full text-[10px] font-bold text-slate-400 dark:text-slate-400 mt-1.5 px-1">
                     <span>09:40</span>
                     <span>11:00</span>
                     <span>12:00</span>
@@ -155,42 +198,42 @@
     <main class="flex-grow container mx-auto px-4 py-8 space-y-10">
 
         <!-- Intro & Rules Section -->
-        <section class="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 md:p-8">
+        <section class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 md:p-8 transition-colors duration-300">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div class="space-y-4">
-                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
                         <span class="w-2 h-8 bg-orange-400 rounded-full inline-block"></span>
                         מבנה הפעילות - הפורימון
                     </h2>
-                    <p class="text-slate-600 leading-relaxed text-lg">
+                    <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-lg">
                         הפורימון שלנו בנוי מתחנות שפועלות במחזוריות מדויקת של 10 דקות.<br>
                         <strong>שימו לב:</strong> ישנן 7 תחנות פעילות, אך בכל סבב משתתפות רק 6 כיתות. לכן, בכל רגע נתון יש תחנה אחת בהפסקה.
                     </p>
                     <div class="flex flex-wrap gap-3 mt-2">
-                        <span class="px-4 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 text-sm rounded-full font-bold shadow-sm">סבב א': שכבה ט' (10:00-10:50)</span>
-                        <span class="px-4 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm rounded-full font-bold shadow-sm">סבב ב': שכבה ז' (11:15-12:00)</span>
+                        <span class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-sm rounded-full font-bold shadow-sm">סבב א': שכבה ט' (10:00-10:50)</span>
+                        <span class="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-sm rounded-full font-bold shadow-sm">סבב ב': שכבה ז' (11:15-12:00)</span>
                     </div>
                 </div>
                 
-                <div class="bg-slate-50 p-5 sm:p-6 rounded-2xl border border-slate-100">
-                    <h3 class="text-center font-bold text-slate-700 mb-4 text-base sm:text-lg">חלוקת הזמן בתחנה בפורימון (10 דק')</h3>
-                    <div class="flex h-6 sm:h-8 rounded-full overflow-hidden shadow-inner border border-slate-200 mb-4">
-                        <div class="w-1/2 bg-slate-400 transition-colors hover:bg-slate-500" title="5 דקות: מעבר והתארגנות"></div>
-                        <div class="w-1/5 bg-amber-400 transition-colors hover:bg-amber-500" title="2 דקות: קבלת הסבר"></div>
-                        <div class="w-[30%] bg-blue-500 transition-colors hover:bg-blue-600" title="3 דקות: ביצוע הפעילות"></div>
+                <div class="bg-slate-50 dark:bg-slate-700 p-5 sm:p-6 rounded-2xl border border-slate-100 dark:border-slate-600 transition-colors duration-300">
+                    <h3 class="text-center font-bold mb-4 text-base sm:text-lg">חלוקת הזמן בתחנה בפורימון (10 דק')</h3>
+                    <div class="flex h-6 sm:h-8 rounded-full overflow-hidden shadow-inner border border-slate-200 dark:border-slate-600 mb-4">
+                        <div class="w-1/2 bg-slate-400 dark:bg-slate-500 transition-colors hover:bg-slate-500 dark:hover:bg-slate-400" title="5 דקות: מעבר והתארגנות"></div>
+                        <div class="w-1/5 bg-amber-400 dark:bg-amber-500 transition-colors hover:bg-amber-500 dark:hover:bg-amber-400" title="2 דקות: קבלת הסבר"></div>
+                        <div class="w-[30%] bg-blue-500 dark:bg-blue-600 transition-colors hover:bg-blue-600 dark:hover:bg-blue-500" title="3 דקות: ביצוע הפעילות"></div>
                     </div>
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm font-bold text-slate-700 gap-3 sm:gap-2 bg-white p-4 sm:p-3 rounded-xl shadow-sm border border-slate-100">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm font-bold gap-3 sm:gap-2 bg-white dark:bg-slate-800 p-4 sm:p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-600 transition-colors duration-300">
                         <div class="flex items-center gap-3">
-                            <span class="w-5 h-5 rounded bg-slate-400 shadow-sm flex-shrink-0"></span> 
-                            <span>🚶 מעבר <span class="text-slate-500 font-medium">(5 דק')</span></span>
+                            <span class="w-5 h-5 rounded bg-slate-400 dark:bg-slate-500 shadow-sm flex-shrink-0"></span> 
+                            <span>🚶 מעבר <span class="text-slate-500 dark:text-slate-400 font-medium">(5 דק')</span></span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="w-5 h-5 rounded bg-amber-400 shadow-sm flex-shrink-0"></span> 
-                            <span>🗣️ הסבר <span class="text-slate-500 font-medium">(2 דק')</span></span>
+                            <span class="w-5 h-5 rounded bg-amber-400 dark:bg-amber-500 shadow-sm flex-shrink-0"></span> 
+                            <span>🗣️ הסבר <span class="text-slate-500 dark:text-slate-400 font-medium">(2 דק')</span></span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="w-5 h-5 rounded bg-blue-500 shadow-sm flex-shrink-0"></span> 
-                            <span>🎯 פעילות <span class="text-slate-500 font-medium">(3 דק')</span></span>
+                            <span class="w-5 h-5 rounded bg-blue-500 dark:bg-blue-600 shadow-sm flex-shrink-0"></span> 
+                            <span>🎯 פעילות <span class="text-slate-500 dark:text-slate-400 font-medium">(3 דק')</span></span>
                         </div>
                     </div>
                 </div>
@@ -198,13 +241,13 @@
         </section>
 
         <!-- Interactive Schedule Section -->
-        <section id="interactive-schedule" class="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+        <section id="interactive-schedule" class="bg-white dark:bg-slate-800 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors duration-300">
             
             <div class="p-6 md:p-8">
                 
                 <!-- Modern Tabs Navigation -->
-                <div class="flex flex-wrap sm:flex-nowrap p-1.5 bg-slate-100 rounded-2xl mb-8 border border-slate-200 gap-1">
-                    <button onclick="switchTab('general')" id="tab-general" class="flex-1 min-w-[100px] py-3 px-2 rounded-xl text-center font-bold text-sm md:text-base transition-all duration-200 tab-active text-teal-600">
+                <div class="flex flex-wrap sm:flex-nowrap p-1.5 bg-slate-100 dark:bg-slate-700 rounded-2xl mb-8 border border-slate-200 dark:border-slate-600 gap-1 transition-colors duration-300">
+                    <button onclick="switchTab('general')" id="tab-general" class="flex-1 min-w-[100px] py-3 px-2 rounded-xl text-center font-bold text-sm md:text-base transition-all duration-200 tab-active text-teal-600 dark:text-teal-400">
                         📅 לו"ז כללי
                     </button>
                     <button onclick="switchTab('participant')" id="tab-participant" class="flex-1 min-w-[100px] py-3 px-2 rounded-xl text-center font-bold text-sm md:text-base transition-all duration-200 tab-inactive">
@@ -220,22 +263,22 @@
 
                 <!-- View 0: General Schedule View -->
                 <div id="view-general" class="space-y-6 animation-fade-in">
-                    <div class="bg-teal-50 border border-teal-100 rounded-2xl p-5 mb-8">
-                        <h3 class="font-bold text-teal-900 text-lg">לו"ז פורימונוסטלגיה לשכבות ז', ט'</h3>
-                        <p class="text-sm text-teal-700 mt-1">מבט על לכל הפעילויות לאורך היום. השורה המודגשת מראה מה מתרחש עכשיו!</p>
+                    <div class="bg-teal-50 dark:bg-teal-900/30 border border-teal-100 dark:border-teal-800 rounded-2xl p-5 mb-8 transition-colors duration-300">
+                        <h3 class="font-bold text-teal-900 dark:text-teal-300 text-lg">לו"ז פורימונוסטלגיה לשכבות ז', ט'</h3>
+                        <p class="text-sm text-teal-700 dark:text-teal-400 mt-1">מבט על לכל הפעילויות לאורך היום. השורה המודגשת מראה מה מתרחש עכשיו!</p>
                     </div>
                     
                     <div class="overflow-x-auto pb-4">
                         <table class="w-full text-right border-collapse rounded-xl overflow-hidden shadow-sm">
-                            <thead class="text-sm text-slate-700 bg-slate-200 font-bold border-b-2 border-slate-300">
+                            <thead class="text-sm bg-slate-200 dark:bg-slate-700 font-bold border-b-2 border-slate-300 dark:border-slate-600 transition-colors duration-300">
                                 <tr>
                                     <th class="px-5 py-4 w-24">שעה</th>
-                                    <th class="px-5 py-4 border-r border-slate-300 w-1/3">שכבת ז'</th>
-                                    <th class="px-5 py-4 border-r border-slate-300 w-1/3">שכבת ט'</th>
-                                    <th class="px-5 py-4 border-r border-slate-300">הערות</th>
+                                    <th class="px-5 py-4 border-r border-slate-300 dark:border-slate-600 w-1/3">שכבת ז'</th>
+                                    <th class="px-5 py-4 border-r border-slate-300 dark:border-slate-600 w-1/3">שכבת ט'</th>
+                                    <th class="px-5 py-4 border-r border-slate-300 dark:border-slate-600">הערות</th>
                                 </tr>
                             </thead>
-                            <tbody id="generalTableBody" class="divide-y divide-slate-200 bg-white text-base">
+                            <tbody id="generalTableBody" class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800 text-base transition-colors duration-300">
                                 <!-- Data rendered by JS for dynamic highlighting -->
                             </tbody>
                         </table>
@@ -244,13 +287,13 @@
 
                 <!-- View 1: Participant View -->
                 <div id="view-participant" class="hidden space-y-6 animation-fade-in">
-                    <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-8">
+                    <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 rounded-2xl p-5 mb-8 transition-colors duration-300">
                         <div class="text-center md:text-right w-full md:w-auto">
-                            <h3 class="font-bold text-blue-900 text-lg">הלו"ז האישי הרציף שלך</h3>
-                            <p class="text-sm text-blue-700 mt-1">בחרו את הכיתה שלכם והמערכת תציג את ציר הזמן המלא (כולל תחנות הפורימון בדקות המדויקות) ומפת התמצאות.</p>
+                            <h3 class="font-bold text-blue-900 dark:text-blue-300 text-lg">הלו"ז האישי הרציף שלך</h3>
+                            <p class="text-sm text-blue-700 dark:text-blue-400 mt-1">בחרו את הכיתה שלכם והמערכת תציג את ציר הזמן המלא, כולל לחצן שיתוף לוואטסאפ.</p>
                         </div>
                         <div class="flex items-center gap-3 w-full md:w-auto">
-                            <select id="classSelector" class="px-5 py-3 border-2 border-blue-200 rounded-xl bg-white shadow-sm focus:border-blue-500 focus:ring-0 outline-none w-full md:w-48 font-bold text-slate-700 cursor-pointer hover:bg-blue-50/50 transition-colors">
+                            <select id="classSelector" class="px-5 py-3 border-2 border-blue-200 dark:border-blue-700 rounded-xl bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-0 outline-none w-full md:w-48 font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-blue-50/50 dark:hover:bg-slate-600 transition-colors">
                                 <option value="" disabled selected>בחרו כיתה...</option>
                                 <optgroup label="שכבה ט'">
                                     <option value="ט1">ט1 גיר</option>
@@ -279,18 +322,18 @@
 
                 <!-- View 2: Operator View -->
                 <div id="view-operator" class="hidden space-y-6">
-                    <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-orange-50 border border-orange-100 rounded-2xl p-5 mb-8">
+                    <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-orange-50 dark:bg-orange-900/30 border border-orange-100 dark:border-orange-800 rounded-2xl p-5 mb-8 transition-colors duration-300">
                         <div class="text-center md:text-right w-full md:w-auto">
-                            <h3 class="font-bold text-orange-900 text-lg">ניהול תחנה - שכבת ח' (פורימון)</h3>
-                            <p class="text-sm text-orange-700 mt-1">בחרו את התחנה שאתם מפעילים. באפשרותכם להפעיל התראות קוליות לקראת סיום הזמן.</p>
+                            <h3 class="font-bold text-orange-900 dark:text-orange-300 text-lg">ניהול תחנה - שכבת ח' (פורימון)</h3>
+                            <p class="text-sm text-orange-700 dark:text-orange-400 mt-1">כאשר אתם במסך זה, המסך שלכם לא ייכבה אוטומטית. ניתן גם להפעיל צליל.</p>
                             <label class="inline-flex items-center mt-3 cursor-pointer">
                                 <input type="checkbox" id="audioToggle" class="sr-only peer">
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                                <span class="ms-3 text-sm font-bold text-orange-800">הפעל צפצוף מעבר תחנה (כל 10 דק')</span>
+                                <div class="w-11 h-6 bg-gray-200 dark:bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                                <span class="ms-3 text-sm font-bold text-orange-800 dark:text-orange-300">הפעל צפצוף מעבר תחנה (כל 10 דק')</span>
                             </label>
                         </div>
                         <div class="flex flex-col gap-2 w-full md:w-auto">
-                            <select id="stationSelector" class="px-5 py-3 border-2 border-orange-200 rounded-xl bg-white shadow-sm focus:border-orange-500 focus:ring-0 outline-none w-full md:w-56 font-bold text-slate-700 cursor-pointer hover:bg-orange-50/50 transition-colors">
+                            <select id="stationSelector" class="px-5 py-3 border-2 border-orange-200 dark:border-orange-700 rounded-xl bg-white dark:bg-slate-700 shadow-sm focus:border-orange-500 focus:ring-0 outline-none w-full md:w-56 font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-orange-50/50 dark:hover:bg-slate-600 transition-colors">
                                 <option value="" disabled selected>בחרו תחנה...</option>
                                 <option value="1">תחנה 1 - ח1 פיסטוק (יבילה)</option>
                                 <option value="2">תחנה 2 - ח2 פקאן (למעלה ימין)</option>
@@ -310,55 +353,64 @@
 
                 <!-- View 3: Master View -->
                 <div id="view-master" class="hidden">
-                     <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-8">
-                        <h3 class="font-bold text-indigo-900 text-lg">לוח בקרה לפורימון (תחנות)</h3>
-                        <p class="text-sm text-indigo-700 mt-1">טבלה מרכזת של כל תנועות הכיתות בין התחנות.</p>
+                     <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800 rounded-2xl p-5 mb-8 transition-colors duration-300">
+                        <h3 class="font-bold text-indigo-900 dark:text-indigo-300 text-lg">לוח בקרה לפורימון (מנהלים)</h3>
+                        <p class="text-sm text-indigo-700 dark:text-indigo-400 mt-1">טבלה מרכזת של כל תנועות הכיתות, כולל מיקומים פיזיים ומפת התמצאות.</p>
                     </div>
                     
-                    <div class="overflow-x-auto pb-4">
-                        <h4 class="text-xl font-black mb-4 text-slate-800 flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                            סבב א' - שכבה ט'
-                        </h4>
-                        <table class="w-full text-sm text-right text-slate-600 mb-10 border-collapse rounded-xl overflow-hidden shadow-sm">
-                            <thead class="text-xs text-slate-700 uppercase bg-slate-200">
-                                <tr>
-                                    <th class="px-4 py-4 min-w-[100px]">שעה</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ט1 גיר</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ט2 לבה</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ט3 סהרה</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ט4 סלע</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ט5 גבע</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ט6 מאגמה</th>
-                                    <th class="px-4 py-4 bg-orange-200 text-orange-900 font-black whitespace-nowrap">⏸️ בהפסקה</th>
-                                </tr>
-                            </thead>
-                            <tbody id="masterTableBodyA" class="divide-y divide-slate-200 bg-white">
-                                <!-- JS Generated -->
-                            </tbody>
-                        </table>
+                    <div class="flex flex-col xl:flex-row gap-8">
+                        <div class="flex-grow overflow-x-auto pb-4">
+                            <h4 class="text-xl font-black mb-4 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                                סבב א' - שכבה ט'
+                            </h4>
+                            <table class="w-full text-sm text-right text-slate-600 dark:text-slate-300 mb-10 border-collapse rounded-xl overflow-hidden shadow-sm transition-colors duration-300">
+                                <thead class="text-xs text-slate-700 dark:text-slate-200 uppercase bg-slate-200 dark:bg-slate-700">
+                                    <tr>
+                                        <th class="px-4 py-4 min-w-[100px]">שעה</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ט1 גיר</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ט2 לבה</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ט3 סהרה</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ט4 סלע</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ט5 גבע</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ט6 מאגמה</th>
+                                        <th class="px-4 py-4 bg-orange-200 dark:bg-orange-800 text-orange-900 dark:text-orange-200 font-black whitespace-nowrap">⏸️ בהפסקה</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="masterTableBodyA" class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
+                                    <!-- JS Generated -->
+                                </tbody>
+                            </table>
 
-                        <h4 class="text-xl font-black mb-4 text-slate-800 flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                            סבב ב' - שכבה ז'
-                        </h4>
-                        <table class="w-full text-sm text-right text-slate-600 border-collapse rounded-xl overflow-hidden shadow-sm">
-                            <thead class="text-xs text-slate-700 uppercase bg-slate-200">
-                                <tr>
-                                    <th class="px-4 py-4 min-w-[100px]">שעה</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ז1 שדה</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ז2 כרם</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ז3 אלומה</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ז4 פרדס</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ז5 תלתן</th>
-                                    <th class="px-4 py-4 whitespace-nowrap">ז6 אשכול</th>
-                                    <th class="px-4 py-4 bg-orange-200 text-orange-900 font-black whitespace-nowrap">⏸️ בהפסקה</th>
-                                </tr>
-                            </thead>
-                            <tbody id="masterTableBodyB" class="divide-y divide-slate-200 bg-white">
-                                <!-- JS Generated -->
-                            </tbody>
-                        </table>
+                            <h4 class="text-xl font-black mb-4 flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                סבב ב' - שכבה ז'
+                            </h4>
+                            <table class="w-full text-sm text-right text-slate-600 dark:text-slate-300 border-collapse rounded-xl overflow-hidden shadow-sm transition-colors duration-300">
+                                <thead class="text-xs text-slate-700 dark:text-slate-200 uppercase bg-slate-200 dark:bg-slate-700">
+                                    <tr>
+                                        <th class="px-4 py-4 min-w-[100px]">שעה</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ז1 שדה</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ז2 כרם</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ז3 אלומה</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ז4 פרדס</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ז5 תלתן</th>
+                                        <th class="px-4 py-4 whitespace-nowrap">ז6 אשכול</th>
+                                        <th class="px-4 py-4 bg-orange-200 dark:bg-orange-800 text-orange-900 dark:text-orange-200 font-black whitespace-nowrap">⏸️ בהפסקה</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="masterTableBodyB" class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-slate-800">
+                                    <!-- JS Generated -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Right Col (Map - Sticky on desktop) -->
+                        <div class="w-full xl:w-1/3 flex-shrink-0">
+                            <div class="sticky top-24" id="masterMapLegend">
+                                <!-- Generated by JS -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -400,8 +452,36 @@
     </footer>
 
     <script>
+        // --- Dark Mode Toggle ---
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        // --- Wake Lock API (למניעת כיבוי מסך אצל מפעילים) ---
+        let wakeLock = null;
+        async function manageWakeLock(shouldLock) {
+            if ('wakeLock' in navigator) {
+                try {
+                    if (shouldLock && wakeLock === null) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    } else if (!shouldLock && wakeLock !== null) {
+                        await wakeLock.release();
+                        wakeLock = null;
+                    }
+                } catch (err) {
+                    console.log(`Wake Lock error: ${err.name}, ${err.message}`);
+                }
+            }
+        }
+
+        // טיפול במקרה שהמסך ממוזער וחוזר
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                wakeLock = await navigator.wakeLock.request('screen');
+            }
+        });
+
         // --- Data Definitions ---
-        
         const generalDaySchedule = [
             { start: 580, end: 600, label: "09:40", zGrade: "בוקר טוב בכיתות", tGrade: "בוקר טוב בכיתות", notes: "רישום נוכחות", merged: true },
             { start: 600, end: 650, label: "10:00", zGrade: "מסיבת אוזניות", tGrade: "פורימון", notes: "תחילת סבב א'", isPurimon: true },
@@ -519,6 +599,10 @@
                 document.getElementById(`view-${tab}`).classList.remove('hidden');
                 
                 currentTab = tab;
+                
+                // Wake Lock management based on active tab
+                manageWakeLock(tab === 'operator');
+                
                 forceFullRender();
             };
 
@@ -566,7 +650,7 @@
             
             if (currentDateStr === EVENT_DATE_STR) {
                 liveTimeBtn.innerHTML = '🔴 מחובר לזמן אמת';
-                liveTimeBtn.className = 'text-[10px] font-bold px-2 py-1 rounded-md transition-colors bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm cursor-default';
+                liveTimeBtn.className = 'text-[10px] font-bold px-2 py-1 rounded-md transition-colors bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-sm cursor-default';
                 
                 const currentMins = now.getHours() * 60 + now.getMinutes();
                 simulatedTime = currentMins;
@@ -577,7 +661,7 @@
                 timeSlider.value = sliderVal;
             } else {
                 liveTimeBtn.innerHTML = '📅 יופעל ב-1.3';
-                liveTimeBtn.className = 'text-[10px] font-bold px-2 py-1 rounded-md transition-colors bg-slate-200 text-slate-500 cursor-default';
+                liveTimeBtn.className = 'text-[10px] font-bold px-2 py-1 rounded-md transition-colors bg-slate-200 dark:bg-slate-600 text-slate-500 dark:text-slate-300 cursor-default';
                 // If not event date, run time artificially for demo purposes if left untouched, or stick to slider
                 simulatedTime = parseInt(timeSlider.value); 
                 currentSeconds = 0;
@@ -593,11 +677,15 @@
             // 1. Update text that changes every second (Timers)
             updateLiveStatusAndTimer();
             
-            // 2. Play Audio Alert if crossing a 10-min slot during Purimon (00 sec)
+            // 2. Play Audio Alert and Confetti if crossing a 10-min slot during Purimon (00 sec)
             if (isLiveMode && currentSeconds === 0 && minuteChanged) {
                 if ((simulatedTime > 600 && simulatedTime <= 650) || (simulatedTime > 675 && simulatedTime <= 715)) {
                     if (simulatedTime % 10 === 0 || simulatedTime % 10 === 5) { // e.g. 10:10, 11:25
                         playBeep();
+                        // הפעלת קונפטי חגיגי!
+                        if (window.confetti) {
+                            confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, zIndex: 9999 });
+                        }
                     }
                 }
             }
@@ -628,8 +716,8 @@
             };
 
             return `
-            <div class="map-container bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mt-6">
-                <h5 class="font-bold text-slate-700 mb-4 text-center">🗺️ מפת התמצאות במתחם</h5>
+            <div class="map-container bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm mt-6 transition-colors duration-300">
+                <h5 class="font-bold text-slate-700 dark:text-slate-200 mb-4 text-center">🗺️ מפת התמצאות במתחם</h5>
                 <div class="map-grid">
                     <div class="${getLocClass(3)}">למעלה שמאל<br><span class="text-xs font-normal opacity-80">(ח3)</span></div>
                     <div class="${getLocClass(5)}">למעלה אמצע<br><span class="text-xs font-normal opacity-80">(ח5)</span></div>
@@ -652,22 +740,22 @@
             
             generalDaySchedule.forEach(slot => {
                 const isActive = simulatedTime >= slot.start && simulatedTime < slot.end;
-                const trClass = isActive ? "bg-teal-100/60 ring-inset ring-2 ring-teal-400 font-bold transition-all shadow-md transform scale-[1.01]" : "transition-colors hover:bg-slate-50";
-                const timeColor = isActive ? "text-teal-800" : "text-slate-800";
+                const trClass = isActive ? "bg-teal-100/60 dark:bg-teal-900/40 ring-inset ring-2 ring-teal-400 dark:ring-teal-500 font-bold transition-all shadow-md transform scale-[1.01]" : "transition-colors hover:bg-slate-50 dark:hover:bg-slate-700";
+                const timeColor = isActive ? "text-teal-800 dark:text-teal-300" : "text-slate-800 dark:text-slate-200";
                 
                 let rowHtml = `<tr class="${trClass}">
                                 <td class="px-5 py-5 font-mono ${timeColor} font-bold align-middle">${slot.label}</td>`;
                 
                 if (slot.merged) {
-                    rowHtml += `<td class="px-5 py-5 text-center text-slate-700 border-r border-slate-300 align-middle" colspan="2">${slot.zGrade}</td>`;
+                    rowHtml += `<td class="px-5 py-5 text-center text-slate-700 dark:text-slate-300 border-r border-slate-300 dark:border-slate-600 align-middle" colspan="2">${slot.zGrade}</td>`;
                 } else {
-                    const zClass = slot.zGrade.includes('אוזניות') ? 'text-indigo-700' : 'text-blue-700';
-                    const tClass = slot.tGrade.includes('אוזניות') ? 'text-indigo-700' : 'text-blue-700';
-                    rowHtml += `<td class="px-5 py-5 text-center ${zClass} border-r border-slate-300 align-middle">${slot.zGrade}</td>
-                                <td class="px-5 py-5 text-center ${tClass} border-r border-slate-300 align-middle">${slot.tGrade}</td>`;
+                    const zClass = slot.zGrade.includes('אוזניות') ? 'text-indigo-700 dark:text-indigo-400' : 'text-blue-700 dark:text-blue-400';
+                    const tClass = slot.tGrade.includes('אוזניות') ? 'text-indigo-700 dark:text-indigo-400' : 'text-blue-700 dark:text-blue-400';
+                    rowHtml += `<td class="px-5 py-5 text-center ${zClass} border-r border-slate-300 dark:border-slate-600 align-middle">${slot.zGrade}</td>
+                                <td class="px-5 py-5 text-center ${tClass} border-r border-slate-300 dark:border-slate-600 align-middle">${slot.tGrade}</td>`;
                 }
                 
-                rowHtml += `<td class="px-5 py-5 text-slate-500 text-sm border-r border-slate-300 align-middle leading-tight">${slot.notes}</td></tr>`;
+                rowHtml += `<td class="px-5 py-5 text-slate-500 dark:text-slate-400 text-sm border-r border-slate-300 dark:border-slate-600 align-middle leading-tight">${slot.notes}</td></tr>`;
                 tbody.innerHTML += rowHtml;
             });
         }
@@ -680,6 +768,7 @@
             const isGrade9 = classId.startsWith('ט');
             const flatSchedule = [];
             let currentStationNum = null;
+            let whatsappText = `🎭 *פורימונוסטלגיה - המסלול של ${classNames[classId]}* 🎭\n\n`;
             
             // Build timeline array
             generalDaySchedule.forEach(slot => {
@@ -705,7 +794,8 @@
                                     start: startMins,
                                     end: startMins + 10,
                                     label: timeStr,
-                                    title: `תחנה ${station}: <span class="text-indigo-600">${stInfo.location}</span>`,
+                                    title: `תחנה ${station}: <span class="text-indigo-600 dark:text-indigo-400">${stInfo.location}</span>`,
+                                    titlePlain: `תחנה ${station}: ${stInfo.location}`,
                                     notes: `מפעילים: ${stInfo.name}`,
                                     icon: '🎯',
                                     isStation: true
@@ -716,7 +806,7 @@
                     
                     if (!isGrade9) {
                         flatSchedule.push({
-                            start: 715, end: 720, label: "11:55", title: "סיום הפורימון", notes: "חזרה לכינוס (כל הכיתות)", icon: '🚶', isStation: false
+                            start: 715, end: 720, label: "11:55", title: "סיום הפורימון", titlePlain: "סיום הפורימון", notes: "חזרה לכינוס (כל הכיתות)", icon: '🚶', isStation: false
                         });
                     }
                 } else {
@@ -729,7 +819,7 @@
                     if(myActivity.includes('הסעות')) icon = '🚌';
                     
                     flatSchedule.push({
-                        start: slot.start, end: slot.end, label: slot.label, title: myActivity, notes: slot.notes, icon: icon, isStation: false
+                        start: slot.start, end: slot.end, label: slot.label, title: myActivity, titlePlain: myActivity, notes: slot.notes, icon: icon, isStation: false
                     });
                 }
             });
@@ -739,11 +829,14 @@
             let foundCurrent = false;
             
             flatSchedule.forEach(item => {
+                // Build WhatsApp message
+                whatsappText += `📍 *${item.label}*: ${item.titlePlain}\n`;
+
                 if (simulatedTime >= item.start && simulatedTime < item.end) {
                     const hours = Math.floor(simulatedTime / 60);
                     const minutes = (simulatedTime % 60).toString().padStart(2, '0');
                     currentAlertHtml = `
-                    <div class="bg-indigo-600 text-white rounded-2xl p-5 mb-8 shadow-xl text-center animate-pulse-slow border-4 border-indigo-400 relative overflow-hidden">
+                    <div class="bg-indigo-600 dark:bg-indigo-700 text-white rounded-2xl p-5 mb-8 shadow-xl text-center animate-pulse-slow border-4 border-indigo-400 dark:border-indigo-500 relative overflow-hidden transition-colors">
                         <div class="absolute -right-4 -top-4 text-7xl opacity-20">${item.icon}</div>
                         <span class="block text-sm md:text-base font-medium mb-1 opacity-90 relative z-10">השעה עכשיו ${hours}:${minutes}. לפי הלו"ז אתם צריכים להיות ב:</span>
                         <span class="text-3xl md:text-4xl font-black block mt-2 relative z-10">${item.title}</span>
@@ -752,10 +845,11 @@
                 }
             });
 
+            whatsappText += `\nחג פורים שמח! 🥳`;
+
             // Generate HTML
             let html = `<div class="flex flex-col xl:flex-row gap-8">`; // Layout split for Map
             html += `<div class="flex-grow">`; // Left Col (Timeline)
-            html += `<h4 class="text-2xl font-black mb-8 text-slate-800">המסלול של: ${classNames[classId]}</h4>`;
             
             if (foundCurrent) html += currentAlertHtml;
 
@@ -766,28 +860,38 @@
                 const endTimeStr = `${Math.floor(item.end / 60)}:${(item.end % 60).toString().padStart(2, '0')}`;
                 
                 const ringClass = isActiveSlot 
-                    ? 'ring-4 ring-blue-200 border-blue-500 bg-blue-50 transform scale-[1.02] shadow-lg z-10' 
-                    : (item.isStation ? 'border-slate-200 bg-white/80' : 'border-slate-200 bg-white');
+                    ? 'ring-4 ring-blue-200 dark:ring-blue-900 border-blue-500 bg-blue-50 dark:bg-blue-900/30 transform scale-[1.02] shadow-lg z-10' 
+                    : (item.isStation ? 'border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-800/80' : 'border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800');
                     
                 const pulseDot = isActiveSlot 
-                    ? '<div class="absolute -right-[2.6rem] md:-right-[3.1rem] top-6 w-5 h-5 bg-blue-500 rounded-full border-4 border-white shadow animate-pulse z-10"></div>' 
-                    : '<div class="absolute -right-[2.4rem] md:-right-[2.9rem] top-6 w-3 h-3 bg-slate-300 rounded-full border-2 border-white z-10"></div>';
+                    ? '<div class="absolute -right-[2.6rem] md:-right-[3.1rem] top-6 w-5 h-5 bg-blue-500 rounded-full border-4 border-white dark:border-slate-900 shadow animate-pulse z-10"></div>' 
+                    : '<div class="absolute -right-[2.4rem] md:-right-[2.9rem] top-6 w-3 h-3 bg-slate-300 dark:bg-slate-500 rounded-full border-2 border-white dark:border-slate-900 z-10"></div>';
 
-                const borderLeftClass = item.isStation ? 'border-r-4 border-r-indigo-400' : '';
+                const borderLeftClass = item.isStation ? 'border-r-4 border-r-indigo-400 dark:border-r-indigo-500' : '';
 
                 html += `
-                <div class="relative w-full rounded-2xl border-2 p-5 md:p-6 shadow-sm transition-all ${ringClass} ${borderLeftClass}">
+                <div class="relative w-full rounded-2xl border-2 p-5 md:p-6 shadow-sm transition-all duration-300 ${ringClass} ${borderLeftClass}">
                     ${pulseDot}
                     <div class="flex flex-col md:flex-row justify-between md:items-center mb-3">
-                        <span class="font-mono font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded w-fit mb-2 md:mb-0">${item.label} - ${endTimeStr}</span>
-                        ${isActiveSlot ? '<span class="text-xs bg-blue-600 text-white px-2 py-1 rounded font-bold animate-pulse absolute top-4 left-4 md:static">אתם כאן עכשיו!</span>' : ''}
+                        <span class="font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded w-fit mb-2 md:mb-0 transition-colors">${item.label} - ${endTimeStr}</span>
+                        ${isActiveSlot ? '<span class="text-xs bg-blue-600 text-white px-2 py-1 rounded font-bold animate-pulse absolute top-4 left-4 md:static shadow-sm">אתם כאן עכשיו!</span>' : ''}
                     </div>
-                    <div class="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-3">
+                    <div class="text-xl md:text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
                         <span>${item.icon}</span> <span>${item.title}</span>
                     </div>
-                    <div class="text-slate-500 text-sm mt-2 font-medium">${item.notes}</div>
+                    <div class="text-slate-500 dark:text-slate-400 text-sm mt-2 font-medium">${item.notes}</div>
                 </div>`;
             });
+
+            // כפתור וואטסאפ חדש!
+            html += `
+            <div class="mt-8 text-center relative z-10">
+                <button onclick="window.open('https://wa.me/?text=${encodeURIComponent(whatsappText)}', '_blank')" class="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-3 px-6 rounded-2xl shadow-lg transition-colors flex items-center justify-center gap-2 mx-auto transform hover:scale-105">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.88-.653-1.474-1.46-1.646-1.757-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                    שלח לו"ז לכיתה בוואטסאפ
+                </button>
+            </div>
+            `;
 
             html += `</div></div>`; // Close Timeline Col
             
@@ -814,16 +918,16 @@
             let html = `<div class="flex flex-col xl:flex-row gap-8">`;
             html += `<div class="flex-grow">`; 
             
-            html += `<h4 class="text-2xl font-black mb-6 text-slate-800">לו"ז הפעלה: תחנה ${stationNum} <span class="text-lg font-medium text-slate-500 block mt-1">(${stInfo.name} | מיקום: ${stInfo.location})</span></h4>`;
+            html += `<h4 class="text-2xl font-black mb-6 text-slate-800 dark:text-slate-100">לו"ז הפעלה: תחנה ${stationNum} <span class="text-lg font-medium text-slate-500 dark:text-slate-400 block mt-1">(${stInfo.name} | מיקום: ${stInfo.location})</span></h4>`;
             html += `<div class="grid grid-cols-1 gap-8">`;
 
             // Round A
-            html += `<div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">`;
-            html += `<div class="bg-blue-50 px-6 py-4 font-black text-blue-900 border-b border-blue-100 flex items-center justify-between">
+            html += `<div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">`;
+            html += `<div class="bg-blue-50 dark:bg-blue-900/50 px-6 py-4 font-black text-blue-900 dark:text-blue-200 border-b border-blue-100 dark:border-blue-800 flex items-center justify-between">
                         <span>סבב א' (שכבה ט')</span>
-                        <span class="text-xs bg-white text-blue-700 px-2 py-1 rounded-md shadow-sm">10:00 - 10:50</span>
+                        <span class="text-xs bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-md shadow-sm">10:00 - 10:50</span>
                      </div>`;
-            html += `<div class="divide-y divide-slate-100">`;
+            html += `<div class="divide-y divide-slate-100 dark:divide-slate-700">`;
             
             scheduleData.roundA.times.forEach((time, idx) => {
                 const row = scheduleData.roundA.matrix[idx];
@@ -844,14 +948,14 @@
 
                 html += `
                 <div class="flex items-center p-4 transition-colors 
-                    ${isActive ? 'bg-indigo-100 border-r-4 border-indigo-500 shadow-inner' : ''}
-                    ${!isActive && isRest ? 'bg-orange-50/50 hover:bg-orange-50' : ''}
-                    ${!isActive && !isRest ? 'hover:bg-slate-50' : ''}
+                    ${isActive ? 'bg-indigo-100 dark:bg-indigo-900/40 border-r-4 border-indigo-500 shadow-inner' : ''}
+                    ${!isActive && isRest ? 'bg-orange-50/50 dark:bg-orange-900/20 hover:bg-orange-50 dark:hover:bg-orange-900/30' : ''}
+                    ${!isActive && !isRest ? 'hover:bg-slate-50 dark:hover:bg-slate-700/50' : ''}
                 ">
-                    <div class="w-24 font-mono font-bold text-sm ${isActive ? 'text-indigo-700 bg-white shadow-sm' : 'text-slate-500 bg-slate-100'} px-2 py-1 rounded text-center">${time}</div>
+                    <div class="w-24 font-mono font-bold text-sm ${isActive ? 'text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-800 shadow-sm' : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700'} px-2 py-1 rounded text-center">${time}</div>
                     <div class="flex-grow font-bold px-4 
-                        ${isActive ? 'text-indigo-900 text-lg' : ''}
-                        ${!isActive && isRest ? 'text-orange-600' : 'text-slate-800 text-lg'}
+                        ${isActive ? 'text-indigo-900 dark:text-indigo-200 text-lg' : ''}
+                        ${!isActive && isRest ? 'text-orange-600 dark:text-orange-400' : 'text-slate-800 dark:text-slate-200 text-lg'}
                     ">
                         ${visitorClass} ${isActive ? '<span class="mr-2 inline-block bg-indigo-500 text-white text-[10px] px-2 py-0.5 rounded animate-pulse">עכשיו</span>' : ''}
                     </div>
@@ -860,12 +964,12 @@
             html += `</div></div>`;
 
             // Round B
-            html += `<div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">`;
-            html += `<div class="bg-emerald-50 px-6 py-4 font-black text-emerald-900 border-b border-emerald-100 flex items-center justify-between">
+            html += `<div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">`;
+            html += `<div class="bg-emerald-50 dark:bg-emerald-900/40 px-6 py-4 font-black text-emerald-900 dark:text-emerald-200 border-b border-emerald-100 dark:border-emerald-800 flex items-center justify-between">
                         <span>סבב ב' (שכבה ז')</span>
-                        <span class="text-xs bg-white text-emerald-700 px-2 py-1 rounded-md shadow-sm">11:15 - 12:00</span>
+                        <span class="text-xs bg-white dark:bg-slate-700 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-md shadow-sm">11:15 - 12:00</span>
                      </div>`;
-            html += `<div class="divide-y divide-slate-100">`;
+            html += `<div class="divide-y divide-slate-100 dark:divide-slate-700">`;
             
             scheduleData.roundB.times.forEach((time, idx) => {
                 const row = scheduleData.roundB.matrix[idx];
@@ -890,17 +994,17 @@
 
                 html += `
                 <div class="flex items-center p-4 transition-colors 
-                    ${isActive ? 'bg-indigo-100 border-r-4 border-indigo-500 shadow-inner' : ''}
-                    ${!isActive && isRest ? 'bg-orange-50/50 hover:bg-orange-50' : ''} 
-                    ${!isActive && isPack ? 'bg-indigo-50/50 hover:bg-indigo-50' : ''}
-                    ${!isActive && !isRest && !isPack ? 'hover:bg-slate-50' : ''}
+                    ${isActive ? 'bg-indigo-100 dark:bg-indigo-900/40 border-r-4 border-indigo-500 shadow-inner' : ''}
+                    ${!isActive && isRest ? 'bg-orange-50/50 dark:bg-orange-900/20 hover:bg-orange-50 dark:hover:bg-orange-900/30' : ''} 
+                    ${!isActive && isPack ? 'bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-50 dark:hover:bg-indigo-900/30' : ''}
+                    ${!isActive && !isRest && !isPack ? 'hover:bg-slate-50 dark:hover:bg-slate-700/50' : ''}
                 ">
-                    <div class="w-24 font-mono font-bold text-sm ${isActive ? 'text-indigo-700 bg-white shadow-sm' : 'text-slate-500 bg-slate-100'} px-2 py-1 rounded text-center">${time}</div>
+                    <div class="w-24 font-mono font-bold text-sm ${isActive ? 'text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-800 shadow-sm' : 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700'} px-2 py-1 rounded text-center">${time}</div>
                     <div class="flex-grow font-bold px-4
-                        ${isActive ? 'text-indigo-900 text-lg' : ''}
-                        ${!isActive && isRest ? 'text-orange-600' : ''} 
-                        ${!isActive && isPack ? 'text-indigo-600' : ''}
-                        ${!isActive && !isRest && !isPack ? 'text-slate-800 text-lg' : ''}
+                        ${isActive ? 'text-indigo-900 dark:text-indigo-200 text-lg' : ''}
+                        ${!isActive && isRest ? 'text-orange-600 dark:text-orange-400' : ''} 
+                        ${!isActive && isPack ? 'text-indigo-600 dark:text-indigo-400' : ''}
+                        ${!isActive && !isRest && !isPack ? 'text-slate-800 dark:text-slate-200 text-lg' : ''}
                     ">
                         ${visitorClass} ${isActive ? '<span class="mr-2 inline-block bg-indigo-500 text-white text-[10px] px-2 py-0.5 rounded animate-pulse">עכשיו</span>' : ''}
                     </div>
@@ -921,35 +1025,81 @@
 
         function renderMasterTable() {
             const tbodyA = document.getElementById('masterTableBodyA');
+            tbodyA.innerHTML = '';
             scheduleData.roundA.times.forEach((time, idx) => {
                 const rowData = scheduleData.roundA.matrix[idx];
                 const restStation = rowData[6];
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-blue-50/50 transition-colors";
+                tr.className = "hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors";
                 tr.innerHTML = `
-                    <td class="px-4 py-3 font-mono font-bold text-slate-500 border-b border-slate-100">${time}</td>
-                    ${rowData.slice(0, 6).map(st => `<td class="px-4 py-3 border-b border-slate-100 font-bold text-slate-700 bg-white" title="מיקום: ${stationDetails[st].location}">תחנה ${st}</td>`).join('')}
-                    <td class="px-4 py-3 font-black text-orange-600 bg-orange-50/50 border-b border-orange-100 text-center text-xs" title="${stationDetails[restStation].name}">תחנה ${restStation}</td>
+                    <td class="px-4 py-3 font-mono font-bold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700 align-middle">${time}</td>
+                    ${rowData.slice(0, 6).map(st => `
+                        <td class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 align-middle" title="מפעילים: ${stationDetails[st].name}">
+                            <div class="flex flex-col">
+                                <span>תחנה ${st}</span>
+                                <span class="text-[10px] font-normal text-indigo-500 dark:text-indigo-400 leading-tight">${stationDetails[st].location}</span>
+                            </div>
+                        </td>
+                    `).join('')}
+                    <td class="px-4 py-3 font-black text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-800 text-center align-middle" title="${stationDetails[restStation].name}">
+                        <div class="flex flex-col items-center justify-center">
+                            <span>תחנה ${restStation}</span>
+                            <span class="text-[10px] font-normal text-orange-500 dark:text-orange-300 leading-tight">(${stationDetails[restStation].location})</span>
+                        </div>
+                    </td>
                 `;
                 tbodyA.appendChild(tr);
             });
 
             const tbodyB = document.getElementById('masterTableBodyB');
+            tbodyB.innerHTML = '';
             scheduleData.roundB.times.forEach((time, idx) => {
                 const rowData = scheduleData.roundB.matrix[idx];
                 const restStation = rowData[6];
-                let restText = `תחנה ${restStation}`;
-                if (idx === 3 && restStation === 3) restText += " (קיפול)";
+                
+                let isPack = (idx === 3 && restStation === 3);
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-emerald-50/50 transition-colors";
+                tr.className = "hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors";
                 tr.innerHTML = `
-                    <td class="px-4 py-3 font-mono font-bold text-slate-500 border-b border-slate-100">${time}</td>
-                    ${rowData.slice(0, 6).map(st => `<td class="px-4 py-3 border-b border-slate-100 font-bold text-slate-700 bg-white" title="מיקום: ${stationDetails[st].location}">תחנה ${st}</td>`).join('')}
-                    <td class="px-4 py-3 font-black text-orange-600 bg-orange-50/50 border-b border-orange-100 text-center text-xs" title="${stationDetails[restStation].name}">${restText}</td>
+                    <td class="px-4 py-3 font-mono font-bold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700 align-middle">${time}</td>
+                    ${rowData.slice(0, 6).map(st => `
+                        <td class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 align-middle" title="מפעילים: ${stationDetails[st].name}">
+                            <div class="flex flex-col">
+                                <span>תחנה ${st}</span>
+                                <span class="text-[10px] font-normal text-indigo-500 dark:text-indigo-400 leading-tight">${stationDetails[st].location}</span>
+                            </div>
+                        </td>
+                    `).join('')}
+                    <td class="px-4 py-3 font-black text-orange-600 dark:text-orange-400 bg-orange-50/50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-800 text-center align-middle" title="${stationDetails[restStation].name}">
+                         <div class="flex flex-col items-center justify-center">
+                            <span>תחנה ${restStation} ${isPack ? '<br><span class="text-xs text-indigo-600 dark:text-indigo-400">(קיפול)</span>' : ''}</span>
+                            ${!isPack ? `<span class="text-[10px] font-normal text-orange-500 dark:text-orange-300 leading-tight">(${stationDetails[restStation].location})</span>` : ''}
+                        </div>
+                    </td>
                 `;
                 tbodyB.appendChild(tr);
             });
+
+            // רינדור המפה והמקרא למסך המנהלים
+            const masterMapLegend = document.getElementById('masterMapLegend');
+            if (masterMapLegend) {
+                let legendHtml = getMapHtml(null); // מפה ללא סימון ספציפי כי זו תצוגה כללית
+                
+                legendHtml += `
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm mt-4 transition-colors duration-300">
+                    <h5 class="font-bold text-slate-700 dark:text-slate-200 mb-3 text-center">📋 מקרא מפעילים</h5>
+                    <div class="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                `;
+                for (let i = 1; i <= 7; i++) {
+                    legendHtml += `<div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-700 pb-2 pt-1">
+                        <span class="font-bold text-indigo-600 dark:text-indigo-400">תחנה ${i}</span>
+                        <span class="text-left">${stationDetails[i].name}</span>
+                    </div>`;
+                }
+                legendHtml += `</div></div>`;
+                masterMapLegend.innerHTML = legendHtml;
+            }
         }
 
         // --- Utils & Timing Calculations ---
