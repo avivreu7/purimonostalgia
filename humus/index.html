@@ -3,853 +3,389 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>חדר בריחה: תעלומת התסריט של סבק</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <title>מי רוצה להיות מיליונר - התסריט הראשון של סבק</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=Rubik+Mono+One&display=swap');
-
-        :root {
-            --bg-dark: #0f172a;
-            --bg-panel: #1e293b;
-            --primary: #f59e0b; /* Amber/Gold */
-            --primary-hover: #d97706;
-            --text-main: #f8fafc;
-            --danger: #ef4444;
-            --success: #10b981;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&display=swap');
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
             font-family: 'Heebo', sans-serif;
+            background: radial-gradient(circle at center, #1b2055 0%, #060814 100%);
+            color: white;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            background-image: 
-                radial-gradient(circle at 50% 0%, #1e293b 0%, transparent 70%),
-                linear-gradient(0deg, #000000 0%, #0f172a 100%);
             overflow-x: hidden;
-            user-select: none;
         }
 
-        h1, h2, .title-font {
-            font-family: 'Rubik Mono One', sans-serif;
-            letter-spacing: 1px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .escape-box {
-            background: var(--bg-panel);
-            border: 2px solid #334155;
-            border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.1);
-            width: 100%;
-            max-w: 800px;
-            padding: 2.5rem;
+        .millionaire-shape {
+            clip-path: polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0 50%);
+            background: linear-gradient(to bottom, #000000, #131244);
+            border: 2px solid #ce983b;
             position: relative;
-            margin-top: 1rem;
+            transition: all 0.3s ease;
         }
 
-        .escape-box::before {
+        .millionaire-shape::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            border-radius: 16px 16px 0 0;
+            top: 2px; left: 5%; right: 5%; bottom: 2px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            pointer-events: none;
         }
 
-        input[type="text"], input[type="number"], input[type="password"] {
-            background: #0f172a;
-            border: 2px solid #475569;
-            color: var(--primary);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 1.25rem;
-            text-align: center;
-            font-weight: bold;
-            outline: none;
+        .millionaire-shape:hover:not(.locked) {
+            background: linear-gradient(to bottom, #000000, #2c2a8c);
+            cursor: pointer;
+            border-color: #ffd700;
+        }
+
+        .answer-btn.selected {
+            background: linear-gradient(to bottom, #b46b00, #e69500);
+            border-color: #fff;
+        }
+
+        .answer-btn.correct {
+            background: linear-gradient(to bottom, #005a00, #00a800);
+            border-color: #fff;
+            animation: blinkCorrect 0.5s 4;
+        }
+
+        .answer-btn.wrong {
+            background: linear-gradient(to bottom, #6b0000, #c40000);
+            border-color: #fff;
+        }
+
+        @keyframes blinkCorrect {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .ladder-item {
+            color: #d1b87a;
             transition: all 0.3s;
         }
-
-        input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-        }
-
-        .btn-action {
-            background: var(--primary);
-            color: #000;
-            font-weight: 900;
-            font-size: 1.2rem;
-            padding: 12px 32px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            font-family: 'Heebo', sans-serif;
-        }
-
-        .btn-action:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-        }
-
-        .btn-action:active {
-            transform: translateY(1px);
-        }
-
-        /* Flashlight Effect (Room 1) */
-        .dark-room {
-            position: relative;
-            width: 100%;
-            height: 250px;
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            cursor: crosshair;
-            border: 2px solid #334155;
-        }
-        .spotlight {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle 60px at var(--x, 50%) var(--y, 50%), transparent 0%, rgba(0,0,0,0.98) 100%);
-            pointer-events: none;
-        }
-        .hidden-word {
-            position: absolute;
-            color: #333; /* Very dark, only visible with flashlight */
-            font-weight: bold;
-            font-size: 2rem;
-            z-index: 0;
-        }
-        .dark-room:hover .hidden-word {
-            color: var(--primary);
-            text-shadow: 0 0 5px var(--primary);
-        }
-
-        /* Interactive Items */
-        .interactive-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-        }
-
-        .item-card {
-            background: #334155;
-            border: 2px solid #475569;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: bold;
-        }
-
-        .item-card:hover {
-            border-color: var(--primary);
-            background: #1e293b;
-        }
-
-        .item-card.selected {
-            background: rgba(245, 158, 11, 0.2);
-            border-color: var(--primary);
-            color: var(--primary);
-            transform: scale(1.05);
-        }
-
-        /* Cipher Symbols */
-        .cipher-symbol {
-            font-size: 2.5rem;
-            background: #0f172a;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-        }
-
-        /* Wires/Matching */
-        .match-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-        }
-        .match-col {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 45%;
-        }
-        .match-btn {
-            background: #1e293b;
-            border: 2px solid #475569;
-            padding: 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-            text-align: center;
-        }
-        .match-btn.active {
-            border-color: var(--primary);
-            background: #334155;
-            box-shadow: 0 0 10px rgba(245,158,11,0.2);
-        }
-        .match-btn.solved {
-            border-color: var(--success);
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            pointer-events: none;
-        }
-
-        /* Animations */
-        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-2px, 0, 0); }
-            20%, 80% { transform: translate3d(4px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
-            40%, 60% { transform: translate3d(8px, 0, 0); }
-        }
         
-        .fade-in { animation: fadeIn 0.5s ease-in forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .ladder-item.active {
+            color: #ffffff;
+            background-color: #c48300;
+            border-radius: 9999px;
+            font-weight: bold;
         }
 
-        .hidden-el { display: none !important; }
-
-        /* Teacher Lock */
-        .teacher-lock {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            opacity: 0.2;
-            cursor: pointer;
-            transition: 0.3s;
-            z-index: 50;
+        .ladder-item.passed {
+            color: #6366f1;
         }
-        .teacher-lock:hover { opacity: 1; }
 
+        .question-box {
+            clip-path: polygon(3% 0, 97% 0, 100% 50%, 97% 100%, 3% 100%, 0 50%);
+            background: linear-gradient(to bottom, #000000, #131244);
+            border: 2px solid #ce983b;
+        }
+
+        /* Responsive adjustments for mobile clip-paths */
+        @media (max-width: 640px) {
+            .millionaire-shape { clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%); }
+            .question-box { clip-path: polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0 50%); }
+        }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-center p-4 text-center">
 
-    <div class="text-center mb-6">
-        <h1 class="text-3xl md:text-5xl text-amber-500 mb-2">תעלומת התסריט</h1>
-        <p class="text-lg text-slate-400 font-bold">חדר בריחה: התסריט הראשון של סבק</p>
+    <!-- Header -->
+    <div class="w-full max-w-5xl flex justify-between items-center mb-8 relative z-10">
+        <div class="text-3xl font-black text-yellow-400 drop-shadow-md hidden md:block">
+            מי רוצה להיות מיליונר?
+        </div>
+        <div class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+            <span>התסריט הראשון של סבק</span>
+            <span class="text-yellow-500">🎬</span>
+        </div>
     </div>
 
-    <div id="game-container" class="escape-box">
-        <!-- Progress -->
-        <div class="flex justify-between text-sm text-slate-400 mb-2 font-bold">
-            <span>התקדמות</span>
-            <span>חידה <span id="current-room-ui">1</span> / 10</span>
-        </div>
-        <div class="w-full bg-slate-800 rounded-full h-3 mb-8 border border-slate-700 overflow-hidden">
-            <div id="progress-bar" class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
-        </div>
-
-        <!-- Room Header -->
-        <h2 id="room-title" class="text-2xl text-amber-400 font-bold mb-4 title-font">כותרת החדר</h2>
+    <!-- Main Game Area -->
+    <div class="w-full max-w-5xl flex flex-col lg:flex-row gap-8 relative z-10" id="game-container">
         
-        <!-- Dynamic Content -->
-        <div id="room-content" class="min-h-[250px] mb-8 fade-in">
-            <!-- Rendered by JS -->
-        </div>
-
-        <!-- Feedback & Actions -->
-        <div class="flex flex-col items-center">
-            <div id="feedback" class="h-8 font-bold text-lg mb-4"></div>
-            <button id="check-btn" onclick="checkAnswer()" class="btn-action">בדוק ופתח מנעול</button>
-        </div>
-    </div>
-
-    <!-- Victory Screen -->
-    <div id="victory-screen" class="escape-box text-center hidden-el fade-in">
-        <div class="text-6xl mb-4">🚪☀️</div>
-        <h1 class="text-4xl text-emerald-400 title-font mb-4">נמלטתם בהצלחה!</h1>
-        <p class="text-xl leading-relaxed mb-6">
-            הדלת נפתחה והאור סינוור אתכם.<br>
-            עברתם את כל המכשולים, הוכחתם היכרות עמוקה עם העלילה, הדמויות והמסר של "התסריט הראשון של סבק".<br>
-            אמנם האשליה של הילדים התנפצה במשרד המנהל, אך אתם הרכבתם את הסיפור מחדש!
-        </p>
-        <button onclick="location.reload()" class="btn-action bg-emerald-500 hover:bg-emerald-600">שחקו שוב</button>
-    </div>
-
-    <!-- Teacher Area (Modal) -->
-    <div id="teacher-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden-el z-50">
-        <div class="bg-slate-800 p-8 rounded-xl border-2 border-amber-500 max-w-sm w-full text-center">
-            <h2 class="text-2xl text-amber-500 mb-4 title-font">כניסת מורה</h2>
-            <input type="password" id="teacher-pwd" class="w-full mb-4" placeholder="הקש סיסמה">
-            <div id="pwd-error" class="text-red-500 font-bold mb-4 hidden-el">סיסמה שגויה!</div>
-            <div class="flex gap-4 justify-center">
-                <button onclick="verifyTeacher()" class="btn-action py-2 px-6 text-sm">היכנס</button>
-                <button onclick="closeTeacherModal()" class="text-slate-400 hover:text-white">ביטול</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Teacher Dashboard -->
-    <div id="teacher-dashboard" class="fixed inset-0 bg-slate-900 z-40 p-6 overflow-y-auto hidden-el" dir="rtl">
-        <div class="max-w-5xl mx-auto">
-            <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
-                <h1 class="text-3xl text-amber-500 title-font">לוח בקרה למורה</h1>
-                <button onclick="closeTeacherDashboard()" class="border border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-4 py-2 rounded font-bold">סגור לוח</button>
-            </div>
+        <!-- Game Board -->
+        <div class="flex-1 flex flex-col justify-end">
             
-            <p class="text-slate-300 mb-6 text-lg">להלן פירוט 10 החידות במשחק, הפעולה הנדרשת וההקשר הלימודי לסיפור.</p>
-
-            <div class="bg-slate-800 rounded-xl shadow-2xl overflow-hidden border border-slate-700">
-                <table class="w-full text-right">
-                    <thead class="bg-slate-900 text-amber-500">
-                        <tr>
-                            <th class="p-4">חידה</th>
-                            <th class="p-4">מכניקה</th>
-                            <th class="p-4">הקשר לימודי (סיפור)</th>
-                            <th class="p-4">פתרון</th>
-                        </tr>
-                    </thead>
-                    <tbody id="teacher-table-body" class="text-slate-200">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
+            <!-- Question Box -->
+            <div class="question-box p-6 md:p-10 mb-8 flex items-center justify-center min-h-[120px] shadow-2xl">
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold text-white tracking-wide leading-relaxed">
+                    טוען שאלה...
+                </h2>
             </div>
+
+            <!-- Answers Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="answers-container">
+                <button onclick="selectAnswer(0)" class="answer-btn millionaire-shape p-4 text-lg md:text-xl font-semibold flex items-center text-right group">
+                    <span class="text-yellow-500 mr-4 ml-2 group-hover:text-yellow-300">א:</span> 
+                    <span id="ans-0-text" class="flex-1">תשובה</span>
+                </button>
+                <button onclick="selectAnswer(1)" class="answer-btn millionaire-shape p-4 text-lg md:text-xl font-semibold flex items-center text-right group">
+                    <span class="text-yellow-500 mr-4 ml-2 group-hover:text-yellow-300">ב:</span> 
+                    <span id="ans-1-text" class="flex-1">תשובה</span>
+                </button>
+                <button onclick="selectAnswer(2)" class="answer-btn millionaire-shape p-4 text-lg md:text-xl font-semibold flex items-center text-right group">
+                    <span class="text-yellow-500 mr-4 ml-2 group-hover:text-yellow-300">ג:</span> 
+                    <span id="ans-2-text" class="flex-1">תשובה</span>
+                </button>
+                <button onclick="selectAnswer(3)" class="answer-btn millionaire-shape p-4 text-lg md:text-xl font-semibold flex items-center text-right group">
+                    <span class="text-yellow-500 mr-4 ml-2 group-hover:text-yellow-300">ד:</span> 
+                    <span id="ans-3-text" class="flex-1">תשובה</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Money Ladder (Sidebar) -->
+        <div class="w-full lg:w-64 bg-black/40 border border-blue-800 rounded-2xl p-6 hidden sm:flex flex-col justify-between order-first lg:order-last">
+            <h3 class="text-yellow-500 font-bold mb-4 text-center border-b border-yellow-500/30 pb-2">סולם הפרסים</h3>
+            <ul id="ladder" class="flex flex-col-reverse gap-2 text-lg">
+                <!-- Generated by JS -->
+            </ul>
         </div>
     </div>
 
-    <!-- Teacher Lock Icon -->
-    <div class="teacher-lock" onclick="openTeacherModal()">
-        <svg class="w-8 h-8 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+    <!-- End Screen (Hidden by default) -->
+    <div id="end-screen" class="hidden flex-col items-center justify-center bg-black/80 fixed inset-0 z-50 p-6 text-center">
+        <h1 id="end-title" class="text-5xl md:text-7xl font-black mb-6 drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]"></h1>
+        <p id="end-message" class="text-2xl md:text-3xl text-white mb-10 max-w-2xl leading-relaxed"></p>
+        <button onclick="startGame()" class="px-8 py-4 bg-gradient-to-r from-yellow-600 to-yellow-400 hover:from-yellow-500 hover:to-yellow-300 text-black font-bold rounded-full text-2xl transition-transform hover:scale-105 shadow-[0_0_15px_rgba(255,215,0,0.5)]">
+            שחק שוב
+        </button>
+    </div>
+
+    <!-- Background Elements -->
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[100px]"></div>
     </div>
 
     <script>
-        /* =========================================
-           GAME LOGIC & DATA
-           ========================================= */
-        
-        let currentRoom = 0;
-        const correctPwd = "220193";
+        const prizes = [
+            "1,000 ₪", "2,000 ₪", "4,000 ₪", "8,000 ₪", "16,000 ₪", 
+            "32,000 ₪", "64,000 ₪", "125,000 ₪", "500,000 ₪", "1,000,000 ₪"
+        ];
 
-        // Global variables for puzzle states
-        window.puzzleState = {};
-
-        const rooms = [
+        const allQuestions = [
             {
-                id: 1,
-                title: "החדר החשוך",
-                mechanic: "פנס אינטראקטיבי המופעל עם העכבר",
-                educational: "זיהוי המכשיר בו השתמשו הילדים בניסיון להקרין בבית (פנס קסם).",
-                solutionText: "המילה 'פנס קסם'",
-                render: function(container) {
-                    container.innerHTML = `
-                        <p class="text-lg mb-4">הילדים חיפשו חדר חשוך כדי להקרין את סרטם, אך החשמל נפל! הזיזו את העכבר/אצבע על גבי המסך השחור כדי להאיר אותו. מצאו את המכשיר שהם רצו להפעיל, והקלידו אותו למטה.</p>
-                        <div class="dark-room" onmousemove="moveFlashlight(event)" ontouchmove="moveFlashlightTouch(event)">
-                            <div class="hidden-word" style="top: 30%; left: 20%; transform: rotate(-15deg);">פנס קסם</div>
-                            <div class="hidden-word" style="bottom: 20%; right: 10%; transform: rotate(10deg); opacity: 0.3; font-size: 1rem;">מקרנה</div>
-                            <div class="spotlight" id="spotlight"></div>
-                        </div>
-                        <div class="mt-6 text-center">
-                            <input type="text" id="ans-1" placeholder="מה הם חיפשו?">
-                        </div>
-                    `;
-                },
-                check: function() {
-                    const ans = document.getElementById('ans-1').value.trim();
-                    return ans === "פנס קסם" || ans === "פנס הקסם";
-                }
+                question: "מדוע הילדים בחבורה אספו כסף עבור סבק?",
+                options: [
+                    "כדי שיקנה לעצמו בגדים חדשים לחורף",
+                    "כדי שילך לקולנוע ויספר להם את עלילת הסרט",
+                    "כדי שיקנה תרופות לאביו החולה",
+                    "כדי שיקנה לכולם ממתקים בקיוסק"
+                ],
+                correct: 1
             },
             {
-                id: 2,
-                title: "מנעול כוכב הקולנוע",
-                mechanic: "כספת מספרים דיגיטלית",
-                educational: "היכרות עם הגיבור הנערץ שהעניק השראה לתסריט (טום מיקס).",
-                solutionText: "הקוד 34 (טום = 3 אותיות, מיקס = 4 אותיות)",
-                render: function(container) {
-                    container.innerHTML = `
-                        <p class="text-lg mb-6">כדי לפתוח את ארגז התחפושות, עליכם להזין קוד בן שתי ספרות.<br>
-                        <strong>רמז:</strong> הקוד מורכב ממספר האותיות בשמו הפרטי, ולאחר מכן בשם משפחתו, של כוכב המערבונים הנערץ על הילדים.</p>
-                        <div class="flex justify-center gap-4 dir-ltr">
-                            <input type="number" id="num-1" class="w-20 h-24 text-4xl" min="0" max="9" value="0">
-                            <input type="number" id="num-2" class="w-20 h-24 text-4xl" min="0" max="9" value="0">
-                        </div>
-                    `;
-                },
-                check: function() {
-                    const n1 = document.getElementById('num-1').value;
-                    const n2 = document.getElementById('num-2').value;
-                    return (n1 === "3" && n2 === "4"); // טום (3) מיקס (4)
-                }
+                question: "מה סבק עשה בפועל עם הכסף שקיבל מהחברים?",
+                options: [
+                    "הוא הלך לקולנוע כפי שהבטיח",
+                    "הוא שמר את הכסף לעצמו",
+                    "הוא קנה כרטיס רכבת כדי לברוח",
+                    "הוא קנה תרופה לאביו החולה"
+                ],
+                correct: 3
             },
             {
-                id: 3,
-                title: "המחברת הקרועה",
-                mechanic: "פאזל קליקים - סידור לפי סדר",
-                educational: "היכרות עם כותרת הסיפור, המייצגת את הרעיון המרכזי.",
-                solutionText: "ללחוץ לפי הסדר: התסריט -> הראשון -> של -> סבק",
-                render: function(container) {
-                    window.puzzleState.selectedWords = [];
-                    const words = ["הראשון", "סבק", "התסריט", "של"];
-                    
-                    let html = `<p class="text-lg mb-6">מנהל הקולנוע זלזל והמחברת נקרעה. הרכיבו מחדש את כותרת היצירה שכתבו הילדים (שהיא גם כותרת הסיפור שקראתם).<br>לחצו על הקרעים לפי הסדר הנכון:</p>`;
-                    html += `<div class="interactive-grid mb-6">`;
-                    words.forEach((w, i) => {
-                        html += `<div class="item-card text-xl" id="word-${i}" onclick="selectWord(this, '${w}')">${w}</div>`;
-                    });
-                    html += `</div>`;
-                    html += `<div class="bg-slate-800 h-16 rounded border-2 border-dashed border-slate-600 flex items-center justify-center gap-2 text-xl font-bold" id="sentence-builder"></div>`;
-                    html += `<button onclick="resetWords()" class="mt-4 text-sm text-amber-500 underline">אפס בחירה</button>`;
-                    container.innerHTML = html;
-                },
-                check: function() {
-                    const sentence = window.puzzleState.selectedWords.join(" ");
-                    return sentence === "התסריט הראשון של סבק";
-                }
+                question: "איזה 'תסריט' בחר סבק לספר לחבריו לאחר המקרה?",
+                options: [
+                    "את העלילה האמיתית של הסרט שהוקרן",
+                    "תסריט שהוא המציא ודמיין בעצמו",
+                    "סיפור שהוא קרא בספר ישן",
+                    "סיפור על חבורת ילדים עשירים"
+                ],
+                correct: 1
             },
             {
-                id: 4,
-                title: "חידת הסדרן",
-                mechanic: "בחירת מפתח (זיהוי עובדה נכונה)",
-                educational: "הבנת רקע העלילה - היכן התרחשו אירועי הילדות.",
-                solutionText: "המפתח שעליו כתוב 'העלילה מתרחשת בוורשה'",
-                render: function(container) {
-                    window.puzzleState.selectedKey = null;
-                    const keys = [
-                        {id: 1, text: "העלילה מתרחשת בישראל"},
-                        {id: 2, text: "העלילה מתרחשת בוורשה"},
-                        {id: 3, text: "הגיבורים הם מבוגרים"},
-                        {id: 4, text: "הסרט הופק בהצלחה"}
-                    ];
-                    let html = `<p class="text-lg mb-6">הסדרן העקשן חוסם את הכניסה לאולם. הוא ייתן לכם מפתח רק אם תבחרו במפתח שעליו חרוטה <strong>עובדה נכונה</strong> על רקע הסיפור.</p>
-                                <div class="grid grid-cols-2 gap-4">`;
-                    keys.forEach(k => {
-                        html += `<div class="item-card flex items-center justify-center gap-2" onclick="selectKey(this, ${k.id})">
-                                    <span class="text-2xl">🔑</span>
-                                    <span>${k.text}</span>
-                                 </div>`;
-                    });
-                    html += `</div>`;
-                    container.innerHTML = html;
-                },
-                check: function() {
-                    return window.puzzleState.selectedKey === 2; // ורשה
-                }
+                question: "כיצד הבינו החברים שסבק לא באמת הלך לקולנוע?",
+                options: [
+                    "הם עקבו אחריו וראו אותו הולך לבית המרקחת",
+                    "הם קראו את תקציר הסרט וגילו שהוא שונה לגמרי",
+                    "סבק הודה בכך מיד כשחזר",
+                    "הכרטיסן בקולנוע אמר להם שהוא לא הגיע"
+                ],
+                correct: 1
             },
             {
-                id: 5,
-                title: "צופן המנהל",
-                mechanic: "פענוח כתב סתרים חזותי",
-                educational: "הבנת תגובתו המזלזלת של מנהל הקולנוע ליצירתם של הילדים.",
-                solutionText: "המילה 'צחק'",
-                render: function(container) {
-                    container.innerHTML = `
-                        <p class="text-lg mb-4">המנהל השאיר פתק מצופנן על השולחן. הפתק מתאר את תגובתו כשקרא את התסריט הרציני של הילדים.</p>
-                        <p class="text-slate-400 mb-6 text-sm">מפתח הצופן: 🎬 = צ | 🍿 = ח | 📽️ = ק | 🎟️ = ל</p>
-                        <div class="flex justify-center gap-4 mb-8">
-                            <div class="cipher-symbol">🎬</div>
-                            <div class="cipher-symbol">🍿</div>
-                            <div class="cipher-symbol">📽️</div>
-                        </div>
-                        <div class="text-center">
-                            <input type="text" id="ans-5" placeholder="פענחו את המילה">
-                        </div>
-                    `;
-                },
-                check: function() {
-                    const ans = document.getElementById('ans-5').value.trim();
-                    return ans === "צחק";
-                }
+                question: "מה חשבו החברים על סבק ברגע הראשון כשגילו את השוני בעלילה?",
+                options: [
+                    "שהוא גנב אותם ולקח את הכסף לעצמו",
+                    "שהוא התבלבל באולם הקולנוע",
+                    "שהוא הלך לעזור לאביו",
+                    "שהוא שחקן ויוצר מוכשר מאוד"
+                ],
+                correct: 0
             },
             {
-                id: 6,
-                title: "חוטי העלילה",
-                mechanic: "התאמת זוגות (מותח קווים לוגיים)",
-                educational: "אפיון דמויות והבנת תפקידן בכוח המניע של הסיפור.",
-                solutionText: "סבק = היזם. הסדרן = שומר הסף. המנהל = שובר החלום.",
-                render: function(container) {
-                    window.puzzleState.matchActive = null;
-                    window.puzzleState.matches = 0;
-                    
-                    const chars = [
-                        {id: 'c1', name: 'סבק'},
-                        {id: 'c2', name: 'הסדרן'},
-                        {id: 'c3', name: 'מנהל הקולנוע'}
-                    ];
-                    const roles = [
-                        {id: 'r2', text: 'שומר הסף (חסם את הילדים)'},
-                        {id: 'r3', text: 'שובר החלום (המבוגר המזלזל)'},
-                        {id: 'r1', text: 'היזם וה"במאי" (הרוח החיה)'}
-                    ];
-
-                    let html = `<p class="text-lg mb-6">לוח החשמל של המקרנה התנתק. חברו את חוטי העלילה: לחצו על דמות מימין, ואז על תפקידה משמאל.</p>
-                                <div class="match-container">
-                                    <div class="match-col" id="col-chars">`;
-                    chars.forEach(c => { html += `<div class="match-btn" id="${c.id}" onclick="handleMatchClick('${c.id}', 'char')">${c.name}</div>`; });
-                    html += `</div><div class="match-col" id="col-roles">`;
-                    roles.forEach(r => { html += `<div class="match-btn" id="${r.id}" onclick="handleMatchClick('${r.id}', 'role')">${r.text}</div>`; });
-                    html += `</div></div>`;
-                    container.innerHTML = html;
-                },
-                check: function() {
-                    // Match logic handled internally, just check if all 3 are solved
-                    return window.puzzleState.matches === 3;
-                }
+                question: "מי שמעה את החברים מאשימים את סבק, והתערבה כדי להגן עליו?",
+                options: [
+                    "המורה של החבורה",
+                    "אימא של סבק",
+                    "אסתושה, אחותו של סבק",
+                    "שכנה שעברה ברחוב"
+                ],
+                correct: 2
             },
             {
-                id: 7,
-                title: "הכרטיס החסר",
-                mechanic: "הקלדה ממקלדת שבורה (Word guess)",
-                educational: "זיהוי הז'אנר הספרותי/קולנועי שאליו כיוונו הילדים.",
-                solutionText: "המילה 'מערבון'",
-                render: function(container) {
-                    container.innerHTML = `
-                        <p class="text-lg mb-4">מכונת הכרטיסים התקלקלה וצריך להזין ידנית את סוג הסרט שהילדים רצו להפיק.</p>
-                        <p class="text-amber-400 font-bold mb-6">רמז: סרט עם בוקרים וסוסים.</p>
-                        <div class="flex justify-center gap-2 mb-6" dir="ltr">
-                            <input type="text" id="l1" class="w-12 h-14 text-2xl text-center" maxlength="1">
-                            <input type="text" id="l2" class="w-12 h-14 text-2xl text-center" maxlength="1">
-                            <input type="text" id="l3" class="w-12 h-14 text-2xl text-center" maxlength="1">
-                            <input type="text" id="l4" class="w-12 h-14 text-2xl text-center" maxlength="1">
-                            <input type="text" id="l5" class="w-12 h-14 text-2xl text-center" maxlength="1">
-                            <input type="text" id="l6" class="w-12 h-14 text-2xl text-center" maxlength="1">
-                        </div>
-                    `;
-                    // Auto advance focus
-                    for(let i=1; i<=5; i++) {
-                        document.getElementById(`l${i}`).addEventListener('input', function() {
-                            if(this.value.length === 1) document.getElementById(`l${i+1}`).focus();
-                        });
-                    }
-                },
-                check: function() {
-                    let word = "";
-                    for(let i=6; i>=1; i--) { // RTL reading from inputs if LTR layout
-                       word += document.getElementById(`l${i}`).value; 
-                    }
-                    // Since inputs are LTR visual, let's just grab them and sort out the string
-                    const inputs = [
-                        document.getElementById('l1').value,
-                        document.getElementById('l2').value,
-                        document.getElementById('l3').value,
-                        document.getElementById('l4').value,
-                        document.getElementById('l5').value,
-                        document.getElementById('l6').value
-                    ];
-                    // Accept correct spelling regardless of DOM visual order (user might type either way)
-                    const joined = inputs.join("");
-                    const reversed = inputs.reverse().join("");
-                    return joined === "מערבון" || reversed === "מערבון" || joined === "נוברעם";
-                }
+                question: "מה האחות חשפה בפני החבורה?",
+                options: [
+                    "שסבק איבד את הכסף בדרך לקולנוע",
+                    "שסבק קנה לאביהם תרופות עם הכסף שנתנו לו",
+                    "שסבק נתן את הכסף לעניים",
+                    "שסבק בכלל לא רצה ללכת לקולנוע"
+                ],
+                correct: 1
             },
             {
-                id: 8,
-                title: "סלילי הזמן",
-                mechanic: "סידור רצף אירועים (לחץ להחלפה)",
-                educational: "הבנת רצף העלילה הכרונולוגי והתפתחות הקונפליקט.",
-                solutionText: "רעיון -> כתיבה -> ציפייה בקולנוע -> אכזבה מול המנהל",
-                render: function(container) {
-                    window.puzzleState.seq = [3, 1, 4, 2]; // Scrambled IDs
-                    const texts = {
-                        1: "1. רעיון לסרט",
-                        2: "2. כתיבה במחברת",
-                        3: "3. הגעה לקולנוע",
-                        4: "4. אכזבה וצחוק"
-                    };
-                    
-                    let html = `<p class="text-lg mb-4">סרט הקולנוע נחתך. סדרו את 4 שלבי העלילה לפי הסדר הכרונולוגי. לחצו על שני סלילים כדי להחליף ביניהם.</p>
-                                <div class="flex flex-col gap-3" id="seq-container">`;
-                    
-                    window.puzzleState.seq.forEach((id, index) => {
-                        html += `<div class="item-card text-right" onclick="swapSeq(${index})" id="seq-${index}">${texts[id]}</div>`;
-                    });
-                    html += `</div>`;
-                    container.innerHTML = html;
-                    window.puzzleState.selectedSeq = null;
-                },
-                check: function() {
-                    return window.puzzleState.seq.join("") === "1234";
-                }
+                question: "מדוע, לדעתכם, סבק בחר להמציא סיפור ולא אמר לחבריו את האמת?",
+                options: [
+                    "מפני שהוא פחד שהם יצחקו עליו",
+                    "מתוך גאווה ובושה במצבו הכלכלי ובמחלת אביו",
+                    "כי הוא רצה להוכיח להם שהוא תסריטאי טוב",
+                    "כי הוא שכח את ההסכם איתם"
+                ],
+                correct: 1
             },
             {
-                id: 9,
-                title: "שברי האשליה",
-                mechanic: "לחיצה על אלמנטים גרפיים חבויים לחשיפת מסר",
-                educational: "הבנת המסר והמוטיב המרכזי של הסיפור (ההתנגשות עם המציאות).",
-                solutionText: "חשיפת המילה 'אשליה' מבעד לזכוכית השבורה.",
-                render: function(container) {
-                    window.puzzleState.shards = 0;
-                    container.innerHTML = `
-                        <p class="text-lg mb-6">בסוף הסיפור, התקווה של הילדים נשברת אל מול המציאות האפורה של עולם המבוגרים.<br>לחצו על שברי הזכוכית כדי לנקות אותם ולגלות מה התנפץ. לאחר מכן, הקלידו את המילה המסתתרת.</p>
-                        <div class="relative w-full h-32 bg-slate-900 border-2 border-slate-700 flex items-center justify-center overflow-hidden mb-6">
-                            <span class="text-4xl font-bold text-amber-500 tracking-widest z-0 opacity-50">אשליה</span>
-                            
-                            <!-- Shards (Covering the text) -->
-                            <div class="absolute inset-0 bg-slate-600 transition-opacity duration-300 z-10 cursor-pointer" id="shard-1" style="clip-path: polygon(0 0, 50% 0, 30% 100%, 0 100%);" onclick="hideShard('shard-1')"></div>
-                            <div class="absolute inset-0 bg-slate-500 transition-opacity duration-300 z-10 cursor-pointer" id="shard-2" style="clip-path: polygon(50% 0, 100% 0, 100% 50%, 60% 60%);" onclick="hideShard('shard-2')"></div>
-                            <div class="absolute inset-0 bg-slate-700 transition-opacity duration-300 z-10 cursor-pointer" id="shard-3" style="clip-path: polygon(30% 100%, 60% 60%, 100% 50%, 100% 100%);" onclick="hideShard('shard-3')"></div>
-                        </div>
-                        <input type="text" id="ans-9" placeholder="מה התנפץ?">
-                    `;
-                },
-                check: function() {
-                    const ans = document.getElementById('ans-9').value.trim();
-                    return ans === "אשליה" || ans === "האשליה";
-                }
+                question: "כיצד הגיבו החברים לאחר שגילו את האמת על הכסף?",
+                options: [
+                    "הם כעסו ודרשו את כספם בחזרה",
+                    "הם סירבו לדבר איתו יותר",
+                    "הם סיפרו לכולם בבית הספר על המקרה",
+                    "הם המשיכו לשלם לו והעמידו פנים שהם מאמינים לסיפוריו"
+                ],
+                correct: 3
             },
             {
-                id: 10,
-                title: "לוח היציאה",
-                mechanic: "לחיצה על רצף צבעים/סמלים",
-                educational: "סיכום הקונפליקט – מעבר מעולם חשוך ודמיוני לעולם מואר ומציאותי.",
-                solutionText: "ללחוץ על השמש (האור מסמל את החזרה למציאות בסוף הסיפור).",
-                render: function(container) {
-                    window.puzzleState.doorUnlocked = false;
-                    container.innerHTML = `
-                        <p class="text-lg mb-6 leading-relaxed">הגעתם לדלת האחרונה! הסיפור מסתיים בכך שהילדים יוצאים מהקולנוע החשוך (עולם הדמיון) אל החוץ.<br>
-                        כדי לצאת, לחצו על הסמל המייצג את מה שקיבל את פניהם בחוץ והחזיר אותם למציאות.</p>
-                        <div class="flex justify-center gap-6">
-                            <button class="text-5xl hover:scale-110 transition p-4 bg-slate-800 rounded-full border-2 border-transparent" onclick="selectFinal(this, false)">🌙</button>
-                            <button class="text-5xl hover:scale-110 transition p-4 bg-slate-800 rounded-full border-2 border-transparent" onclick="selectFinal(this, false)">📽️</button>
-                            <button class="text-5xl hover:scale-110 transition p-4 bg-slate-800 rounded-full border-2 border-transparent" onclick="selectFinal(this, true)">☀️</button>
-                        </div>
-                    `;
-                },
-                check: function() {
-                    return window.puzzleState.doorUnlocked === true;
-                }
+                question: "מדוע החברים בחרו להמשיך לשלם לסבק ולהעמיד פנים?",
+                options: [
+                    "כדי לעזור לו לממן את התרופות לאביו מבלי לפגוע בכבודו",
+                    "כי הם באמת אהבו את הסיפורים שלו יותר מהסרטים",
+                    "כי הם פחדו שהוא ירביץ להם אם יפסיקו",
+                    "כי האחות אסתושה הכריחה אותם לעשות זאת"
+                ],
+                correct: 0
             }
         ];
 
-        /* =========================================
-           CORE ENGINE
-           ========================================= */
+        let currentQuestionIndex = 0;
+        let isLocked = false;
 
-        const container = document.getElementById('room-content');
-        const titleEl = document.getElementById('room-title');
-        const feedbackEl = document.getElementById('feedback');
-        const progressEl = document.getElementById('progress-bar');
-        const currentUi = document.getElementById('current-room-ui');
-
-        function loadRoom(index) {
-            if (index >= rooms.length) {
-                showVictory();
-                return;
-            }
-
-            const room = rooms[index];
-            
-            // UI Update
-            titleEl.innerText = room.title;
-            currentUi.innerText = index + 1;
-            progressEl.style.width = `${(index / rooms.length) * 100}%`;
-            feedbackEl.innerText = "";
-            
-            // Animation reset
-            container.classList.remove('fade-in');
-            void container.offsetWidth;
-            container.classList.add('fade-in');
-
-            // Render Task
-            room.render(container);
-        }
-
-        function checkAnswer() {
-            const room = rooms[currentRoom];
-            if (room.check()) {
-                feedbackEl.innerText = "פעולה מוצלחת! המנעול נפתח.";
-                feedbackEl.className = "h-8 font-bold text-xl text-emerald-400";
-                
-                // Block button temporarily
-                const btn = document.getElementById('check-btn');
-                btn.disabled = true;
-                btn.style.opacity = '0.5';
-
-                setTimeout(() => {
-                    currentRoom++;
-                    loadRoom(currentRoom);
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
-                }, 1500);
-            } else {
-                feedbackEl.innerText = "שגיאה. נסו שוב.";
-                feedbackEl.className = "h-8 font-bold text-xl text-red-400";
-                
-                const box = document.getElementById('game-container');
-                box.classList.add('shake');
-                setTimeout(() => box.classList.remove('shake'), 400);
-            }
-        }
-
-        function showVictory() {
-            document.getElementById('game-container').classList.add('hidden-el');
-            document.getElementById('victory-screen').classList.remove('hidden-el');
-        }
-
-        /* =========================================
-           MINI-GAME SPECIFIC FUNCTIONS
-           ========================================= */
-
-        // Room 1 (Flashlight)
-        function moveFlashlight(e) {
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            document.getElementById('spotlight').style.setProperty('--x', x + 'px');
-            document.getElementById('spotlight').style.setProperty('--y', y + 'px');
-        }
-        function moveFlashlightTouch(e) {
-            e.preventDefault();
-            const rect = e.currentTarget.getBoundingClientRect();
-            const x = e.touches[0].clientX - rect.left;
-            const y = e.touches[0].clientY - rect.top;
-            document.getElementById('spotlight').style.setProperty('--x', x + 'px');
-            document.getElementById('spotlight').style.setProperty('--y', y + 'px');
-        }
-
-        // Room 3 (Words sequence)
-        function selectWord(el, word) {
-            el.style.visibility = 'hidden';
-            window.puzzleState.selectedWords.push(word);
-            document.getElementById('sentence-builder').innerText = window.puzzleState.selectedWords.join(" ");
-        }
-        function resetWords() {
-            rooms[2].render(container);
-        }
-
-        // Room 4 (Keys)
-        function selectKey(el, id) {
-            document.querySelectorAll('.item-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            window.puzzleState.selectedKey = id;
-        }
-
-        // Room 6 (Matching)
-        function handleMatchClick(id, type) {
-            const el = document.getElementById(id);
-            if (el.classList.contains('solved')) return;
-
-            // Deselect others of same type
-            document.querySelectorAll(`#col-${type}s .match-btn`).forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-
-            // Store active selection
-            if (type === 'char') window.puzzleState.activeChar = id;
-            if (type === 'role') window.puzzleState.activeRole = id;
-
-            // Check if both selected
-            if (window.puzzleState.activeChar && window.puzzleState.activeRole) {
-                const charId = window.puzzleState.activeChar;
-                const roleId = window.puzzleState.activeRole;
-                
-                // Logic map: c1(סבק)->r1, c2(סדרן)->r2, c3(מנהל)->r3
-                if (charId.charAt(1) === roleId.charAt(1)) {
-                    document.getElementById(charId).classList.replace('active', 'solved');
-                    document.getElementById(roleId).classList.replace('active', 'solved');
-                    window.puzzleState.matches++;
-                } else {
-                    document.getElementById(charId).classList.remove('active');
-                    document.getElementById(roleId).classList.remove('active');
-                    // Shake error
-                    document.getElementById('col-chars').classList.add('shake');
-                    setTimeout(() => document.getElementById('col-chars').classList.remove('shake'), 400);
-                }
-                window.puzzleState.activeChar = null;
-                window.puzzleState.activeRole = null;
-            }
-        }
-
-        // Room 8 (Sequence swap)
-        function swapSeq(index) {
-            if (window.puzzleState.selectedSeq === null) {
-                window.puzzleState.selectedSeq = index;
-                document.getElementById(`seq-${index}`).classList.add('selected');
-            } else {
-                const idx1 = window.puzzleState.selectedSeq;
-                const idx2 = index;
-                
-                // Swap in array
-                let temp = window.puzzleState.seq[idx1];
-                window.puzzleState.seq[idx1] = window.puzzleState.seq[idx2];
-                window.puzzleState.seq[idx2] = temp;
-                
-                // Re-render
-                rooms[7].render(container);
-            }
-        }
-
-        // Room 9 (Shards)
-        function hideShard(id) {
-            document.getElementById(id).style.opacity = '0';
-            document.getElementById(id).style.pointerEvents = 'none';
-        }
-
-        // Room 10 (Final Button)
-        function selectFinal(el, isCorrect) {
-            document.querySelectorAll('#room-content button').forEach(b => b.classList.remove('border-amber-500'));
-            el.classList.add('border-amber-500');
-            window.puzzleState.doorUnlocked = isCorrect;
-        }
-
-
-        /* =========================================
-           TEACHER DASHBOARD
-           ========================================= */
-
-        function openTeacherModal() {
-            document.getElementById('teacher-modal').classList.remove('hidden-el');
-            document.getElementById('teacher-pwd').value = "";
-            document.getElementById('pwd-error').classList.add('hidden-el');
-        }
-
-        function closeTeacherModal() {
-            document.getElementById('teacher-modal').classList.add('hidden-el');
-        }
-
-        function verifyTeacher() {
-            const pwd = document.getElementById('teacher-pwd').value;
-            if (pwd === correctPwd) {
-                closeTeacherModal();
-                openTeacherDashboard();
-            } else {
-                document.getElementById('pwd-error').classList.remove('hidden-el');
-            }
-        }
-
-        function openTeacherDashboard() {
-            document.getElementById('game-container').classList.add('hidden-el');
-            document.getElementById('victory-screen').classList.add('hidden-el');
-            document.getElementById('teacher-dashboard').classList.remove('hidden-el');
-            
-            // Populate table
-            const tbody = document.getElementById('teacher-table-body');
-            tbody.innerHTML = "";
-            rooms.forEach(r => {
-                tbody.innerHTML += `
-                    <tr class="border-b border-slate-700 hover:bg-slate-700 transition">
-                        <td class="p-4 font-bold text-amber-500">${r.id}. ${r.title}</td>
-                        <td class="p-4">${r.mechanic}</td>
-                        <td class="p-4">${r.educational}</td>
-                        <td class="p-4 text-emerald-400 font-bold">${r.solutionText}</td>
-                    </tr>
-                `;
+        function initLadder() {
+            const ladderEl = document.getElementById('ladder');
+            ladderEl.innerHTML = '';
+            prizes.forEach((prize, index) => {
+                const li = document.createElement('li');
+                li.id = `ladder-${index}`;
+                li.className = 'ladder-item px-4 py-1 flex justify-between';
+                li.innerHTML = `<span>${index + 1}</span> <span>${prize}</span>`;
+                ladderEl.appendChild(li);
             });
         }
 
-        function closeTeacherDashboard() {
-            document.getElementById('teacher-dashboard').classList.add('hidden-el');
-            if (currentRoom < rooms.length) {
-                document.getElementById('game-container').classList.remove('hidden-el');
-            } else {
-                document.getElementById('victory-screen').classList.remove('hidden-el');
+        function updateLadder() {
+            prizes.forEach((_, index) => {
+                const li = document.getElementById(`ladder-${index}`);
+                li.classList.remove('active', 'passed');
+                if (index === currentQuestionIndex) {
+                    li.classList.add('active');
+                } else if (index < currentQuestionIndex) {
+                    li.classList.add('passed');
+                }
+            });
+        }
+
+        function startGame() {
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            currentQuestionIndex = 0;
+            initLadder();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isLocked = false;
+            updateLadder();
+            
+            const q = allQuestions[currentQuestionIndex];
+            document.getElementById('question-text').innerText = q.question;
+            
+            // Reset buttons
+            for (let i = 0; i < 4; i++) {
+                const btn = document.querySelectorAll('.answer-btn')[i];
+                btn.className = 'answer-btn millionaire-shape p-4 text-lg md:text-xl font-semibold flex items-center text-right group';
+                document.getElementById(`ans-${i}-text`).innerText = q.options[i];
             }
         }
 
-        // Init
-        window.onload = () => loadRoom(currentRoom);
+        function selectAnswer(selectedIndex) {
+            if (isLocked) return;
+            isLocked = true;
 
+            const buttons = document.querySelectorAll('.answer-btn');
+            const selectedBtn = buttons[selectedIndex];
+            const correctIndex = allQuestions[currentQuestionIndex].correct;
+            
+            // Add 'locked' class to prevent hover effects during animation
+            buttons.forEach(btn => btn.classList.add('locked'));
+
+            // Show selected state (Orange)
+            selectedBtn.classList.add('selected');
+
+            // Suspense timeout
+            setTimeout(() => {
+                selectedBtn.classList.remove('selected');
+                
+                if (selectedIndex === correctIndex) {
+                    // Correct answer
+                    selectedBtn.classList.add('correct');
+                    
+                    setTimeout(() => {
+                        currentQuestionIndex++;
+                        if (currentQuestionIndex < allQuestions.length) {
+                            loadQuestion();
+                        } else {
+                            endGame(true);
+                        }
+                    }, 2500); // Wait for blinking to finish
+
+                } else {
+                    // Wrong answer
+                    selectedBtn.classList.add('wrong');
+                    buttons[correctIndex].classList.add('correct'); // Show correct answer
+                    
+                    setTimeout(() => {
+                        endGame(false);
+                    }, 3000);
+                }
+            }, 2000); // 2 seconds of suspense!
+        }
+
+        function endGame(isWin) {
+            document.getElementById('game-container').classList.add('hidden');
+            const endScreen = document.getElementById('end-screen');
+            const endTitle = document.getElementById('end-title');
+            const endMessage = document.getElementById('end-message');
+            
+            endScreen.classList.remove('hidden');
+            endScreen.classList.add('flex');
+
+            if (isWin) {
+                endTitle.innerText = "כל הכבוד! הפכתם למיליונרים!";
+                endTitle.className = "text-5xl md:text-7xl font-black mb-6 text-yellow-400 drop-shadow-[0_0_20px_rgba(255,215,0,0.8)]";
+                endMessage.innerText = "הצלחתם לענות נכונה על כל השאלות והוכחתם בקיאות מרשימה בסיפור המרגש של סבק וחבריו. אצילות הנפש והחברות שניצחו בסיפור, הובילו גם אתכם לניצחון!";
+            } else {
+                endTitle.innerText = "המשחק נגמר...";
+                endTitle.className = "text-5xl md:text-7xl font-black mb-6 text-red-500 drop-shadow-[0_0_20px_rgba(255,0,0,0.8)]";
+                const prizeWon = currentQuestionIndex > 0 ? prizes[currentQuestionIndex - 1] : "0 ₪";
+                endMessage.innerText = `הגעתם לשלב ה-${currentQuestionIndex + 1}. קחו רגע לחזור לטקסט ולחפש את הרמזים בסיפור "התסריט הראשון של סבק" ונסו שוב.`;
+            }
+        }
+
+        // Initialize game on load
+        startGame();
     </script>
 </body>
 </html>
-
 
