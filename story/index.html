@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חדר הבריחה – התסריט הראשון של סבק</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Heebo:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08060f;
+  --panel:#110d1e;
+  --panel2:#1a1430;
+  --border:#3a2560;
+  --gold:#c8a030;
+  --gold2:#f0cc50;
+  --purple:#8855ee;
+  --purple2:#aa77ff;
+  --red:#cc3333;
+  --green:#22aa55;
+  --text:#ddd0f8;
+  --muted:#6650a0;
+  --dim:#332255;
+}
+body{
+  font-family:'Heebo',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  background-image:
+    radial-gradient(ellipse at 50% -10%,rgba(136,85,238,0.18) 0%,transparent 55%),
+    radial-gradient(ellipse at 10% 80%,rgba(200,160,48,0.06) 0%,transparent 40%);
+}
+
+/* ═══ HEADER ═══ */
+.hdr{
+  text-align:center;
+  padding:2.5rem 1rem 1.8rem;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.hdr::before,.hdr::after{
+  content:'✦ ✦ ✦';
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  color:var(--border);
+  font-size:.75rem;
+  letter-spacing:8px;
+}
+.hdr::before{right:1.5rem}
+.hdr::after{left:1.5rem}
+.hdr-skull{font-size:3rem;display:block;margin-bottom:.6rem;animation:throb 3s ease-in-out infinite}
+@keyframes throb{
+  0%,100%{filter:drop-shadow(0 0 8px var(--gold)) brightness(1)}
+  50%{filter:drop-shadow(0 0 28px var(--gold2)) brightness(1.2)}
+}
+.hdr h1{
+  font-family:'Cinzel',serif;
+  font-size:clamp(1.2rem,3.5vw,2rem);
+  font-weight:900;
+  color:var(--gold);
+  text-shadow:0 0 40px rgba(200,160,48,.4);
+  letter-spacing:.06em;
+  line-height:1.3;
+}
+.hdr-sub{color:var(--muted);font-size:.8rem;margin-top:.5rem;letter-spacing:.15em;text-transform:uppercase}
+
+/* ═══ HUD ═══ */
+.hud{
+  display:flex;align-items:center;gap:1rem;
+  padding:.7rem 1.5rem;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:500;
+  backdrop-filter:blur(10px);
+}
+.hud-keys{display:flex;gap:.35rem;flex:1}
+.key{
+  width:30px;height:30px;
+  border:2px solid var(--border);
+  border-radius:4px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;
+  transition:all .5s;
+  background:rgba(0,0,0,.4);
+  color:var(--muted);
+}
+.key.found{
+  border-color:var(--gold);
+  background:rgba(200,160,48,.15);
+  box-shadow:0 0 12px rgba(200,160,48,.3);
+  color:var(--gold2);
+  animation:keyPop .4s ease;
+}
+@keyframes keyPop{0%{transform:scale(1.5)}100%{transform:scale(1)}}
+.hud-score{
+  font-family:'Cinzel',serif;
+  color:var(--gold);
+  font-size:.95rem;
+  font-weight:700;
+  text-shadow:0 0 10px rgba(200,160,48,.4);
+  white-space:nowrap;
+}
+
+/* ═══ MAIN LAYOUT ═══ */
+main{max-width:700px;margin:0 auto;padding:2rem 1rem 5rem}
+
+/* ═══ INTRO SCROLL ═══ */
+.scroll{
+  background:linear-gradient(135deg,#16102a,#1e1635,#16102a);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:2rem;
+  margin-bottom:2rem;
+  position:relative;
+  box-shadow:0 0 50px rgba(0,0,0,.8),inset 0 0 80px rgba(0,0,0,.4);
+}
+.scroll::before{
+  content:'';
+  position:absolute;inset:5px;
+  border:1px solid rgba(58,37,96,.4);
+  border-radius:4px;
+  pointer-events:none;
+}
+.scroll-label{
+  font-family:'Cinzel',serif;
+  font-size:.75rem;
+  color:var(--muted);
+  letter-spacing:.2em;
+  text-align:center;
+  text-transform:uppercase;
+  margin-bottom:1.2rem;
+}
+.scroll p{line-height:1.9;font-size:.95rem;color:#c0b0e0;margin-bottom:.8rem}
+.scroll blockquote{
+  border-right:3px solid var(--purple);
+  padding-right:1rem;
+  font-style:italic;
+  color:var(--muted);
+  margin:1rem 0;
+  font-size:.9rem;
+  line-height:1.8;
+}
+
+/* ═══ ROOM CARDS ═══ */
+.room{
+  margin-bottom:1.5rem;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--panel);
+  overflow:hidden;
+  position:relative;
+  transition:border-color .4s,box-shadow .4s,opacity .4s,filter .4s;
+}
+.room.active{
+  border-color:var(--purple);
+  box-shadow:0 0 30px rgba(136,85,238,.15),inset 0 0 30px rgba(0,0,0,.3);
+}
+.room.locked{
+  opacity:.3;
+  pointer-events:none;
+  filter:grayscale(.9) blur(.5px);
+}
+.room.solved{
+  border-color:var(--green);
+  opacity:.65;
+}
+
+/* corner decoration */
+.room::before,.room::after{
+  content:'◈';
+  position:absolute;
+  font-size:.5rem;
+  color:var(--border);
+}
+.room::before{top:6px;right:6px}
+.room::after{bottom:6px;left:6px}
+
+.room-hdr{
+  display:flex;align-items:center;gap:.9rem;
+  padding:.9rem 1.3rem;
+  background:rgba(0,0,0,.5);
+  border-bottom:1px solid var(--border);
+}
+.room-n{
+  font-family:'Cinzel',serif;
+  font-size:.65rem;
+  color:var(--muted);
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.room-title{font-family:'Cinzel',serif;font-size:.95rem;color:var(--gold);flex:1;line-height:1.3}
+.badge{font-size:.65rem;font-weight:700;padding:.18rem .6rem;border-radius:3px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.b-mc{background:rgba(204,51,51,.25);color:#ff8888;border:1px solid var(--red)}
+.b-write{background:rgba(34,170,85,.2);color:#88ffaa;border:1px solid var(--green)}
+.b-sort{background:rgba(30,80,180,.25);color:#88bbff;border:1px solid #1e50b4}
+.b-match{background:rgba(136,85,238,.25);color:#cc99ff;border:1px solid var(--purple)}
+.room-icon{font-size:1.2rem}
+
+.room-body{padding:1.3rem 1.5rem}
+.room-desc{font-size:.93rem;color:#aa99cc;line-height:1.8;margin-bottom:1.2rem}
+
+/* ═══ MULTIPLE CHOICE ═══ */
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.8rem}
+@media(max-width:480px){.opts{grid-template-columns:1fr}}
+.opt{
+  background:rgba(0,0,0,.4);
+  border:1px solid var(--border);
+  border-radius:5px;
+  padding:.8rem 1rem;
+  cursor:pointer;
+  font-family:'Heebo',sans-serif;
+  font-size:.9rem;
+  color:var(--text);
+  text-align:right;
+  line-height:1.5;
+  transition:all .2s;
+  width:100%;
+}
+.opt:hover:not(:disabled){border-color:var(--purple2);background:rgba(136,85,238,.12);transform:translateY(-1px)}
+.opt:focus{outline:2px solid var(--purple2);outline-offset:2px}
+.opt.correct{background:rgba(34,170,85,.2)!important;border-color:var(--green)!important;color:#88ffaa!important}
+.opt.wrong{background:rgba(204,51,51,.2)!important;border-color:var(--red)!important;color:#ff9999!important}
+.opt:disabled{cursor:default;transform:none!important}
+
+/* ═══ DRAG & DROP SORT ═══ */
+.drag-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.8rem}
+.drag-item{
+  background:rgba(0,0,0,.4);
+  border:1px solid var(--border);
+  border-radius:5px;
+  padding:.75rem 1rem;
+  cursor:grab;
+  display:flex;align-items:center;gap:.8rem;
+  font-size:.9rem;
+  line-height:1.4;
+  transition:border-color .2s,background .2s;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.drag-item:active{cursor:grabbing}
+.drag-item.drag-over{border-color:var(--purple2);background:rgba(136,85,238,.15)}
+.drag-item.dragging{opacity:.3;border-style:dashed}
+.drag-handle{color:var(--muted);font-size:1rem;flex-shrink:0;cursor:grab}
+.drag-pos{
+  background:var(--panel2);
+  border:1px solid var(--border);
+  color:var(--gold);
+  font-family:'Cinzel',serif;
+  font-size:.75rem;
+  width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:3px;
+  flex-shrink:0;
+}
+
+/* touch sort buttons */
+.sort-arrows{display:none;gap:.3rem;margin-right:auto;flex-shrink:0}
+@media(max-width:600px){.sort-arrows{display:flex}}
+.arrow-btn{
+  background:var(--panel2);
+  border:1px solid var(--border);
+  color:var(--gold);
+  width:28px;height:28px;
+  border-radius:3px;
+  cursor:pointer;
+  font-size:.9rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s;
+  flex-shrink:0;
+}
+.arrow-btn:hover{background:rgba(136,85,238,.2)}
+
+/* ═══ MATCH ═══ */
+.match-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:.8rem}
+@media(max-width:460px){.match-wrap{grid-template-columns:1fr}}
+.match-col h4{font-size:.72rem;color:var(--muted);margin-bottom:.5rem;letter-spacing:.1em;text-transform:uppercase}
+.match-item{
+  background:rgba(0,0,0,.4);
+  border:1px solid var(--border);
+  border-radius:5px;
+  padding:.6rem .85rem;
+  margin-bottom:.4rem;
+  font-size:.88rem;
+  cursor:pointer;
+  line-height:1.4;
+  transition:all .2s;
+  width:100%;
+  text-align:right;
+}
+.match-item:hover:not(.done){border-color:var(--purple2);background:rgba(136,85,238,.1)}
+.match-item:focus{outline:2px solid var(--purple2);outline-offset:2px}
+.match-item.selected{border-color:var(--gold);background:rgba(200,160,48,.12);color:var(--gold2)}
+.match-item.ok{border-color:var(--green)!important;background:rgba(34,170,85,.15)!important;color:#88ffaa!important;cursor:default}
+.match-item.bad{border-color:var(--red);background:rgba(204,51,51,.15);color:#ff9999}
+.match-item.done{cursor:default}
+
+/* ═══ TEXTAREA ═══ */
+.write-wrap{position:relative}
+textarea{
+  width:100%;
+  background:rgba(0,0,0,.5);
+  border:1px solid var(--border);
+  border-radius:5px;
+  padding:.9rem 1rem;
+  font-family:'Heebo',sans-serif;
+  font-size:.92rem;
+  color:var(--text);
+  line-height:1.8;
+  resize:vertical;
+  min-height:120px;
+  direction:rtl;
+  transition:border-color .2s;
+}
+textarea:focus{outline:none;border-color:var(--purple)}
+textarea:disabled{opacity:.6;cursor:default}
+.char-c{font-size:.75rem;color:var(--muted);text-align:left;margin-top:.3rem}
+.char-c.good{color:var(--green)}
+
+/* ═══ BUTTONS ═══ */
+.btn{
+  background:transparent;
+  border:1px solid var(--purple);
+  border-radius:5px;
+  padding:.6rem 1.5rem;
+  font-family:'Heebo',sans-serif;
+  font-weight:700;
+  font-size:.9rem;
+  color:var(--purple2);
+  cursor:pointer;
+  transition:all .2s;
+  margin-top:.7rem;
+  letter-spacing:.05em;
+}
+.btn:hover:not(:disabled){
+  background:rgba(136,85,238,.15);
+  border-color:var(--purple2);
+  box-shadow:0 0 15px rgba(136,85,238,.2);
+  transform:translateY(-1px);
+}
+.btn:focus{outline:2px solid var(--purple2);outline-offset:2px}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.btn-gold{border-color:var(--gold);color:var(--gold2)}
+.btn-gold:hover:not(:disabled){background:rgba(200,160,48,.1);border-color:var(--gold2);box-shadow:0 0 15px rgba(200,160,48,.2)}
+
+/* ═══ FEEDBACK ═══ */
+.fb{
+  display:none;
+  margin-top:.8rem;
+  padding:.85rem 1rem;
+  border-radius:5px;
+  font-size:.9rem;
+  line-height:1.7;
+  border-right:3px solid;
+}
+.fb.show{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.fb-ok{background:rgba(34,170,85,.12);border-color:var(--green);color:#aaffcc}
+.fb-bad{background:rgba(204,51,51,.12);border-color:var(--red);color:#ffaaaa}
+.fb-info{background:rgba(136,85,238,.12);border-color:var(--purple);color:#ccaaff}
+
+/* ═══ SOLVED STAMP ═══ */
+.stamp{
+  display:none;
+  text-align:center;
+  padding:.6rem;
+  font-family:'Cinzel',serif;
+  font-size:.75rem;
+  color:var(--green);
+  letter-spacing:.2em;
+  border-top:1px solid rgba(34,170,85,.3);
+  background:rgba(34,170,85,.05);
+}
+.stamp.show{display:block}
+
+/* ═══ COMPLETION ═══ */
+.victory{
+  display:none;
+  text-align:center;
+  padding:3rem 2rem;
+  background:linear-gradient(135deg,var(--panel),#1e1440);
+  border:1px solid var(--gold);
+  border-radius:8px;
+  margin-top:2rem;
+  box-shadow:0 0 60px rgba(200,160,48,.15);
+}
+.victory.show{display:block;animation:victoryIn .6s ease}
+@keyframes victoryIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.victory h2{font-family:'Cinzel',serif;font-size:1.8rem;color:var(--gold);margin-bottom:.5rem;text-shadow:0 0 30px rgba(200,160,48,.5)}
+.v-score{font-family:'Cinzel',serif;font-size:3rem;color:var(--gold2);margin:1rem 0;text-shadow:0 0 20px rgba(240,200,80,.4)}
+.victory p{color:var(--muted);font-size:.97rem;line-height:1.8}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <span class="hdr-skull">🔮</span>
+  <h1>חדר הבריחה<br>התסריט הראשון של סבק</h1>
+  <p class="hdr-sub">בנימין טנא · מטלה ספרותית</p>
+</header>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="hud-keys" id="keys">
+    <div class="key" id="k1" title="חידה 1">🗝</div>
+    <div class="key" id="k2" title="חידה 2">🗝</div>
+    <div class="key" id="k3" title="חידה 3">🗝</div>
+    <div class="key" id="k4" title="חידה 4">🗝</div>
+    <div class="key" id="k5" title="חידה 5">🗝</div>
+    <div class="key" id="k6" title="חידה 6">🗝</div>
+    <div class="key" id="k7" title="חידה 7">🗝</div>
+  </div>
+  <div class="hud-score" id="scoreEl">0 נקודות</div>
+</div>
+
+<main>
+
+<!-- INTRO -->
+<div class="scroll">
+  <div class="scroll-label">✦ הוראות החדר ✦</div>
+  <p>ברוכים הבאים לחדר הבריחה הספרותי. כדי לצאת עליכם לפתור 7 חידות על הסיפור <strong>"התסריט הראשון של סבק"</strong> מאת בנימין טנא.</p>
+  <p>כל חידה שנפתחת מעניקה לכם מפתח 🗝. אספו את כל 7 המפתחות כדי לפרוץ החוצה!</p>
+  <blockquote>
+    "...קדא הכריז: אני מציע שסבק ייפטר מן התור וההגרלה, מאחר שהוא הבוגר שבינינו... ואין ספק שידע למסור לנו טוב יותר מכולנו את תוכן הסרט..."
+  </blockquote>
+</div>
+
+<!-- ══════════════════════════════════
+     חידה 1 – בחירה מרובה
+═══════════════════════════════════ -->
+<div class="room active" id="room1">
+  <div class="room-hdr">
+    <span class="room-n">חידה 01</span>
+    <span class="room-title">מי הוא סבק?</span>
+    <span class="badge b-mc">בחירה מרובה</span>
+    <span class="room-icon">🎬</span>
+  </div>
+  <div class="room-body">
+    <p class="room-desc">החיה מאחורי הדלנו נעולה. כדי לפתוח אותה – ענו: מה מייחד את סבק מכל חברי הכנופייה?</p>
+    <div class="opts" id="opts1">
+      <button class="opt" onclick="checkMC(1,'a')">הוא היה הכי חזק פיזית בחבורה</button>
+      <button class="opt" onclick="checkMC(1,'b')">הוא ידע לספר סיפורים ואהב קולנוע</button>
+      <button class="opt" onclick="checkMC(1,'c')">הוא היה בן של בעל הקולנוע</button>
+      <button class="opt" onclick="checkMC(1,'d')">הוא הביא כסף לקנות כרטיסים לחברים</button>
+    </div>
+    <div class="fb" id="fb1"></div>
+  </div>
+  <div class="stamp" id="stamp1">✦ מפתח 1 נאסף ✦</div>
+</div>
+
+<!-- ══════════════════════════════════
+     חידה 2 – בחירה מרובה
+═══════════════════════════════════ -->
+<div class="room locked" id="room2">
+  <div class="room-hdr">
+    <span class="room-n">חידה 02</span>
+    <span class="room-title">ההסכם הסודי</span>
+    <span class="badge b-mc">בחירה מרובה</span>
+    <span class="room-icon">🤝</span>
+  </div>
+  <div class="room-body">
+    <p class="room-desc">החבורה שילמה לסבק עשרים גרוש בכל שבת ושישי – ובתמורה הוא סיפר להם את הסרטים. מה חשף את המרמה?</p>
+    <div class="opts" id="opts2">
+      <button class="opt" onclick="checkMC(2,'a')">סבק סיפר להם אותו סיפור פעמיים</button>
+      <button class="opt" onclick="checkMC(2,'b')">קמיש ראה את סבק יוצא מביתו לפני שהסרטים הסתיימו</button>
+      <button class="opt" onclick="checkMC(2,'c')">סבק ביקש פתאום יותר כסף</button>
+      <button class="opt" onclick="checkMC(2,'d')">סבק בלבל פרטים בסיפור</button>
+    </div>
+    <div class="fb" id="fb2"></div>
+  </div>
+  <div class="stamp" id="stamp2">✦ מפתח 2 נאסף ✦</div>
+</div>
+
+<!-- ══════════════════════════════════
+     חידה 3 – סדר גרירה
+═══════════════════════════════════ -->
+<div class="room locked" id="room3">
+  <div class="room-hdr">
+    <span class="room-n">חידה 03</span>
+    <span class="room-title">ציר הזמן הנסתר</span>
+    <span class="badge b-sort">סדר אירועים</span>
+    <span class="room-icon">⏳</span>
+  </div>
+  <div class="room-body">
+    <p class="room-desc">האירועים התערבבו! גררו אותם לסדר הכרונולוגי הנכון בסיפור. במובייל השתמשו בחצים ⬆⬇.</p>
+    <div class="drag-list" id="dragList"></div>
+    <button class="btn btn-gold" id="sortBtn" onclick="checkSort()">🔓 בדוק סדר</button>
+    <div class="fb" id="fb3"></div>
+  </div>
+  <div class="stamp" id="stamp3">✦ מפתח 3 נאסף ✦</div>
+</div>
+
+<!-- ══════════════════════════════════
+     חידה 4 – ניתוח דמות
+═══════════════════════════════════ -->
+<div class="room locked" id="room4">
+  <div class="room-hdr">
+    <span class="room-n">חידה 04</span>
+    <span class="room-title">הקוד הסודי של סבק</span>
+    <span class="badge b-write">כתיבה</span>
+    <span class="room-icon">✍️</span>
+  </div>
+  <div class="room-body">
+    <p class="room-desc">כדי לפצח את הקוד, עליכם לנתח את הדמות: סבק מוכשר וכריזמטי – אך מרמה את חבריו.<br>כתבו 3–4 משפטים: <strong>מה אתם חושבים עליו? האם תסלחו לו?</strong></p>
+    <div class="write-wrap">
+      <textarea id="ta4" placeholder="כתבו כאן את ניתוח הדמות..." oninput="onWrite(4)"></textarea>
+      <div class="char-c" id="cc4">0 / 50 תווים מינימום</div>
+    </div>
+    <button class="btn btn-gold" id="btn4" onclick="submitWrite(4)">🔓 שלח תשובה</button>
+    <div class="fb" id="fb4"></div>
+  </div>
+  <div class="stamp" id="stamp4">✦ מפתח 4 נאסף ✦</div>
+</div>
+
+<!-- ══════════════════════════════════
+     חידה 5 – שיוך דמויות
+═══════════════════════════════════ -->
+<div class="room locked" id="room5">
+  <div class="room-hdr">
+    <span class="room-n">חידה 05</span>
+    <span class="room-title">ארבעת הפנים</span>
+    <span class="badge b-match">שיוך</span>
+    <span class="room-icon">🃏</span>
+  </div>
+  <div class="room-body">
+    <p class="room-desc">לחצו על דמות ואז על התכונה המתאימה לה. השתמשו בכפתור "בדוק זוג" אחרי כל בחירה.</p>
+    <div class="match-wrap">
+      <div class="match-col">
+        <h4>🧑 דמויות</h4>
+        <button class="match-item" id="ml-sabek" onclick="pickLeft('sabek')">סבק</button>
+        <button class="match-item" id="ml-kamish" onclick="pickLeft('kamish')">קמיש</button>
+        <button class="match-item" id="ml-narrator" onclick="pickLeft('narrator')">המספר (הכותב)</button>
+        <button class="match-item" id="ml-estusa" onclick="pickLeft('estusa')">אסתוסה</button>
+      </div>
+      <div class="match-col">
+        <h4>💡 תכונה</h4>
+        <button class="match-item" id="mr-creative" onclick="pickRight('creative')">יצירתי, מספר סיפורים מוכשר</button>
+        <button class="match-item" id="mr-sharp" onclick="pickRight('sharp')">חד-עין וחשדן</button>
+        <button class="match-item" id="mr-observer" onclick="pickRight('observer')">משקיף, זוכר הכול</button>
+        <button class="match-item" id="mr-loyal" onclick="pickRight('loyal')">מצדיקה את אחיה בדמעות</button>
+      </div>
+    </div>
+    <button class="btn btn-gold" id="matchBtn" onclick="checkMatchPair()">🔓 בדוק זוג</button>
+    <div class="fb" id="fb5"></div>
+  </div>
+  <div class="stamp" id="stamp5">✦ מפתח 5 נאסף ✦</div>
+</div>
+
+<!-- ══════════════════════════════════
+     חידה 6 – נושא מרכזי
+═══════════════════════════════════ -->
+<div class="room locked" id="room6">
+  <div class="room-hdr">
+    <span class="room-n">חידה 06</span>
+    <span class="room-title">הצופן הסופי</span>
+    <span class="badge b-mc">בחירה מרובה</span>
+    <span class="room-icon">🔑</span>
+  </div>
+  <div class="room-body">
+    <p class="room-desc">הדלת האחרונה נפתחת רק עם הנושא הנכון. מה הנושא המרכזי של הסיפור?</p>
+    <div class="opts" id="opts6">
+      <button class="opt" onclick="checkMC(6,'a')">הקולנוע ותרבות הפנאי בפולין</button>
+      <button class="opt" onclick="checkMC(6,'b')">חלום, עוני, אמון ובגידה בילדות</button>
+      <button class="opt" onclick="checkMC(6,'c')">היחסים בין אחים בחבורת ילדים</button>
+      <button class="opt" onclick="checkMC(6,'d')">גבורה והקרבה עצמית</button>
+    </div>
+    <div class="fb" id="fb6"></div>
+  </div>
+  <div class="stamp" id="stamp6">✦ מפתח 6 נאסף ✦</div>
+</div>
+
+<!-- ══════════════════════════════════
+     חידה 7 – כתיבה יוצרת
+═══════════════════════════════════ -->
+<div class="room locked" id="room7">
+  <div class="room-hdr">
+    <span class="room-n">חידה 07</span>
+    <span class="room-title">התסריט השני של סבק</span>
+    <span class="badge b-write">כתיבה יוצרת</span>
+    <span class="room-icon">🎭</span>
+  </div>
+  <div class="room-body">
+    <p class="room-desc">כדי לצאת מהחדר – כתבו המשך לסיפור:<br><strong>מה קרה לסבק אחרי שגדל? האם הגשים את חלומו?</strong><br>כתבו לפחות 4–6 משפטים.</p>
+    <div class="write-wrap">
+      <textarea id="ta7" placeholder="לדוגמה: 'שנים רבות לאחר מכן, סבק...'" oninput="onWrite(7)" style="min-height:140px"></textarea>
+      <div class="char-c" id="cc7">0 / 80 תווים מינימום</div>
+    </div>
+    <button class="btn btn-gold" id="btn7" onclick="submitWrite(7)">🚪 צאו מהחדר!</button>
+    <div class="fb" id="fb7"></div>
+  </div>
+  <div class="stamp" id="stamp7">✦ מפתח 7 נאסף – יציאה! ✦</div>
+</div>
+
+<!-- VICTORY -->
+<div class="victory" id="victory">
+  <div style="font-size:3.5rem;margin-bottom:.8rem">🏆</div>
+  <h2>בריחה מוצלחת!</h2>
+  <div class="v-score" id="vScore"></div>
+  <p>אספתם את כל 7 המפתחות!<br>הוכחתם שאתם קוראים ספרותיים אמיתיים – בדיוק כמו סבק שחלם לספר סיפורים.</p>
+</div>
+
+</main>
+
+<script>
+// ═══════════════════════════════
+// STATE
+// ═══════════════════════════════
+var score = 0;
+var solved = 0;
+var TOTAL = 7;
+var POINTS = {mc:10, sort:15, write:10, match:15};
+
+var taskOrder = ['room1','room2','room3','room4','room5','room6','room7'];
+
+// ═══════════════════════════════
+// SCORE UI
+// ═══════════════════════════════
+function addScore(pts){
+  score += pts;
+  document.getElementById('scoreEl').textContent = score + ' נקודות';
+}
+
+function collectKey(n){
+  var k = document.getElementById('k'+n);
+  k.classList.add('found');
+  k.textContent = '✦';
+}
+
+function markSolved(roomNum){
+  solved++;
+  collectKey(roomNum);
+  var room = document.getElementById('room'+roomNum);
+  room.classList.remove('active');
+  room.classList.add('solved');
+  document.getElementById('stamp'+roomNum).classList.add('show');
+
+  // unlock next
+  var idx = taskOrder.indexOf('room'+roomNum);
+  if(idx < taskOrder.length-1){
+    setTimeout(function(){
+      unlockRoom(idx+1);
+    }, 700);
+  }
+  if(solved >= TOTAL){
+    setTimeout(showVictory, 1200);
+  }
+}
+
+function unlockRoom(idx){
+  var el = document.getElementById(taskOrder[idx]);
+  el.classList.remove('locked');
+  el.classList.add('active');
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function showVictory(){
+  var v = document.getElementById('victory');
+  document.getElementById('vScore').textContent = score + ' נקודות 🗝';
+  v.classList.add('show');
+  v.scrollIntoView({behavior:'smooth'});
+}
+
+// ═══════════════════════════════
+// MULTIPLE CHOICE
+// ═══════════════════════════════
+var mcCorrect = {1:'b', 2:'b', 6:'b'};
+var mcMsg = {
+  1:{
+    b:'✦ נכון! סבק היה הסיפורן המוכשר של הכנופייה ואהב קולנוע – לכן בחרו בו.',
+    x:'✗ לא בדיוק. חשבו מה ייחד את סבק מהשאר בכנופייה...'
+  },
+  2:{
+    b:'✦ נכון! קמיש ראה בטעות שסבק יוצא מביתו לפני שהסרטים הסתיימו – וזה חשף הכל.',
+    x:'✗ לא בדיוק. שימו לב לפרט הקטן שקמיש גילה מחלון ביתו...'
+  },
+  6:{
+    b:'✦ נכון! הסיפור עוסק בחלום ילד עני, בקושי "להשיג", ובאמון שנשבר בתוך חבורת חברים.',
+    x:'✗ לא בדיוק. חשבו: מה דחף את סבק לרמות? מה הרקע?'
+  }
+};
+
+function checkMC(roomNum, ans){
+  var correct = mcCorrect[roomNum];
+  var btns = document.querySelectorAll('#opts'+roomNum+' .opt');
+  btns.forEach(function(b){ b.disabled = true; });
+  var letters = ['a','b','c','d'];
+  var ansIdx = letters.indexOf(ans);
+  var corIdx = letters.indexOf(correct);
+  btns[ansIdx].classList.add(ans===correct ? 'correct' : 'wrong');
+  if(ans !== correct) btns[corIdx].classList.add('correct');
+
+  var isOk = ans === correct;
+  var msgs = mcMsg[roomNum];
+  showFb(roomNum, isOk ? msgs[correct] : msgs['x'], isOk ? 'ok' : 'bad');
+
+  if(isOk){
+    addScore(POINTS.mc);
+    markSolved(roomNum);
+  }
+}
+
+// ═══════════════════════════════
+// SORT / DRAG & DROP
+// ═══════════════════════════════
+var sortData = [
+  {id:'s0', text:'הילדים מחליטים לבחור סיפורן שיספר את הסרטים תמורת תשלום', pos:0},
+  {id:'s1', text:'קדא מציע לפטור את סבק מההגרלה בגלל ניסיונו', pos:1},
+  {id:'s2', text:'סבק מקבל עשרים גרוש ויושב תחת עץ האגוז לספר', pos:2},
+  {id:'s3', text:'קמיש רואה את סבק יוצא מביתו לפני סיום ההצגות', pos:3},
+  {id:'s4', text:'החברים מגלים שסבק לא ביקר בקולנוע', pos:4},
+  {id:'s5', text:'אסתוסה אחותו של סבק בוכה ומצדיקה אותו', pos:5},
+  {id:'s6', text:'סבק משתף את חבריו בתסריט הראשון שלו', pos:6},
+];
+
+var shuffled = sortData.slice().sort(function(){ return Math.random()-.5; });
+var dragSrcEl = null;
+var sortLocked = false;
+
+function buildSort(){
+  var list = document.getElementById('dragList');
+  list.innerHTML = '';
+  shuffled.forEach(function(item, i){
+    var div = document.createElement('div');
+    div.className = 'drag-item';
+    div.setAttribute('draggable','true');
+    div.setAttribute('data-id', item.id);
+    div.innerHTML =
+      '<span class="drag-handle">⠿</span>' +
+      '<span class="drag-pos">'+(i+1)+'</span>' +
+      '<span style="flex:1">'+item.text+'</span>' +
+      '<span class="sort-arrows">'+
+        '<button class="arrow-btn" onclick="moveItem(this,\'up\')" title="העלה">▲</button>'+
+        '<button class="arrow-btn" onclick="moveItem(this,\'down\')" title="הורד">▼</button>'+
+      '</span>';
+
+    // drag events
+    div.addEventListener('dragstart', function(e){
+      if(sortLocked) return;
+      dragSrcEl = div;
+      setTimeout(function(){ div.classList.add('dragging'); }, 0);
+    });
+    div.addEventListener('dragend', function(){
+      div.classList.remove('dragging');
+      dragSrcEl = null;
+      updatePositions();
+    });
+    div.addEventListener('dragover', function(e){
+      e.preventDefault();
+      if(!dragSrcEl || dragSrcEl === div) return;
+      div.classList.add('drag-over');
+      var list2 = document.getElementById('dragList');
+      var items = Array.from(list2.querySelectorAll('.drag-item'));
+      var srcIdx = items.indexOf(dragSrcEl);
+      var tgtIdx = items.indexOf(div);
+      if(srcIdx < tgtIdx) list2.insertBefore(dragSrcEl, div.nextSibling);
+      else list2.insertBefore(dragSrcEl, div);
+    });
+    div.addEventListener('dragleave', function(){
+      div.classList.remove('drag-over');
+    });
+    div.addEventListener('drop', function(e){
+      e.preventDefault();
+      div.classList.remove('drag-over');
+    });
+
+    list.appendChild(div);
+  });
+}
+
+function moveItem(btn, dir){
+  var item = btn.closest('.drag-item');
+  var list = document.getElementById('dragList');
+  if(dir === 'up' && item.previousElementSibling){
+    list.insertBefore(item, item.previousElementSibling);
+  } else if(dir === 'down' && item.nextElementSibling){
+    list.insertBefore(item.nextElementSibling, item);
+  }
+  updatePositions();
+}
+
+function updatePositions(){
+  var items = document.querySelectorAll('#dragList .drag-item .drag-pos');
+  items.forEach(function(el, i){ el.textContent = i+1; });
+}
+
+function checkSort(){
+  if(sortLocked) return;
+  var items = Array.from(document.querySelectorAll('#dragList .drag-item'));
+  var ids = items.map(function(el){ return el.getAttribute('data-id'); });
+  var correct = 0;
+  ids.forEach(function(id, idx){
+    var item = sortData.find(function(s){ return s.id === id; });
+    if(item && item.pos === idx) correct++;
+  });
+
+  if(correct === sortData.length){
+    showFb(3,'✦ מושלם! כל האירועים בסדר הנכון!','ok');
+    addScore(POINTS.sort);
+    sortLocked = true;
+    document.getElementById('sortBtn').disabled = true;
+    markSolved(3);
+  } else if(correct >= 5){
+    showFb(3,'◈ '+correct+' מתוך 7 נכונים – כמעט! נסו שוב.','info');
+  } else {
+    showFb(3,'✗ '+correct+' מתוך 7 נכונים. חשבו: מה קרה קודם – ההסכם, החשד, הגילוי, הבכי?','bad');
+  }
+}
+
+// ═══════════════════════════════
+// WRITING
+// ═══════════════════════════════
+var writeMin = {4:50, 7:80};
+
+function onWrite(n){
+  var ta = document.getElementById('ta'+n);
+  var len = ta.value.length;
+  var min = writeMin[n];
+  var cc = document.getElementById('cc'+n);
+  cc.textContent = len + ' / ' + min + ' תווים מינימום';
+  cc.className = 'char-c' + (len >= min ? ' good' : '');
+}
+
+function submitWrite(n){
+  var ta = document.getElementById('ta'+n);
+  var val = ta.value.trim();
+  var min = writeMin[n];
+  if(val.length < min){
+    showFb(n,'✗ כתבו לפחות ' + min + ' תווים כדי לשלוח.','bad');
+    return;
+  }
+  ta.disabled = true;
+  document.getElementById('btn'+n).disabled = true;
+  var msgs = {
+    4:'✦ מעולה! ניתוח דמות טוב רואה כמה זוויות – בדיוק כמו שעשיתם.',
+    7:'✦ יצירתי! כתבתם כמו סופרים אמיתיים. הדלת נפתחת!'
+  };
+  showFb(n, msgs[n], 'ok');
+  addScore(POINTS.write);
+  markSolved(n);
+}
+
+// ═══════════════════════════════
+// MATCH
+// ═══════════════════════════════
+var matchSolution = {sabek:'creative', kamish:'sharp', narrator:'observer', estusa:'loyal'};
+var matchDone = {};
+var matchCount = 0;
+var selLeft = null;
+var selRight = null;
+
+function pickLeft(id){
+  if(matchDone[id]) return;
+  // deselect prev
+  if(selLeft){
+    var prev = document.getElementById('ml-'+selLeft);
+    if(prev) prev.classList.remove('selected');
+  }
+  selLeft = id;
+  document.getElementById('ml-'+id).classList.add('selected');
+}
+
+function pickRight(id){
+  if(matchDone[id]) return;
+  if(selRight){
+    var prev = document.getElementById('mr-'+selRight);
+    if(prev) prev.classList.remove('selected');
+  }
+  selRight = id;
+  document.getElementById('mr-'+id).classList.add('selected');
+}
+
+function checkMatchPair(){
+  var fb = document.getElementById('fb5');
+  if(!selLeft || !selRight){
+    showFb(5,'✗ בחרו דמות ואז תכונה לפני הבדיקה.','bad');
+    return;
+  }
+  var isOk = matchSolution[selLeft] === selRight;
+  var lEl = document.getElementById('ml-'+selLeft);
+  var rEl = document.getElementById('mr-'+selRight);
+  lEl.classList.remove('selected');
+  rEl.classList.remove('selected');
+
+  if(isOk){
+    lEl.classList.add('ok','done');
+    rEl.classList.add('ok','done');
+    lEl.onclick = null; rEl.onclick = null;
+    matchDone[selLeft] = true;
+    matchDone[selRight] = true;
+    matchCount++;
+    if(matchCount === 4){
+      showFb(5,'✦ מושלם! כל הדמויות שויכו נכון!','ok');
+      addScore(POINTS.match);
+      document.getElementById('matchBtn').disabled = true;
+      markSolved(5);
+    } else {
+      showFb(5,'✦ נכון! המשיכו – בחרו זוג נוסף.','ok');
+    }
+  } else {
+    lEl.classList.add('bad');
+    rEl.classList.add('bad');
+    setTimeout(function(){
+      lEl.classList.remove('bad');
+      rEl.classList.remove('bad');
+    }, 700);
+    showFb(5,'✗ לא בדיוק. חשבו מה כל דמות עושה בסיפור.','bad');
+  }
+  selLeft = null;
+  selRight = null;
+}
+
+// ═══════════════════════════════
+// FEEDBACK HELPER
+// ═══════════════════════════════
+function showFb(roomNum, msg, type){
+  var el = document.getElementById('fb'+roomNum);
+  el.textContent = msg;
+  el.className = 'fb show fb-'+type;
+}
+
+// ═══════════════════════════════
+// INIT
+// ═══════════════════════════════
+buildSort();
+</script>
+</body>
+</html>
