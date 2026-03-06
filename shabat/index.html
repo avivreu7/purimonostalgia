@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>שבת שלום - אביב, דורין ונרי</title>
+    <!-- פונטים יוקרתיים מבית גוגל -->
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600&family=Cormorant+Garamond:wght@600;700&family=Heebo:wght@800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gold-gradient: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
+            --glass-bg: rgba(10, 10, 10, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Assistant', sans-serif;
+            color: #fff;
+        }
+
+        /* --- Scene Containers --- */
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        /* Background Images */
+        .bg-image {
+            position: absolute;
+            top: -5%;
+            left: -5%;
+            width: 110%;
+            height: 110%;
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+            transition: transform 0.1s ease-out; /* For parallax */
+        }
+
+        /* --- Scene 1: The Lion (War & Roar) --- */
+        #scene-lion {
+            z-index: 2;
+        }
+        
+        .lion-bg {
+            /* תמונת אריה עוצמתית ומדויקת מ-Unsplash */
+            background-image: url('https://images.unsplash.com/photo-1546182990-dffeafbe841d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2059&q=80');
+            filter: brightness(0.5) contrast(1.2);
+        }
+
+        .lion-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, rgba(20, 0, 0, 0.9) 100%);
+            z-index: 1;
+        }
+
+        /* --- Scene 2: Shabbat (Peace & Gold) --- */
+        #scene-shabbat {
+            z-index: 3;
+            /* The magic transition using clip-path */
+            clip-path: circle(0% at 50% 85%);
+            transition: clip-path 2.5s cubic-bezier(0.645, 0.045, 0.355, 1);
+            pointer-events: none; /* Ignore clicks until active */
+        }
+        
+        #scene-shabbat.active {
+            clip-path: circle(150% at 50% 85%);
+            pointer-events: auto;
+        }
+
+        .shabbat-bg {
+            /* רקע אורות בוקה זהובים */
+            background-image: url('https://images.unsplash.com/photo-1543722530-d2c3201371e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=2074&q=80');
+            filter: brightness(0.4) saturate(1.2);
+        }
+
+        /* Canvas for Particles */
+        canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* --- Premium UI Elements --- */
+        .content-box {
+            position: relative;
+            z-index: 10;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            max-width: 90%;
+            width: 600px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(20px);
+            opacity: 0;
+            animation: floatUp 1.5s forwards ease-out 0.5s;
+        }
+
+        #scene-shabbat .content-box {
+            background: rgba(10, 20, 40, 0.5);
+            border-color: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255, 215, 0, 0.1);
+            animation: none; /* Handled by JS */
+        }
+
+        @keyframes floatUp {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Heebo', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            line-height: 1.1;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .gold-text {
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        }
+
+        .fire-text {
+            background: linear-gradient(to bottom, #ff9a00, #ff0000);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 5px 15px rgba(255,0,0,0.5);
+        }
+
+        h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #fdfbf7;
+        }
+
+        p {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #d1d5db;
+            font-weight: 300;
+        }
+
+        .signatures {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 10px;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* --- Interactive Button --- */
+        .premium-btn {
+            position: relative;
+            background: linear-gradient(135deg, #1a0b0b, #3a1010);
+            color: #ff9a00;
+            border: 1px solid #ff4e00;
+            padding: 18px 45px;
+            font-size: 1.4rem;
+            font-family: 'Heebo', sans-serif;
+            font-weight: 800;
+            border-radius: 50px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 78, 0, 0.3);
+            z-index: 20;
+        }
+
+        .premium-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.5s ease;
+        }
+
+        .premium-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(255, 78, 0, 0.6);
+            background: linear-gradient(135deg, #ff4e00, #ff0000);
+            color: #fff;
+        }
+
+        .premium-btn:hover::before {
+            left: 200%;
+        }
+
+        /* --- Hyper-Realistic Candles --- */
+        .candles-wrapper {
+            width: 200px;
+            height: 250px;
+            margin: -50px auto 20px auto;
+            position: relative;
+            z-index: 15;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.8));
+        }
+
+        .flame-core {
+            fill: #ffffff;
+            animation: flicker-core 0.1s infinite alternate;
+            transform-origin: 50% 100%;
+        }
+        .flame-mid {
+            fill: #ffeb3b;
+            mix-blend-mode: screen;
+            animation: flicker-mid 0.15s infinite alternate;
+            transform-origin: 50% 100%;
+        }
+        .flame-outer {
+            fill: #ff5722;
+            opacity: 0.8;
+            mix-blend-mode: screen;
+            animation: flicker-outer 2s infinite alternate ease-in-out;
+            transform-origin: 50% 100%;
+        }
+        .flame-halo {
+            fill: url(#halo-grad);
+            animation: pulse-halo 3s infinite alternate ease-in-out;
+            transform-origin: center;
+        }
+
+        @keyframes flicker-core { 0% { transform: scale(0.95); } 100% { transform: scale(1.05); } }
+        @keyframes flicker-mid { 0% { transform: scale(0.9) skewX(-2deg); } 100% { transform: scale(1.1) skewX(2deg); } }
+        @keyframes flicker-outer { 0% { transform: scale(0.8) rotate(-3deg); } 100% { transform: scale(1.2) rotate(3deg); } }
+        @keyframes pulse-halo { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.3); opacity: 0.9; } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 2rem; }
+            p { font-size: 1.1rem; }
+            .content-box { padding: 30px 20px; width: 95%; }
+            .premium-btn { font-size: 1.2rem; padding: 15px 35px; }
+            .candles-wrapper { width: 160px; height: 200px; margin-top: -30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Scene 1: Lion & War -->
+    <div id="scene-lion" class="scene">
+        <div class="bg-image lion-bg" id="lion-bg"></div>
+        <div class="lion-overlay"></div>
+        <canvas id="fire-canvas"></canvas>
+        
+        <div class="content-box">
+            <h1 class="fire-text">שאגת הארי</h1>
+            <p>
+                בימים שבהם המציאות סוערת ואנו נדרשים לתעצומות נפש, אנו זוכרים שהעוצמה והאחדות שלנו הם המגן הבלתי חדיר שלנו. מתוך הכוח הזה, אנו מוצאים את השקט.
+            </p>
+            <button class="premium-btn" onclick="triggerTransition(this)">הכניסו את השבת 🕯️</button>
+        </div>
+    </div>
+
+    <!-- Scene 2: Shabbat Peace -->
+    <div id="scene-shabbat" class="scene">
+        <div class="bg-image shabbat-bg" id="shabbat-bg"></div>
+        <canvas id="gold-canvas"></canvas>
+        
+        <div class="content-box" id="shabbat-content" style="opacity: 0; transform: translateY(30px); transition: all 1.5s ease 1s;">
+            
+            <!-- Ultra Realistic SVG Candles -->
+            <div class="candles-wrapper">
+                <svg viewBox="0 0 200 250" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="silver-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#455a64" />
+                            <stop offset="30%" stop-color="#cfd8dc" />
+                            <stop offset="50%" stop-color="#ffffff" />
+                            <stop offset="70%" stop-color="#90a4ae" />
+                            <stop offset="100%" stop-color="#263238" />
+                        </linearGradient>
+                        <radialGradient id="halo-grad">
+                            <stop offset="0%" stop-color="rgba(255, 215, 0, 0.6)" />
+                            <stop offset="50%" stop-color="rgba(255, 140, 0, 0.2)" />
+                            <stop offset="100%" stop-color="rgba(255, 215, 0, 0)" />
+                        </radialGradient>
+                        <filter id="blur-glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="4" result="blur" />
+                            <feMerge>
+                                <feMergeNode in="blur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
+
+                    <!-- Left Candle -->
+                    <g transform="translate(30, 0)">
+                        <circle cx="20" cy="50" r="40" class="flame-halo"/>
+                        <g filter="url(#blur-glow)">
+                            <path d="M20 20 Q35 55 20 70 Q5 55 20 20 Z" class="flame-outer"/>
+                            <path d="M20 35 Q28 60 20 70 Q12 60 20 35 Z" class="flame-mid"/>
+                            <path d="M20 45 Q24 62 20 70 Q16 62 20 45 Z" class="flame-core"/>
+                        </g>
+                        <rect x="12" y="70" width="16" height="60" fill="url(#silver-grad)"/>
+                        <path d="M12 70 Q20 75 28 70 L28 130 L12 130 Z" fill="#fff" opacity="0.9"/>
+                        <path d="M5 130 Q20 145 35 130 L30 140 L10 140 Z" fill="url(#silver-grad)"/>
+                        <rect x="15" y="140" width="10" height="40" fill="url(#silver-grad)"/>
+                        <path d="M10 160 Q20 170 30 160 Q20 165 10 160 Z" fill="#fff" opacity="0.5"/>
+                        <path d="M0 180 Q20 160 40 180 L35 190 L5 190 Z" fill="url(#silver-grad)"/>
+                    </g>
+
+                    <!-- Right Candle -->
+                    <g transform="translate(130, 0)">
+                        <circle cx="20" cy="50" r="40" class="flame-halo" style="animation-delay: -1s;"/>
+                        <g filter="url(#blur-glow)">
+                            <path d="M20 20 Q35 55 20 70 Q5 55 20 20 Z" class="flame-outer" style="animation-delay: -0.5s;"/>
+                            <path d="M20 35 Q28 60 20 70 Q12 60 20 35 Z" class="flame-mid" style="animation-delay: -0.2s;"/>
+                            <path d="M20 45 Q24 62 20 70 Q16 62 20 45 Z" class="flame-core" style="animation-delay: -0.1s;"/>
+                        </g>
+                        <rect x="12" y="70" width="16" height="60" fill="url(#silver-grad)"/>
+                        <path d="M12 70 Q20 75 28 70 L28 130 L12 130 Z" fill="#fff" opacity="0.9"/>
+                        <path d="M5 130 Q20 145 35 130 L30 140 L10 140 Z" fill="url(#silver-grad)"/>
+                        <rect x="15" y="140" width="10" height="40" fill="url(#silver-grad)"/>
+                        <path d="M10 160 Q20 170 30 160 Q20 165 10 160 Z" fill="#fff" opacity="0.5"/>
+                        <path d="M0 180 Q20 160 40 180 L35 190 L5 190 Z" fill="url(#silver-grad)"/>
+                    </g>
+                </svg>
+            </div>
+
+            <h1 class="gold-text">שבת שלום</h1>
+            <h2>ומבורכת למשפחתנו</h2>
+            <p>
+                הגיע הזמן לעצור, לנשום עמוק ולהכניס את האור. מי ייתן והשבת הזו תביא איתה שלווה, ביטחון וחיבוק חם לכל עם ישראל ולמשפחה היקרה שלנו.
+            </p>
+            <div class="signatures">
+                באהבה עצומה, <br>
+                אביב, דורין ונרי ❤️
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Parallax Effect for Backgrounds ---
+        const lionBg = document.getElementById('lion-bg');
+        const shabbatBg = document.getElementById('shabbat-bg');
+        
+        window.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            lionBg.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
+            shabbatBg.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
+        });
+
+        // --- Particle Systems (Fire & Gold) ---
+        class ParticleSystem {
+            constructor(canvasId, type) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.type = type;
+                this.particles = [];
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+                
+                const count = window.innerWidth < 768 ? 50 : 120;
+                for(let i=0; i<count; i++) {
+                    this.particles.push(this.createParticle());
+                }
+                this.animate();
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            createParticle() {
+                return {
+                    x: Math.random() * this.canvas.width,
+                    y: this.type === 'fire' ? this.canvas.height + Math.random() * 100 : Math.random() * this.canvas.height,
+                    size: Math.random() * (this.type === 'fire' ? 3 : 4) + 1,
+                    speedX: (Math.random() - 0.5) * (this.type === 'fire' ? 2 : 0.5),
+                    speedY: this.type === 'fire' ? -(Math.random() * 3 + 1) : (Math.random() - 0.5) * 0.5,
+                    opacity: Math.random() * 0.8 + 0.2,
+                    life: Math.random() * 100
+                };
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                for(let i=0; i<this.particles.length; i++) {
+                    let p = this.particles[i];
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    p.life++;
+
+                    if(this.type === 'fire') {
+                        let color = p.life < 50 ? `rgba(255, 150, 0, ${p.opacity})` : `rgba(255, 50, 0, ${p.opacity - 0.2})`;
+                        this.ctx.fillStyle = color;
+                        this.ctx.shadowBlur = 10;
+                        this.ctx.shadowColor = 'red';
+                        
+                        if(p.y < -10) this.particles[i] = this.createParticle();
+                    } else {
+                        p.opacity = Math.sin(p.life * 0.05) * 0.5 + 0.5;
+                        this.ctx.fillStyle = `rgba(255, 215, 0, ${p.opacity})`;
+                        this.ctx.shadowBlur = 15;
+                        this.ctx.shadowColor = 'gold';
+                        
+                        if(p.x < 0 || p.x > this.canvas.width || p.y < 0 || p.y > this.canvas.height) {
+                            this.particles[i] = this.createParticle();
+                        }
+                    }
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                this.ctx.shadowBlur = 0;
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        const fireSystem = new ParticleSystem('fire-canvas', 'fire');
+        const goldSystem = new ParticleSystem('gold-canvas', 'gold');
+
+        // --- The Cinematic Transition ---
+        function triggerTransition(btn) {
+            btn.innerHTML = "פותח שערי שבת...";
+            btn.style.pointerEvents = "none";
+            
+            document.body.animate([
+                { transform: 'translate(2px, 1px) rotate(0deg)' },
+                { transform: 'translate(-1px, -2px) rotate(-1deg)' },
+                { transform: 'translate(-3px, 0px) rotate(1deg)' },
+                { transform: 'translate(0px, 0px) rotate(0deg)' }
+            ], { duration: 300, iterations: 2 });
+
+            setTimeout(() => {
+                document.getElementById('scene-shabbat').classList.add('active');
+                
+                const shabbatContent = document.getElementById('shabbat-content');
+                shabbatContent.style.opacity = '1';
+                shabbatContent.style.transform = 'translateY(0)';
+            }, 400);
+        }
+    </script>
+</body>
+</html>
+
+
