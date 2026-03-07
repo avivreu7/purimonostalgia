@@ -1,1 +1,960 @@
-gshs
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>קוד הגיבורות | יום האישה הבינלאומי</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Assistant', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#fdf4ff',
+                            primary: '#c026d3', // Fuchsia
+                            secondary: '#7c3aed', // Violet
+                            dark: '#4c1d95',
+                        }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #2e1065 0%, #4c1d95 50%, #701a75 100%);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1f2937;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.4s ease-in-out; }
+
+        .match-btn { transition: all 0.3s ease; }
+        .match-btn.selected {
+            background-color: #c026d3 !important;
+            color: white !important;
+            border-color: #f0abfc !important;
+            box-shadow: 0 0 15px rgba(192, 38, 211, 0.6);
+            transform: scale(1.02);
+        }
+        .match-btn.matched {
+            background-color: #10b981 !important; 
+            color: white !important;
+            border-color: #059669 !important;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .vault-input {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fde047; 
+            border: 2px solid #7c3aed;
+            border-radius: 0.75rem;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+            direction: ltr; 
+        }
+        .vault-input:focus {
+            outline: none;
+            border-color: #c026d3;
+            box-shadow: 0 0 20px rgba(192, 38, 211, 0.8), inset 0 0 10px rgba(0,0,0,0.8);
+        }
+        
+        .screen-container { display: none; }
+        .screen-container.active-screen { display: flex; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 10px; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- HUD (תצוגה עילית) -->
+    <nav id="hud" class="fixed top-0 w-full z-50 glass-panel hidden flex-col transition-all duration-300">
+        <div class="max-w-4xl mx-auto px-4 py-3 w-full flex justify-between items-center">
+            <button onclick="resetGame()" class="text-white/70 hover:text-white transition p-2 rounded-full bg-black/20 hover:bg-red-500/80" title="התחל מחדש">
+                <i class="fas fa-power-off"></i>
+            </button>
+            
+            <div class="flex-1 text-center">
+                <div class="text-xs md:text-sm text-brand-light opacity-80 mb-1 font-bold tracking-widest">קוד הכספת (משמאל לימין)</div>
+                <div class="flex justify-center gap-3 text-xl md:text-2xl font-mono font-bold text-yellow-300 drop-shadow-md" dir="ltr">
+                    <span id="digit-0" class="bg-black/40 px-3 py-1 rounded border border-white/20 transition-all duration-500">?</span>
+                    <span id="digit-1" class="bg-black/40 px-3 py-1 rounded border border-white/20 transition-all duration-500">?</span>
+                    <span id="digit-2" class="bg-black/40 px-3 py-1 rounded border border-white/20 transition-all duration-500">?</span>
+                    <span id="digit-3" class="bg-black/40 px-3 py-1 rounded border border-white/20 transition-all duration-500">?</span>
+                </div>
+            </div>
+
+            <button onclick="prevScreen()" id="backBtn" class="text-white/70 hover:text-white transition p-2 rounded-full bg-black/20 hover:bg-black/40">
+                <i class="fas fa-arrow-right text-lg"></i>
+            </button>
+        </div>
+        <div class="h-1.5 w-full bg-black/30">
+            <div id="progressBar" class="h-full bg-gradient-to-r from-brand-primary to-yellow-400 transition-all duration-700" style="width: 0%"></div>
+        </div>
+    </nav>
+
+    <!-- אזור תוכן מרכזי -->
+    <main class="max-w-4xl mx-auto w-full min-h-screen flex flex-col pt-24 pb-12 px-4 relative z-10">
+
+        <!-- מסך 0: פתיחה מרשימה וחינוכית -->
+        <div id="screen-0" class="screen-container active-screen flex-1 flex-col justify-center items-center text-center animate-fade-in-up">
+            <div class="glass-card p-8 md:p-12 w-full relative overflow-hidden text-right">
+                <div class="absolute top-0 right-0 w-full h-3 bg-gradient-to-r from-brand-primary via-purple-500 to-yellow-400"></div>
+                
+                <h1 class="text-4xl md:text-6xl font-black text-gray-900 mb-4 text-center tracking-tight">קוד הגיבורות</h1>
+                <h2 class="text-xl md:text-2xl font-bold text-brand-primary mb-8 text-center bg-brand-light inline-block px-6 py-2 rounded-full mx-auto block w-fit">ברוכים הבאים לפעילות בנושא יום האישה</h2>
+                
+                <!-- טקסט חינוכי מורחב -->
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-6 md:p-8 rounded-2xl border border-purple-100 mb-8 shadow-inner">
+                    <p class="text-gray-800 text-lg md:text-xl leading-relaxed mb-4 font-medium">
+                        <i class="fas fa-quote-right text-brand-primary opacity-40 text-2xl ml-2"></i>
+                        יום האישה הבינלאומי, המצוין בכל שנה ב-8 במרץ, הוא הרבה יותר מסתם תאריך בלוח השנה. זהו יום שבו אנו עוצרים כדי להצדיע להישגים המדהימים של נשים לאורך ההיסטוריה – במדע, בתרבות, בפוליטיקה ובחברה.
+                    </p>
+                    <p class="text-gray-700 text-base md:text-lg leading-relaxed">
+                        היום הזה מזכיר לנו את המאבק ההיסטורי והאמיץ לשוויון זכויות: החל מהזכות הבסיסית של אישה להצביע בבחירות, דרך הדרישה לשכר שווה עבור עבודה שווה, ועד לשבירת תקרות זכוכית שאפשרו לנשים להגיע לחלל, לזכות בפרסי נובל ולהנהיג מדינות. למרות ההתקדמות העצומה שעשינו כחברה, הדרך לשוויון מלא עדיין נמשכת, וכל אחת ואחד מאיתנו יכולים לקחת בה חלק.
+                    </p>
+                </div>
+
+                <div class="bg-gray-800 text-white p-6 rounded-2xl mb-8 text-center shadow-lg relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 text-gray-700 text-9xl opacity-20"><i class="fas fa-lock"></i></div>
+                    <h3 class="text-2xl font-black mb-2 text-yellow-400 relative z-10">המשימה שלכם:</h3>
+                    <p class="text-lg relative z-10 leading-relaxed">
+                        עליכם לעבור בין התחנות הבאות, ללמוד על נשים ששינו את פני ההיסטוריה, ולאסוף <strong>4 ספרות סודיות</strong>. אם תצליחו לאסוף את כל הספרות, תוכלו לפתוח את הכספת הדיגיטלית בסוף המסע.
+                    </p>
+                </div>
+
+                <!-- שדות הזנה גנריים -->
+                <div class="bg-white p-6 rounded-2xl border-2 border-gray-100 mb-8 space-y-5 shadow-sm">
+                    <h4 class="font-bold text-gray-800 text-lg mb-2 border-b pb-2">לפני שמתחילים, ספרו לנו מי אתם:</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600 mb-1">שם פרטי ומשפחה:</label>
+                            <input type="text" id="playerName" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-primary focus:ring-0 outline-none transition font-bold text-gray-800 bg-gray-50" placeholder="לדוגמה: נועה כהן" oninput="checkSetupInputs()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-600 mb-1">כיתה / שכבה:</label>
+                            <input type="text" id="className" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-primary focus:ring-0 outline-none transition font-bold text-gray-800 bg-gray-50" placeholder="לדוגמה: ח'3" oninput="checkSetupInputs()">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-600 mb-1">שם המורה שהפנה/תה אתכם למשימה:</label>
+                        <input type="text" id="teacherName" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-primary focus:ring-0 outline-none transition font-bold text-gray-800 bg-gray-50" placeholder="לדוגמה: דורין / המורה יוסי" oninput="checkSetupInputs()">
+                    </div>
+                </div>
+
+                <button onclick="startGame()" id="startBtn" class="w-full bg-gradient-to-r from-brand-primary to-brand-secondary text-white font-black py-5 rounded-xl shadow-[0_10px_20px_rgba(192,38,211,0.3)] transform transition-all duration-300 hover:scale-[1.02] opacity-50 cursor-not-allowed text-xl md:text-2xl" disabled>
+                    אני מוכן/ה, בואו נתחיל! <i class="fas fa-rocket ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- מסך 1: התאמה מדעית -->
+        <div id="screen-1" class="screen-container flex-1 flex-col items-center animate-fade-in-up">
+            <div class="glass-card p-6 md:p-10 w-full mb-6 text-right">
+                <div class="flex items-center mb-6 border-b pb-6">
+                    <div class="bg-blue-100 text-blue-600 w-14 h-14 flex items-center justify-center rounded-2xl ml-4 shadow-sm shrink-0">
+                        <i class="fas fa-microscope text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-black text-gray-900 mb-1">תחנה 1: נשים במדע</h2>
+                        <p class="text-brand-secondary font-bold text-lg">מחברות את ההיסטוריה</p>
+                    </div>
+                </div>
+                
+                <p class="mb-6 text-gray-700 font-medium leading-relaxed text-lg">
+                    לאורך מאות שנים, נשים הודרו מהאקדמיה וממוסדות המחקר, אך למרות זאת, רבות מהן סללו את הדרך לפריצות הדרך הטכנולוגיות והרפואיות החשובות ביותר באנושות.<br>
+                    <strong class="text-brand-primary">המשימה:</strong> לחצו על שמה של המדענית, ולאחר מכן לחצו על התגלית שהביאה לעולם כדי לחשוף את סיפורה המלא.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="space-y-4" id="matchNames"></div>
+                    <div class="space-y-4" id="matchDiscoveries"></div>
+                </div>
+
+                <!-- קופסת המידע החינוכית (מורחבת) -->
+                <div id="s1-fact-box" class="hidden bg-gradient-to-l from-blue-50 to-white border-r-4 border-blue-500 p-6 rounded-l-2xl mb-8 shadow-md">
+                    <h4 class="font-black text-blue-900 mb-3 text-xl flex items-center">
+                        <i class="fas fa-book-open text-blue-500 ml-3"></i> הידעתם?
+                    </h4>
+                    <p id="s1-fact-text" class="text-base md:text-lg text-gray-800 leading-relaxed font-medium"></p>
+                </div>
+
+                <div id="s1-feedback" class="mt-4 text-center font-black text-2xl hidden transition-all"></div>
+                
+                <div id="btn-next-1-container" class="hidden mt-8 text-center">
+                    <div class="inline-block bg-yellow-100 text-yellow-800 px-8 py-3 rounded-full font-black text-2xl mb-6 border-2 border-yellow-300 shadow-md animate-pulse-slow">
+                        הספרה הראשונה: 8
+                    </div>
+                    <button onclick="completeStation(1, '8')" class="w-full bg-gray-900 hover:bg-black text-white font-black py-5 rounded-2xl shadow-lg transition text-xl">
+                        המשך לתחנה הבאה <i class="fas fa-chevron-left mr-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- מסך 2: טריוויה ישראלית -->
+        <div id="screen-2" class="screen-container flex-1 flex-col items-center animate-fade-in-up">
+            <div class="glass-card p-6 md:p-10 w-full mb-6 text-right">
+                <div class="flex items-center mb-6 border-b pb-6">
+                    <div class="bg-indigo-100 text-indigo-600 w-14 h-14 flex items-center justify-center rounded-2xl ml-4 shadow-sm shrink-0">
+                        <i class="fas fa-star-of-david text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-black text-gray-900 mb-1">תחנה 2: ישראליות בהיסטוריה</h2>
+                        <p class="text-brand-secondary font-bold text-lg">מנהיגות, צבא וספורט</p>
+                    </div>
+                </div>
+
+                <div id="trivia-container">
+                    <div class="flex items-center justify-between mb-6">
+                        <span class="text-sm md:text-base font-bold text-gray-600 bg-gray-100 px-4 py-1.5 rounded-full border border-gray-200">שאלה <span id="trivia-current">1</span> מתוך 3</span>
+                        <div class="flex gap-2" id="trivia-dots">
+                            <div class="w-4 h-4 rounded-full bg-gray-300"></div>
+                            <div class="w-4 h-4 rounded-full bg-gray-300"></div>
+                            <div class="w-4 h-4 rounded-full bg-gray-300"></div>
+                        </div>
+                    </div>
+                    
+                    <h3 id="trivia-question" class="text-2xl md:text-3xl font-black mb-8 text-gray-900 leading-snug"></h3>
+                    
+                    <div id="trivia-options" class="space-y-4"></div>
+
+                    <!-- אזור הפידבק החינוכי -->
+                    <div id="s2-feedback" class="mt-8 text-right text-lg hidden p-6 rounded-2xl shadow-inner border-2"></div>
+                </div>
+
+                <div id="btn-next-2-container" class="hidden mt-8 text-center">
+                    <div class="inline-block bg-yellow-100 text-yellow-800 px-8 py-3 rounded-full font-black text-2xl mb-6 border-2 border-yellow-300 shadow-md animate-pulse-slow">
+                        הספרה השנייה: 3
+                    </div>
+                    <button onclick="completeStation(2, '3')" class="w-full bg-gray-900 hover:bg-black text-white font-black py-5 rounded-2xl shadow-lg transition text-xl">
+                        המשך לתחנה הבאה <i class="fas fa-chevron-left mr-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- מסך 3: אמת או שקר -->
+        <div id="screen-3" class="screen-container flex-1 flex-col items-center animate-fade-in-up">
+            <div class="glass-card p-6 md:p-10 w-full mb-6 text-right">
+                <div class="flex items-center mb-6 border-b pb-6">
+                    <div class="bg-orange-100 text-orange-600 w-14 h-14 flex items-center justify-center rounded-2xl ml-4 shadow-sm shrink-0">
+                        <i class="fas fa-balance-scale text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-black text-gray-900 mb-1">תחנה 3: אמת או שקר?</h2>
+                        <p class="text-brand-secondary font-bold text-lg">מנפצים סטיגמות עם נתונים</p>
+                    </div>
+                </div>
+
+                <div id="tf-game-area">
+                    <p class="mb-6 text-gray-700 font-medium leading-relaxed text-lg">
+                        כדי לשנות את המציאות, צריך קודם כל להכיר את המספרים. קראו את ההצהרה הבאה וקבעו: האם מדובר בעובדה מגובה בנתונים, או במיתוס שגוי לחלוטין?
+                    </p>
+
+                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-8 rounded-3xl border-2 border-gray-200 shadow-inner text-center mb-8 min-h-[160px] flex items-center justify-center relative">
+                        <span id="tf-counter" class="absolute top-4 right-5 text-sm font-bold text-brand-primary bg-brand-light px-3 py-1 rounded-full border border-brand-primary/20">1/3</span>
+                        <h3 id="tf-statement" class="text-2xl md:text-3xl font-black text-gray-800 leading-relaxed px-4"></h3>
+                    </div>
+
+                    <div class="flex gap-5" id="tf-buttons">
+                        <button onclick="checkTF(true)" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-black py-5 rounded-2xl shadow-[0_6px_0_#166534] active:shadow-none active:translate-y-1.5 text-2xl transition-all flex flex-col items-center justify-center gap-2">
+                            <i class="fas fa-check-circle text-3xl"></i> עובדה!
+                        </button>
+                        <button onclick="checkTF(false)" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-black py-5 rounded-2xl shadow-[0_6px_0_#991b1b] active:shadow-none active:translate-y-1.5 text-2xl transition-all flex flex-col items-center justify-center gap-2">
+                            <i class="fas fa-times-circle text-3xl"></i> שקר!
+                        </button>
+                    </div>
+
+                    <div id="s3-feedback" class="mt-8 p-6 rounded-2xl text-right hidden border-2">
+                        <p id="s3-feedback-text" class="text-lg md:text-xl mb-6 text-gray-800 leading-relaxed"></p>
+                        <button onclick="nextTF()" id="btn-next-tf" class="bg-gray-800 text-white px-8 py-4 rounded-xl shadow-md font-black hover:bg-gray-900 transition w-full text-xl">הבנתי את הנתונים, המשך</button>
+                    </div>
+                </div>
+
+                <div id="btn-next-3-container" class="hidden mt-8 text-center">
+                    <div class="inline-block bg-yellow-100 text-yellow-800 px-8 py-3 rounded-full font-black text-2xl mb-6 border-2 border-yellow-300 shadow-md animate-pulse-slow">
+                        הספרה השלישית: 0
+                    </div>
+                    <button onclick="completeStation(3, '0')" class="w-full bg-gray-900 hover:bg-black text-white font-black py-5 rounded-2xl shadow-lg transition text-xl">
+                        לתחנה האחרונה <i class="fas fa-chevron-left mr-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- מסך 4: רפלקציה ושיתוף -->
+        <div id="screen-4" class="screen-container flex-1 flex-col items-center animate-fade-in-up">
+            <div class="glass-card p-6 md:p-10 w-full mb-6 text-right">
+                <div class="flex items-center mb-6 border-b pb-6">
+                    <div class="bg-pink-100 text-pink-600 w-14 h-14 flex items-center justify-center rounded-2xl ml-4 shadow-sm shrink-0">
+                        <i class="fas fa-heart text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-black text-gray-900 mb-1">תחנה 4: הגיבורה שלי</h2>
+                        <p class="text-brand-secondary font-bold text-lg">משימת סיכום אישית</p>
+                    </div>
+                </div>
+
+                <div class="bg-brand-light p-6 rounded-2xl border border-brand-primary/20 mb-8">
+                    <p class="text-gray-800 font-medium text-lg leading-relaxed mb-2">
+                        למדנו על נשים מדהימות מההיסטוריה, אבל גיבורות נמצאות סביבנו גם בחיי היומיום.
+                    </p>
+                    <p class="text-brand-dark font-black text-xl">
+                        כתבו על אישה שמעוררת בכם השראה. זו יכולה להיות בת משפחה (אימא, סבתא, אחות), מורה, חברה טובה, או דמות מפורסמת. למה בחרתם דווקא בה?
+                    </p>
+                </div>
+
+                <div class="relative">
+                    <textarea id="reflectionText" rows="5" class="w-full p-5 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-brand-primary/20 focus:border-brand-primary outline-none resize-none mb-3 text-gray-800 text-lg md:text-xl transition bg-gray-50 leading-relaxed" placeholder="האישה שמעוררת בי השראה היא... בגלל ש..." oninput="checkReflection()"></textarea>
+                    <div class="absolute bottom-6 left-5 text-base font-bold text-gray-400 bg-white/90 px-3 py-1 rounded-lg border shadow-sm" id="char-count">0/20</div>
+                </div>
+
+                <p id="reflection-hint" class="text-base text-gray-500 mb-6 font-bold flex items-center gap-2">
+                    <i class="fas fa-pen"></i> יש לכתוב לפחות 20 תווים כדי לסיים את המשימה.
+                </p>
+
+                <div id="btn-next-4-container" class="mt-4">
+                    <button onclick="revealLastDigit()" id="btn-reveal-last" class="w-full bg-gray-300 text-gray-500 font-black py-5 rounded-2xl shadow-md transition cursor-not-allowed text-xl" disabled>
+                        סיימתי לכתוב! <i class="fas fa-lock ml-2"></i>
+                    </button>
+                </div>
+
+                <div id="btn-next-4-done" class="hidden mt-6 text-center">
+                    <p class="text-gray-600 mb-4 font-bold">מעולה! עכשיו תוכלו לשתף את התשובה המרגשת שלכם עם <span class="dyn-teacher text-brand-primary">המורה</span> בוואטסאפ:</p>
+                    <button onclick="shareWhatsApp()" class="mb-8 w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-black py-4 rounded-2xl shadow-lg transition flex items-center justify-center gap-3 text-xl transform hover:scale-[1.02]">
+                        <i class="fab fa-whatsapp text-3xl"></i> שליחת התשובה ל<span class="dyn-teacher">המורה</span>
+                    </button>
+
+                    <div class="h-px bg-gray-200 w-full mb-8"></div>
+
+                    <div class="inline-block bg-yellow-100 text-yellow-800 px-8 py-3 rounded-full font-black text-2xl mb-6 border-2 border-yellow-300 shadow-md animate-pulse-slow">
+                        הספרה האחרונה: 4
+                    </div>
+                    <button onclick="completeStation(4, '4')" class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-black py-5 rounded-2xl shadow-xl transition text-2xl transform hover:scale-[1.02]">
+                        קדימה לכספת הסודית! <i class="fas fa-door-open mr-2"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- מסך 5: הכספת (מיושרת משמאל לימין) -->
+        <div id="screen-5" class="screen-container flex-1 flex-col justify-center animate-fade-in-up">
+            <div class="bg-gray-900 p-8 md:p-14 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] text-center border-4 border-gray-700 relative overflow-hidden w-full max-w-xl mx-auto">
+                <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle, #4c1d95 2px, transparent 2px); background-size: 25px 25px;"></div>
+                
+                <div class="relative z-10">
+                    <div class="w-24 h-24 mx-auto bg-gray-800 rounded-full border-4 border-gray-600 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(124,58,237,0.4)]">
+                        <i class="fas fa-vault text-5xl text-gray-400" id="vault-icon"></i>
+                    </div>
+                    
+                    <h2 class="text-5xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-yellow-400 tracking-tight">הכספת</h2>
+                    <p class="text-gray-300 mb-10 text-xl font-medium">הקלידו את 4 הספרות שאספתם (משמאל לימין) כדי לפרוץ את המנעול האלקטרוני.</p>
+
+                    <!-- קוד מיושר משמאל לימין (LTR) מובטח -->
+                    <div class="flex justify-center gap-4 md:gap-6 mb-10" dir="ltr" style="direction: ltr;">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" class="vault-input w-16 h-20 md:w-24 md:h-28 text-4xl" maxlength="1" placeholder="•" data-index="0">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" class="vault-input w-16 h-20 md:w-24 md:h-28 text-4xl" maxlength="1" placeholder="•" data-index="1">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" class="vault-input w-16 h-20 md:w-24 md:h-28 text-4xl" maxlength="1" placeholder="•" data-index="2">
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" class="vault-input w-16 h-20 md:w-24 md:h-28 text-4xl" maxlength="1" placeholder="•" data-index="3">
+                    </div>
+
+                    <div id="vault-error" class="text-red-400 mb-6 h-8 font-bold text-xl"></div>
+
+                    <button onclick="checkVault()" id="openVaultBtn" class="w-full max-w-[280px] mx-auto bg-gradient-to-r from-brand-primary to-brand-secondary text-white font-black py-5 rounded-2xl shadow-[0_0_25px_rgba(192,38,211,0.6)] transition hover:scale-105 active:scale-95 text-2xl">
+                        פתיחת כספת <i class="fas fa-key ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- מסך 6: ניצחון והעצמה -->
+        <div id="screen-6" class="screen-container flex-1 flex-col justify-center items-center text-center animate-fade-in-up">
+            <div class="glass-card p-8 md:p-12 rounded-[2.5rem] w-full max-w-3xl relative overflow-hidden text-center mb-8 shadow-2xl border-t-8 border-yellow-400">
+                <div class="absolute -top-32 -left-32 w-64 h-64 bg-yellow-300 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse"></div>
+                <div class="absolute -bottom-32 -right-32 w-64 h-64 bg-brand-primary rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-pulse"></div>
+                
+                <div class="relative z-10">
+                    <div class="text-yellow-400 text-7xl mb-6 drop-shadow-xl inline-block animate-bounce">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    
+                    <h1 class="text-5xl md:text-6xl font-black text-gray-900 mb-3 tracking-tight">כל הכבוד!</h1>
+                    <h2 class="text-3xl md:text-4xl font-bold text-brand-primary mb-8"><span class="dyn-student"></span> האלופ/ה!</h2>
+                    
+                    <div class="h-1.5 w-24 bg-gray-200 mx-auto rounded-full mb-8"></div>
+
+                    <!-- מסר חינוכי דינמי -->
+                    <div class="bg-gradient-to-br from-brand-light to-purple-100 p-8 md:p-10 rounded-3xl shadow-lg mb-10 border-2 border-brand-primary/20 text-right relative">
+                        <i class="fas fa-quote-right absolute top-6 right-6 text-5xl text-brand-primary opacity-10"></i>
+                        <h3 class="text-2xl md:text-3xl font-black text-brand-dark mb-6 border-b-2 border-brand-primary/20 pb-3 inline-block">מסר מיוחד מ<span class="dyn-teacher">המורה</span> ליום האישה:</h3>
+                        <p class="text-gray-800 text-xl md:text-2xl leading-relaxed font-medium mb-6">
+                            כל אחת ואחד מכם מחזיק בכוח אדיר לשנות את העולם לטובה ולהשפיע על הסביבה שלכם.
+                        </p>
+                        <ul class="text-gray-700 text-lg md:text-xl space-y-4 mb-6 pr-4 list-disc list-inside">
+                            <li><strong class="text-brand-primary">עבור הבנות:</strong> זו תזכורת להאמין בעצמכן, לחלום בגדול ולדעת שאין שום תקרת זכוכית שאתן לא יכולות לנפץ. המדע, הטכנולוגיה, הספורט וההנהגה מחכים לכן.</li>
+                            <li><strong class="text-brand-secondary">עבור הבנים:</strong> זו ההזדמנות שלכם להיות בני ברית, לכבד, לתמוך, ולקדם סביבה שוויונית ובטוחה בכל מקום שבו תהיו.</li>
+                        </ul>
+                        <p class="text-gray-900 text-xl md:text-2xl font-black mt-6 bg-white/50 p-4 rounded-xl text-center border border-white">
+                            זכרו תמיד: ב<span class="dyn-class text-brand-primary">כיתה</span> שלנו כולנו שווים, ויחד אנחנו יכולים לעשות הכל!
+                        </p>
+                    </div>
+
+                    <button onclick="resetGame()" class="text-gray-600 font-bold hover:text-gray-900 transition flex items-center justify-center mx-auto gap-2 bg-gray-100 px-8 py-3 rounded-full text-lg shadow-sm hover:shadow-md">
+                        <i class="fas fa-redo"></i> חזרה למסך ההתחלה
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- ניהול מצב (State) ---
+        const TOTAL_SCREENS = 6;
+        let gameState = {
+            playerName: '', className: '', teacherName: '',
+            currentScreen: 0,
+            digits: ['?', '?', '?', '?'],
+            completedStations: [false, false, false, false],
+            reflectionText: '',
+            triviaCompleted: false, tfCompleted: false
+        };
+
+        // --- תוכן לימודי מורחב (העמקה היסטורית) ---
+        const matchingData = [
+            { id: 'm1', name: 'עדה לאבלייס (Ada Lovelace)', desc: 'המתכנתת הראשונה בהיסטוריה (עוד במאה ה-19!)', 
+              fullFact: 'עדה לאבלייס (1815-1852) הקדימה את זמנה במאה שנה. היא כתבה את האלגוריתם הראשון שנועד להתבצע על ידי "מנוע אנליטי" (המחשב המכני הראשון). היא הייתה הראשונה להבין שמחשבים יוכלו לעשות הרבה יותר מסתם חישובים מתמטיים פשוטים, אלא גם ליצור מוזיקה ואמנות! היום שפת התכנות "Ada" קרויה על שמה.' },
+            { id: 'm2', name: 'מארי קירי (Marie Curie)', desc: 'זכתה בשני פרסי נובל (בפיזיקה ובכימיה)', 
+              fullFact: 'מארי קירי היא סמל לנחישות. היא הייתה האישה הראשונה לזכות בפרס נובל, והאדם הראשון והיחיד עד היום שזכה בשני פרסי נובל בשני תחומים מדעיים שונים! למרות שגילתה את הרדיואקטיביות (מה שאפשר את צילומי הרנטגן והציל חיי מיליונים), האקדמיה הצרפתית למדעים סירבה לקבל אותה כחברה רק בגלל היותה אישה.' },
+            { id: 'm3', name: 'הדי לאמאר (Hedy Lamarr)', desc: 'שחקנית הוליוודית וממציאה שפיתחה את הבסיס ל-WiFi', 
+              fullFact: 'הדי לאמאר הייתה כוכבת קולנוע מפורסמת, אבל רוב האנשים לא ידעו שהיא גם מוח מתמטי מבריק. בזמן מלחמת העולם השנייה, היא המציאה טכנולוגיית "דילוג תדרים" כדי למנוע מאויבים לשבש תקשורת של טורפדו. הטכנולוגיה הזו שהמציאה היא הבסיס לטכנולוגיות ה-GPS, ה-Bluetooth וה-WiFi שאנחנו משתמשים בהם מדי יום!' },
+            { id: 'm4', name: 'רוזלינד פרנקלין (Rosalind Franklin)', desc: 'צילמה והוכיחה את המבנה הסלילי של ה-DNA', 
+              fullFact: 'תגלית המבנה הסלילי הכפול של ה-DNA היא אחת התגליות החשובות בביולוגיה. רוזלינד פרנקלין הייתה כימאית שיצרה את "תמונה 51" – צילום רנטגן מדויק שהוכיח את המבנה. לרוע המזל, מדענים גברים (ווטסון וקריק) השתמשו בתמונה שלה ללא רשותה, זכו בפרס נובל, והיא לא זכתה להכרה המלאה המגיעה לה במהלך חייה קצרים.' }
+        ];
+
+        const triviaData = [
+            { q: "מי הייתה האישה הראשונה (והיחידה עד כה) שכיהנה כראש ממשלת ישראל?", options: ["גולדה מאיר", "שולמית אלוני", "ציפי לבני", "דליה איציק"], correct: 0, 
+              fact: "גולדה מאיר נבחרה לראשות הממשלה בשנת 1969. בחירתה הייתה אירוע היסטורי קנה מידה עולמי - היא הייתה האישה השלישית בכל העולם (והראשונה במזרח התיכון) שהגיעה לתפקיד של הנהגת מדינה דמוקרטית. היא כיהנה בתקופות מאתגרות מאוד, כולל מלחמת יום הכיפורים." },
+            { q: "בזכות בג\"ץ שהגישה בשנת 1995, נפתח קורס טיס בצה\"ל לנשים. מי היא?", options: ["יעל רום", "אליס מילר", "קרן טנדלר", "אורנה ברביבאי"], correct: 1, 
+              fact: "אליס מילר הייתה מהנדסת אווירונאוטיקה שחלמה להיות טייסת, אך צה\"ל סירב לזמן אותה למיונים רק בשל מינה. בג\"ץ אליס מילר נגד שר הביטחון היווה נקודת מפנה דרמטית במאבק לשוויון מגדרי בישראל. הפסיקה קבעה שאסור להפלות נשים, ובעקבותיה נפתחו קורסי טיס וקורסים קרביים רבים לנשים." },
+            { q: "איזו ספורטאית ישראלית עשתה היסטוריה וזכתה במדליית זהב באולימפיאדת טוקיו?", options: ["יעל ארד", "נטע ריבקין", "לינוי אשרם", "שחר פאר"], correct: 2, 
+              fact: "לינוי אשרם עשתה היסטוריה מדהימה כשהפכה לאישה הישראלית הראשונה אי פעם שזכתה במדליית זהב אולימפית (בהתעמלות אמנותית, טוקיו 2020). אגב, האישה הראשונה שהביאה מדליה אולימפית כלשהי לישראל הייתה יעל ארד (מדליית כסף בג'ודו, ברצלונה 1992)." }
+        ];
+
+        const tfData = [
+            { statement: "נשים הן חצי מאוכלוסיית העולם, אך לפי האו\"ם, רק ב-28 מתוך 193 מדינות מכהנות נשים כראשות ממשלה או נשיאות.", isTrue: true, 
+              explanation: "הנתון הזה, נכון לשנת 2023, מדגים את החסר העצום בייצוג נשי במוקדי קבלת ההחלטות העולמיים. מחקרים מוכיחים שכאשר נשים משתתפות בהנהגה ובפוליטיקה, החקיקה נוטה להיות שוויונית יותר, חברתית יותר, ומקדמת שלום." },
+            { statement: "האישה הראשונה טסה לחלל רק בשנת 2000, כמעט 40 שנה אחרי הגבר הראשון.", isTrue: false, 
+              explanation: "זהו מיתוס שגוי! הקוסמונאוטית הסובייטית ולנטינה טרשקובה עשתה היסטוריה וטסה לחלל כבר בשנת 1963 (רק שנתיים אחרי יורי גגארין). היא הקיפה את כדור הארץ 48 פעמים במשימה היסטורית שהוכיחה שנשים יכולות לתפקד בתנאי חלל קיצוניים בדיוק כמו גברים." },
+            { statement: "בממוצע עולמי, נשים מרוויחות משמעותית פחות מגברים על ביצוע אותה עבודה בדיוק.", isTrue: true, 
+              explanation: "לצערנו, זוהי עובדה כואבת המכונה 'פער השכר המגדרי'. לפי נתוני האו\"ם, אישה מרוויחה בממוצע רק 77 סנט על כל דולר שמרוויח גבר. הסיבות לכך כוללות אפליה היסטורית, והעובדה שנשים עדיין נושאות ברוב הנטל של עבודות שקופות (כמו טיפול בילדים וקשישים). זהו אחד המאבקים החשובים של יום האישה בימינו." }
+        ];
+
+        let matchState = { selectedName: null, selectedDesc: null, matchedCount: 0, elements: { name: null, desc: null } };
+        let triviaState = { currentQ: 0 };
+        let tfState = { currentQ: 0 };
+
+        // --- אתחול ואיפוס ---
+        function init() {
+            const saved = localStorage.getItem('womens_day_edu_v1');
+            if (saved) {
+                try { gameState = JSON.parse(saved); } catch (e) { console.error(e); }
+            }
+            
+            setupVaultInputs();
+            initMatchingGame();
+            
+            if(gameState.playerName) document.getElementById('playerName').value = gameState.playerName;
+            if(gameState.className) document.getElementById('className').value = gameState.className;
+            if(gameState.teacherName) document.getElementById('teacherName').value = gameState.teacherName;
+            
+            if(gameState.reflectionText) {
+                document.getElementById('reflectionText').value = gameState.reflectionText;
+                checkReflection();
+            }
+
+            checkSetupInputs();
+            populateDynamicContent();
+            renderScreen(gameState.currentScreen);
+        }
+
+        function resetGame() {
+            if(confirm("בטוחים שאתם רוצים להתחיל את המשימה מחדש? ההתקדמות תימחק.")) {
+                localStorage.removeItem('womens_day_edu_v1');
+                
+                gameState = {
+                    playerName: '', className: '', teacherName: '',
+                    currentScreen: 0, digits: ['?', '?', '?', '?'],
+                    completedStations: [false, false, false, false],
+                    reflectionText: '', triviaCompleted: false, tfCompleted: false
+                };
+                
+                document.getElementById('playerName').value = '';
+                document.getElementById('className').value = '';
+                document.getElementById('teacherName').value = '';
+                document.getElementById('reflectionText').value = '';
+                document.getElementById('reflectionText').disabled = false;
+                document.getElementById('reflectionText').classList.remove('bg-gray-100');
+                document.querySelectorAll('.vault-input').forEach(i => i.value = '');
+                
+                matchState = { selectedName: null, selectedDesc: null, matchedCount: 0, elements: { name: null, desc: null } };
+                initMatchingGame();
+                document.getElementById('s1-fact-box').classList.add('hidden');
+                document.getElementById('btn-next-1-container').classList.add('hidden');
+                document.getElementById('s1-feedback').classList.add('hidden');
+                
+                triviaState = { currentQ: 0 };
+                document.getElementById('btn-next-2-container').classList.add('hidden');
+                
+                tfState = { currentQ: 0 };
+                document.getElementById('btn-next-3-container').classList.add('hidden');
+                
+                document.getElementById('btn-next-4-container').classList.remove('hidden');
+                document.getElementById('btn-next-4-done').classList.add('hidden');
+
+                document.getElementById('vault-icon').className = 'fas fa-vault text-5xl text-gray-400';
+                document.getElementById('openVaultBtn').innerHTML = 'פתיחת כספת <i class="fas fa-key ml-2"></i>';
+
+                checkSetupInputs();
+                renderScreen(0);
+            }
+        }
+
+        function saveGame() {
+            localStorage.setItem('womens_day_edu_v1', JSON.stringify(gameState));
+            updateHUD();
+        }
+
+        // --- מסך 0: הזנת נתונים גנריים ---
+        function checkSetupInputs() {
+            const pName = document.getElementById('playerName').value.trim();
+            const cName = document.getElementById('className').value.trim();
+            const tName = document.getElementById('teacherName').value.trim();
+            
+            const btn = document.getElementById('startBtn');
+            if (pName.length >= 2 && cName.length >= 2 && tName.length >= 2) {
+                btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function startGame() {
+            gameState.playerName = document.getElementById('playerName').value.trim();
+            gameState.className = document.getElementById('className').value.trim();
+            gameState.teacherName = document.getElementById('teacherName').value.trim();
+            populateDynamicContent();
+            nextScreen();
+        }
+
+        function populateDynamicContent() {
+            const safeClass = gameState.className || "הכיתה";
+            const safeTeacher = gameState.teacherName || "המורה";
+            const safeStudent = gameState.playerName ? gameState.playerName.split(' ')[0] : "תלמיד/ה";
+
+            document.querySelectorAll('.dyn-class').forEach(el => el.innerText = safeClass);
+            document.querySelectorAll('.dyn-teacher').forEach(el => el.innerText = safeTeacher);
+            document.querySelectorAll('.dyn-student').forEach(el => el.innerText = safeStudent);
+        }
+
+        // --- ניהול מסכים ---
+        function renderScreen(index) {
+            document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active-screen', 'animate-fade-in-up'));
+            
+            const target = document.getElementById(`screen-${index}`);
+            if(target) {
+                target.classList.add('active-screen');
+                setTimeout(() => target.classList.add('animate-fade-in-up'), 10);
+            }
+
+            gameState.currentScreen = index;
+            
+            if (index === 1) checkStation1Done();
+            if (index === 2) loadTrivia();
+            if (index === 3) loadTF();
+            if (index === 4) checkReflection();
+            if (index === 6) fireConfetti();
+
+            updateHUD();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            saveGame();
+        }
+
+        function updateHUD() {
+            const hud = document.getElementById('hud');
+            if (gameState.currentScreen > 0 && gameState.currentScreen < 6) {
+                hud.classList.remove('hidden'); hud.classList.add('flex');
+            } else {
+                hud.classList.add('hidden'); hud.classList.remove('flex');
+            }
+
+            gameState.digits.forEach((digit, i) => {
+                const span = document.getElementById(`digit-${i}`);
+                if (digit !== '?') {
+                    span.innerText = digit;
+                    span.classList.replace('bg-black/40', 'bg-brand-primary');
+                    span.classList.replace('border-white/20', 'border-brand-primary');
+                    span.classList.add('shadow-[0_0_10px_rgba(192,38,211,0.8)]');
+                } else {
+                    span.innerText = '?';
+                    span.className = 'bg-black/40 px-3 py-1 rounded border border-white/20 transition-all duration-500';
+                }
+            });
+
+            document.getElementById('progressBar').style.width = `${(gameState.currentScreen / TOTAL_SCREENS) * 100}%`;
+            
+            const backBtn = document.getElementById('backBtn');
+            if (gameState.currentScreen === 1 || gameState.currentScreen === 5) {
+                backBtn.style.opacity = '0.3'; backBtn.style.pointerEvents = 'none';
+            } else {
+                backBtn.style.opacity = '1'; backBtn.style.pointerEvents = 'auto';
+            }
+        }
+
+        function nextScreen() { if (gameState.currentScreen < TOTAL_SCREENS) renderScreen(gameState.currentScreen + 1); }
+        function prevScreen() { if (gameState.currentScreen > 1 && gameState.currentScreen < 5) renderScreen(gameState.currentScreen - 1); }
+
+        function completeStation(stationNum, digitCode) {
+            gameState.completedStations[stationNum - 1] = true;
+            gameState.digits[stationNum - 1] = digitCode;
+            saveGame();
+            nextScreen();
+        }
+
+        // --- תחנה 1: התאמה ---
+        function initMatchingGame() {
+            const namesContainer = document.getElementById('matchNames');
+            const descContainer = document.getElementById('matchDiscoveries');
+            namesContainer.innerHTML = ''; descContainer.innerHTML = '';
+
+            let shuffledDesc = [...matchingData].sort(() => Math.random() - 0.5);
+
+            matchingData.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'match-btn w-full text-right p-5 rounded-2xl border-2 border-gray-200 bg-white text-gray-800 font-bold hover:border-brand-primary/50 text-xl shadow-sm';
+                btn.innerText = item.name;
+                btn.onclick = () => selectMatch('name', item.id, btn);
+                namesContainer.appendChild(btn);
+            });
+
+            shuffledDesc.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'match-btn w-full text-right p-5 rounded-2xl border-2 border-blue-200 bg-blue-50 text-blue-900 font-bold hover:border-blue-400 text-base md:text-lg shadow-sm leading-snug';
+                btn.innerText = item.desc;
+                btn.onclick = () => selectMatch('desc', item.id, btn);
+                descContainer.appendChild(btn);
+            });
+        }
+
+        function selectMatch(type, id, element) {
+            if(element.classList.contains('matched') || gameState.completedStations[0]) return;
+            if (type === 'name') {
+                if(matchState.elements.name) matchState.elements.name.classList.remove('selected');
+                matchState.elements.name = element; matchState.selectedName = id;
+            } else {
+                if(matchState.elements.desc) matchState.elements.desc.classList.remove('selected');
+                matchState.elements.desc = element; matchState.selectedDesc = id;
+            }
+            element.classList.add('selected');
+            if (matchState.selectedName && matchState.selectedDesc) checkMatch();
+        }
+
+        function checkMatch() {
+            const el1 = matchState.elements.name; const el2 = matchState.elements.desc;
+            if (matchState.selectedName === matchState.selectedDesc) {
+                el1.classList.remove('selected'); el2.classList.remove('selected');
+                el1.classList.add('matched'); el2.classList.add('matched');
+                el1.innerHTML += ' <i class="fas fa-check-circle text-green-600 float-left mt-1 text-2xl"></i>';
+                
+                // תצוגת תוכן חינוכי
+                const itemData = matchingData.find(m => m.id === matchState.selectedName);
+                const factBox = document.getElementById('s1-fact-box');
+                document.getElementById('s1-fact-text').innerHTML = `<strong>${itemData.name}:</strong> ${itemData.fullFact}`;
+                factBox.classList.remove('hidden');
+                factBox.classList.remove('animate-fade-in-up'); // איפוס
+                void factBox.offsetWidth; // Trigger reflow
+                factBox.classList.add('animate-fade-in-up');
+                
+                matchState.matchedCount++;
+                if (matchState.matchedCount === matchingData.length) showStation1Success();
+            } else {
+                el1.classList.add('shake', 'bg-red-100', 'border-red-500', 'text-red-800');
+                el2.classList.add('shake', 'bg-red-100', 'border-red-500', 'text-red-800');
+                setTimeout(() => {
+                    el1.classList.remove('selected', 'shake', 'bg-red-100', 'border-red-500', 'text-red-800');
+                    el2.classList.remove('selected', 'shake', 'bg-red-100', 'border-red-500', 'text-red-800');
+                }, 600);
+            }
+            matchState.selectedName = null; matchState.selectedDesc = null;
+            matchState.elements.name = null; matchState.elements.desc = null;
+        }
+
+        function showStation1Success() {
+            const fb = document.getElementById('s1-feedback');
+            fb.innerHTML = '<i class="fas fa-star text-yellow-400 text-4xl mb-3 block"></i> כל הכבוד! פתרת את לוח ההתאמות.';
+            fb.classList.remove('hidden'); fb.classList.add('text-green-600', 'animate-fade-in-up');
+            document.getElementById('btn-next-1-container').classList.remove('hidden');
+        }
+
+        function checkStation1Done() {
+            if(gameState.completedStations[0]) {
+                document.getElementById('matchNames').innerHTML = '<div class="p-8 bg-green-50 text-green-800 rounded-2xl font-black text-2xl text-center border-2 border-green-200">כבר פתרתם תחנה זו!</div>';
+                document.getElementById('matchDiscoveries').innerHTML = '';
+                document.getElementById('btn-next-1-container').classList.remove('hidden');
+                document.getElementById('s1-fact-box').classList.add('hidden');
+            }
+        }
+
+        // --- תחנה 2: טריוויה ---
+        function loadTrivia() {
+            if (gameState.completedStations[1] || gameState.triviaCompleted) { showTriviaSuccess(); return; }
+            const qData = triviaData[triviaState.currentQ];
+            document.getElementById('trivia-current').innerText = triviaState.currentQ + 1;
+            document.getElementById('trivia-question').innerText = qData.q;
+            
+            Array.from(document.getElementById('trivia-dots').children).forEach((dot, i) => {
+                dot.className = i <= triviaState.currentQ ? 'w-4 h-4 rounded-full bg-brand-primary shadow-sm' : 'w-4 h-4 rounded-full bg-gray-200';
+            });
+            
+            const optionsContainer = document.getElementById('trivia-options');
+            optionsContainer.innerHTML = '';
+            document.getElementById('s2-feedback').classList.add('hidden');
+
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-right p-5 rounded-2xl border-2 border-gray-200 bg-white hover:border-brand-primary/50 hover:bg-brand-light font-bold text-gray-800 text-xl transition shadow-sm';
+                btn.innerText = opt;
+                btn.onclick = () => checkTrivia(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkTrivia(selectedIndex, btn) {
+            document.querySelectorAll('#trivia-options button').forEach(b => b.disabled = true);
+            const qData = triviaData[triviaState.currentQ];
+            const feedback = document.getElementById('s2-feedback');
+            feedback.className = 'mt-8 text-right p-6 rounded-2xl border-2 animate-fade-in-up';
+
+            if (selectedIndex === qData.correct) {
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                btn.classList.remove('bg-white', 'text-gray-800');
+                feedback.classList.add('bg-green-50', 'text-green-900', 'border-green-400');
+                feedback.innerHTML = `<div class="flex items-center mb-2"><i class="fas fa-check-circle text-green-600 text-3xl ml-3"></i> <strong class="text-2xl font-black">תשובה נכונה!</strong></div><p class="text-lg leading-relaxed font-medium">${qData.fact}</p>`;
+                
+                setTimeout(() => {
+                    triviaState.currentQ++;
+                    if (triviaState.currentQ < triviaData.length) loadTrivia();
+                    else { gameState.triviaCompleted = true; saveGame(); showTriviaSuccess(); }
+                }, 6000); // 6 seconds to read the rich fact
+            } else {
+                btn.classList.add('bg-red-500', 'text-white', 'border-red-600', 'shake');
+                document.querySelectorAll('#trivia-options button')[qData.correct].classList.add('border-green-500', 'bg-green-50');
+                feedback.classList.add('bg-red-50', 'text-red-900', 'border-red-400');
+                feedback.innerHTML = `<strong class="text-xl">אופס, טעות.</strong> התשובה הנכונה היא: ${qData.options[qData.correct]}. <br>מתחילים את התחנה מההתחלה...`;
+                setTimeout(() => { triviaState.currentQ = 0; loadTrivia(); }, 4000);
+            }
+        }
+
+        function showTriviaSuccess() {
+            document.getElementById('trivia-container').innerHTML = `<div class="text-center p-10 bg-green-50 text-green-800 rounded-3xl border-2 border-green-300 animate-fade-in-up"><i class="fas fa-medal text-7xl text-yellow-400 mb-6 drop-shadow-lg"></i><h3 class="text-4xl font-black mb-3">אלופים!</h3><p class="text-xl font-medium">עניתם נכון ולמדתם עובדות חשובות על ההיסטוריה הישראלית.</p></div>`;
+            document.getElementById('btn-next-2-container').classList.remove('hidden');
+        }
+
+        // --- תחנה 3: אמת/שקר ---
+        function loadTF() {
+             if (gameState.completedStations[2] || gameState.tfCompleted) { showTFSuccess(); return; }
+            const data = tfData[tfState.currentQ];
+            document.getElementById('tf-counter').innerText = `${tfState.currentQ + 1}/3`;
+            document.getElementById('tf-statement').innerText = `"${data.statement}"`;
+            document.getElementById('tf-buttons').classList.remove('hidden');
+            document.getElementById('tf-buttons').classList.add('flex');
+            document.getElementById('s3-feedback').classList.add('hidden');
+        }
+
+        function checkTF(answer) {
+            document.getElementById('tf-buttons').classList.replace('flex', 'hidden');
+            const data = tfData[tfState.currentQ];
+            const feedbackBox = document.getElementById('s3-feedback');
+            feedbackBox.className = 'mt-8 p-6 rounded-2xl text-right border-2 animate-fade-in-up';
+
+            if (answer === data.isTrue) {
+                feedbackBox.classList.add('bg-green-50', 'border-green-400');
+                document.getElementById('s3-feedback-text').innerHTML = `<span class="text-green-700 text-2xl font-black block mb-3"><i class="fas fa-check-circle"></i> זיהית נכון!</span><span class="text-gray-800 text-lg font-medium leading-relaxed">${data.explanation}</span>`;
+            } else {
+                feedbackBox.classList.add('bg-red-50', 'border-red-400');
+                document.getElementById('s3-feedback-text').innerHTML = `<span class="text-red-700 text-2xl font-black block mb-3"><i class="fas fa-times-circle"></i> לא מדויק.</span><span class="text-gray-800 text-lg font-medium leading-relaxed">${data.explanation}</span>`;
+            }
+            
+            const nextBtn = document.getElementById('btn-next-tf');
+            if (tfState.currentQ === tfData.length - 1) {
+                nextBtn.innerText = "סיימתי את השלב!";
+                nextBtn.className = "bg-brand-primary text-white px-8 py-4 rounded-xl shadow-md font-black hover:bg-brand-secondary transition w-full text-xl";
+            } else {
+                nextBtn.innerText = "הבנתי, נעבור לנתון הבא";
+                nextBtn.className = "bg-gray-800 text-white px-8 py-4 rounded-xl shadow-md font-black hover:bg-gray-900 transition w-full text-xl";
+            }
+        }
+
+        function nextTF() {
+            tfState.currentQ++;
+            if (tfState.currentQ < tfData.length) loadTF();
+            else { gameState.tfCompleted = true; saveGame(); showTFSuccess(); }
+        }
+
+        function showTFSuccess() {
+            document.getElementById('tf-game-area').innerHTML = `<div class="text-center p-10 bg-green-50 text-green-800 rounded-3xl border-2 border-green-300 animate-fade-in-up"><i class="fas fa-brain text-7xl text-pink-500 mb-6 drop-shadow-lg"></i><h3 class="text-4xl font-black mb-3">שברנו סטיגמות!</h3><p class="text-xl font-medium">הבנתם את המספרים האמיתיים מאחורי המאבק לשוויון.</p></div>`;
+            document.getElementById('btn-next-3-container').classList.remove('hidden');
+        }
+
+        // --- תחנה 4: רפלקציה ושיתוף בוואטסאפ ---
+        function checkReflection() {
+            const text = document.getElementById('reflectionText').value;
+            const len = text.trim().length;
+            gameState.reflectionText = text;
+            
+            document.getElementById('char-count').innerText = `${len}/20`;
+            const btn = document.getElementById('btn-reveal-last');
+            const hint = document.getElementById('reflection-hint');
+            
+            if (len >= 20) {
+                btn.disabled = false;
+                btn.className = 'w-full bg-brand-primary text-white font-black py-5 rounded-2xl shadow-lg transition hover:bg-brand-secondary text-2xl';
+                document.getElementById('char-count').classList.add('text-green-600');
+                hint.classList.replace('text-gray-500', 'text-green-600');
+                hint.innerHTML = '<i class="fas fa-check-circle text-xl"></i> מעולה! אפשר להמשיך לחשוף את הספרה.';
+            } else {
+                btn.disabled = true;
+                btn.className = 'w-full bg-gray-300 text-gray-500 font-black py-5 rounded-2xl shadow-sm transition cursor-not-allowed text-2xl';
+                document.getElementById('char-count').classList.remove('text-green-600');
+                hint.classList.replace('text-green-600', 'text-gray-500');
+                hint.innerHTML = `<i class="fas fa-pen"></i> יש לכתוב לפחות 20 תווים. (חסרים ${Math.max(0, 20 - len)})`;
+            }
+            saveGame();
+            if (gameState.completedStations[3]) revealLastDigit(true);
+        }
+
+        function revealLastDigit(fromStorage = false) {
+            document.getElementById('btn-next-4-container').classList.add('hidden');
+            document.getElementById('btn-next-4-done').classList.remove('hidden');
+            document.getElementById('reflectionText').disabled = true;
+            document.getElementById('reflectionText').classList.add('bg-gray-100', 'opacity-80');
+            if(!fromStorage) { gameState.digits[3] = '4'; saveGame(); }
+        }
+
+        function shareWhatsApp() {
+            const textMsg = `היי ${gameState.teacherName}! 👋\nסיימתי בהצלחה את הפעילות הדיגיטלית ליום האישה! 🏆\n\nבמשימת הסיכום כתבתי שהאישה שמעוררת בי השראה היא:\n"${gameState.reflectionText.trim()}"\n\nממני, ${gameState.playerName} (${gameState.className})`;
+            const encodedUrl = `https://wa.me/?text=${encodeURIComponent(textMsg)}`;
+            window.open(encodedUrl, '_blank');
+        }
+
+        // --- לוגיקת הכספת (מיושרת LTR) ---
+        function setupVaultInputs() {
+            const inputs = document.querySelectorAll('.vault-input');
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', function(e) {
+                    this.value = this.value.replace(/[^0-9]/g, ''); 
+                    if (this.value.length > 1) this.value = this.value.slice(0, 1);
+                    if (this.value !== '' && index < inputs.length - 1) inputs[index + 1].focus();
+                });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                        inputs[index - 1].focus();
+                        inputs[index - 1].value = ''; 
+                    }
+                });
+            });
+        }
+
+        function checkVault() {
+            const inputs = document.querySelectorAll('.vault-input');
+            let codeEntered = inputs[0].value + inputs[1].value + inputs[2].value + inputs[3].value;
+            const correctCode = "8304";
+            const errDiv = document.getElementById('vault-error');
+            const btn = document.getElementById('openVaultBtn');
+
+            if (codeEntered === correctCode) {
+                errDiv.innerText = "";
+                document.getElementById('vault-icon').className = 'fas fa-door-open text-6xl text-yellow-400';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> פותח...';
+                setTimeout(() => nextScreen(), 1200);
+            } else {
+                errDiv.innerText = "קוד שגוי! הקלד את הספרות משמאל לימין.";
+                inputs.forEach(i => { i.classList.add('border-red-500', 'shake'); i.style.color = '#ef4444'; });
+                setTimeout(() => {
+                    inputs.forEach(i => { i.classList.remove('border-red-500', 'shake'); i.style.color = '#fde047'; });
+                }, 600);
+            }
+        }
+
+        function fireConfetti() {
+            var duration = 6 * 1000;
+            var end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 7, angle: 60, spread: 60, origin: { x: 0 }, colors: ['#c026d3', '#fde047', '#7c3aed', '#ffffff'] });
+                confetti({ particleCount: 7, angle: 120, spread: 60, origin: { x: 1 }, colors: ['#c026d3', '#fde047', '#7c3aed', '#ffffff'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+
