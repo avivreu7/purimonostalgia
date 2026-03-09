@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>האקדמיה של צ'אק נוריס</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Rubik -->
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Rubik', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            light: '#f8fafc',
+                            accent: '#f97316', // Orange
+                            accentHover: '#ea580c',
+                        }
+                    },
+                    animation: {
+                        'slide-in': 'slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'pulse-glow': 'pulseGlow 2s infinite',
+                    },
+                    keyframes: {
+                        slideIn: {
+                            '0%': { opacity: '0', transform: 'translateX(-50px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { boxShadow: '0 0 10px #f97316, 0 0 20px #f97316' },
+                            '50%': { boxShadow: '0 0 25px #ea580c, 0 0 35px #ea580c' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        
+        .screen {
+            display: none;
+            min-height: calc(100vh - 64px); /* Minus header height */
+        }
+        
+        .screen.active {
+            display: flex;
+            animation: slideIn 0.5s forwards;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f97316; 
+            border-radius: 4px;
+        }
+
+        /* Safe Inputs */
+        .safe-input {
+            width: 60px;
+            height: 70px;
+            font-size: 2rem;
+            text-align: center;
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 8px;
+            color: #f97316;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .safe-input:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+        }
+        /* Hide number arrows */
+        .safe-input::-webkit-outer-spin-button,
+        .safe-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Modal Overlay */
+        #customModal {
+            backdrop-filter: blur(5px);
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #customModal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Glitch effect for intro */
+        .glitch-text {
+            text-shadow: 2px 0 #f97316, -2px 0 #0ea5e9;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen custom-scrollbar relative">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-800 border-b border-slate-700 h-16 sticky top-0 z-40 flex items-center justify-between px-4 sm:px-8 shadow-lg">
+        <div class="flex items-center gap-4">
+            <button id="btnBack" onclick="goBack()" class="text-slate-300 hover:text-brand-accent transition-colors hidden" title="חזור למסך הקודם">
+                <i class="fa-solid fa-arrow-right text-xl"></i> חזור
+            </button>
+        </div>
+        
+        <div class="font-bold text-xl tracking-wider text-slate-100 flex items-center gap-2">
+            <i class="fa-solid fa-fire text-brand-accent"></i> 
+            <span class="hidden sm:inline">האקדמיה של צ'אק נוריס</span>
+        </div>
+
+        <div>
+            <button onclick="restartGame()" class="text-slate-300 hover:text-red-500 transition-colors" title="התחל מחדש">
+                <i class="fa-solid fa-rotate-right text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="absolute bottom-0 left-0 h-1 bg-slate-700 w-full">
+            <div id="progressBar" class="h-full bg-brand-accent transition-all duration-500 w-0 shadow-[0_0_10px_#f97316]"></div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow relative pb-10">
+
+        <!-- SCREEN 1: Lobby -->
+        <section id="screen-1" class="screen active flex-col items-center justify-center p-6 text-center">
+            <div class="max-w-2xl w-full mx-auto space-y-8">
+                <div class="relative inline-block">
+                    <!-- Placeholder graphic -->
+                    <div class="w-32 h-32 md:w-40 md:h-40 mx-auto bg-slate-800 rounded-full border-4 border-brand-accent flex items-center justify-center shadow-[0_0_30px_rgba(249,115,22,0.6)] mb-6">
+                        <i class="fa-solid fa-user-ninja text-6xl md:text-8xl text-brand-accent"></i>
+                    </div>
+                </div>
+                
+                <h1 class="text-5xl md:text-7xl font-black mb-2 glitch-text tracking-tight">יום הולדת 86!</h1>
+                <p class="text-xl md:text-2xl text-slate-300 font-medium">מחר, ה-10 במרץ, האגדה חוגגת. האם אתם ראויים לחגורה השחורה?</p>
+                
+                <div class="bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-700 mt-8 max-w-md mx-auto">
+                    <label for="playerNameInput" class="block text-lg mb-3 font-semibold text-slate-200">איך קוראים לכם?</label>
+                    <input type="text" id="playerNameInput" placeholder="הקלד/י שם כאן..." class="w-full bg-slate-900 border-2 border-slate-600 rounded-xl p-4 text-center text-xl text-white focus:border-brand-accent focus:outline-none transition-colors mb-6" onkeypress="if(event.key === 'Enter') startMission()">
+                    
+                    <button onclick="startMission()" class="w-full bg-brand-accent hover:bg-brand-accentHover text-white font-bold text-xl py-4 px-8 rounded-xl transition-all hover:scale-105 active:scale-95 animate-pulse-glow">
+                        היכנסו לדוג'ו <i class="fa-solid fa-door-open mr-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: Meme Culture -->
+        <section id="screen-2" class="screen flex-col items-center justify-center p-6 text-center">
+            <div class="max-w-3xl w-full mx-auto space-y-6">
+                <span class="text-brand-accent font-bold tracking-widest text-sm md:text-base bg-brand-accent/10 px-4 py-1 rounded-full">שלב 1: תופעת הרשת</span>
+                <h2 class="text-4xl md:text-5xl font-black mb-6">האיש והמיתוס</h2>
+                
+                <div class="bg-slate-800/80 p-6 md:p-8 rounded-2xl border border-slate-700 text-lg md:text-xl text-slate-300 leading-relaxed text-right shadow-lg space-y-4">
+                    <p>
+                        שלום <span class="playerNameDisplay font-bold text-white"></span>. ברוך הבא לאקדמיה.
+                    </p>
+                    <p>
+                        בשנת 2005, קרה משהו מוזר באינטרנט. פתאום, כולם התחילו להמציא "עובדות" מוגזמות, בלתי אפשריות ומצחיקות בטירוף על כוכב האקשן צ'אק נוריס.
+                    </p>
+                    <p>
+                        הגולשים הפכו אותו מסתם שחקן – לישות הכל-יכולה של היקום. התופעה הזו נקראת <strong>"עובדות צ'אק נוריס"</strong> (Chuck Norris Facts), והיא אחד הממים (Memes) המפורסמים בהיסטוריה.
+                    </p>
+                    <div class="bg-slate-900 p-4 rounded-lg border-l-4 border-brand-accent my-6">
+                        <i class="fa-solid fa-quote-right text-brand-accent opacity-50 text-2xl mb-2"></i>
+                        <p class="font-medium text-white italic">"כשצ'אק נוריס עושה שכיבות סמיכה, הוא לא מרים את עצמו למעלה, הוא דוחף את כדור הארץ למטה."</p>
+                    </div>
+                </div>
+
+                <button onclick="nextScreen()" class="mt-8 bg-brand-accent hover:bg-brand-accentHover text-white font-bold text-xl py-4 px-10 rounded-xl transition-all hover:scale-105 shadow-[0_4px_14px_0_rgba(249,115,22,0.39)]">
+                    הבנתי את הקטע! <i class="fa-solid fa-check ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: Complete the Joke Game -->
+        <section id="screen-3" class="screen flex-col items-center justify-center p-6">
+            <div class="max-w-2xl w-full mx-auto space-y-6">
+                <div class="text-center">
+                    <span class="text-brand-accent font-bold tracking-widest text-sm md:text-base bg-brand-accent/10 px-4 py-1 rounded-full">שלב 2: מבחן ההומור</span>
+                    <h2 class="text-3xl md:text-5xl font-black mt-4 mb-2">השלם את הבדיחה</h2>
+                    <p class="text-slate-400">בואו נראה אם הבנתם את ההיגיון של האינטרנט. בחרו את הפאנצ'ליין הנכון (שאלה <span id="jokeCurrentNum">1</span> מתוך 3).</p>
+                </div>
+
+                <div class="bg-slate-800 p-6 md:p-8 rounded-2xl border border-slate-700 shadow-xl mt-6 relative" id="jokeContainer">
+                    <div class="absolute -top-6 -right-4 text-6xl text-slate-700 opacity-30"><i class="fa-solid fa-face-laugh-squint"></i></div>
+                    
+                    <h3 id="jokeQuestion" class="text-2xl md:text-3xl font-bold text-white mb-8 leading-tight text-center relative z-10">
+                        <!-- Question injected here -->
+                    </h3>
+                    
+                    <div id="jokeOptions" class="space-y-4">
+                        <!-- Options injected here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: The True History -->
+        <section id="screen-4" class="screen flex-col items-center justify-center p-6">
+            <div class="max-w-4xl w-full mx-auto space-y-6">
+                <div class="text-center">
+                    <span class="text-brand-accent font-bold tracking-widest text-sm md:text-base bg-brand-accent/10 px-4 py-1 rounded-full">שלב 3: חקירה היסטורית</span>
+                    <h2 class="text-3xl md:text-5xl font-black mt-4 mb-2">מי אתה באמת, קרלוס?</h2>
+                    <p class="text-slate-300 text-lg">מעבר לבדיחות, יש כאן סיפור הצלחה אמיתי. <strong class="text-white">קראו בעיון, תצטרכו את המידע הזה לחדר הבא!</strong></p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <!-- Fact Card 1 -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-brand-accent/50 transition-colors">
+                        <div class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-brand-accent mb-4 text-xl"><i class="fa-solid fa-id-card"></i></div>
+                        <h4 class="text-xl font-bold text-white mb-2">זהות אמיתית</h4>
+                        <p class="text-slate-300">שמו האמיתי הוא <strong class="text-brand-accent">קרלוס ריי נוריס</strong>. הוא נולד בשנת <strong class="text-white">1940</strong>. ילד ביישן שלא חלם להיות מפורסם.</p>
+                    </div>
+                    <!-- Fact Card 2 -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-brand-accent/50 transition-colors">
+                        <div class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-blue-400 mb-4 text-xl"><i class="fa-solid fa-plane"></i></div>
+                        <h4 class="text-xl font-bold text-white mb-2">שירות צבאי</h4>
+                        <p class="text-slate-300">הוא שירת בחיל האוויר האמריקאי ב<strong class="text-white">קוריאה הדרומית</strong>. שם קיבל את הכינוי "צ'אק" ושם נחשף לראשונה לאומנויות לחימה.</p>
+                    </div>
+                    <!-- Fact Card 3 -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-brand-accent/50 transition-colors">
+                        <div class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-yellow-500 mb-4 text-xl"><i class="fa-solid fa-medal"></i></div>
+                        <h4 class="text-xl font-bold text-white mb-2">אלוף העולם</h4>
+                        <p class="text-slate-300">בזכות התמדה, הוא הפך לאלוף העולם בקראטה במשקל בינוני למשך <strong class="text-brand-accent text-2xl">6</strong> שנים ברציפות!</p>
+                    </div>
+                    <!-- Fact Card 4 -->
+                    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 hover:border-brand-accent/50 transition-colors">
+                        <div class="w-12 h-12 bg-slate-700 rounded-full flex items-center justify-center text-red-500 mb-4 text-xl"><i class="fa-solid fa-film"></i></div>
+                        <h4 class="text-xl font-bold text-white mb-2">אגדה קולנועית</h4>
+                        <p class="text-slate-300">לא רק ספורט: צ'אק נוריס המציא שיטת לחימה משלו ("צ'אן קוק דו"). הקרב המפורסם ביותר שלו בקולנוע היה נגד ברוס לי בסרט שיצא בשנת <strong class="text-brand-accent">1972</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="text-center mt-10">
+                    <button onclick="nextScreen()" class="bg-brand-accent hover:bg-brand-accentHover text-white font-bold text-xl py-4 px-10 rounded-xl transition-all hover:scale-105 shadow-lg">
+                        קראתי והבנתי, אפשר להמשיך <i class="fa-solid fa-arrow-left mr-2"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: The Safe (Escape Room) -->
+        <section id="screen-5" class="screen flex-col items-center justify-center p-6">
+            <div class="max-w-xl w-full mx-auto space-y-6 text-center">
+                <span class="text-red-500 font-bold tracking-widest text-sm md:text-base bg-red-500/10 px-4 py-1 rounded-full border border-red-500/50">שלב 4: חדר בריחה - הכספת</span>
+                
+                <div class="bg-slate-800 p-8 rounded-3xl border-2 border-slate-600 shadow-2xl relative mt-8">
+                    <!-- Top vault visual -->
+                    <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 w-20 h-20 bg-slate-900 border-4 border-slate-600 rounded-full flex items-center justify-center shadow-inner">
+                        <i class="fa-solid fa-lock text-3xl text-slate-400" id="lockIcon"></i>
+                    </div>
+
+                    <h2 class="text-3xl font-black mt-6 mb-4">הקוד הסודי</h2>
+                    <p class="text-slate-300 mb-8">
+                        כדי להוכיח שבאמת קראתם, פצחו את הקוד בן 3 הספרות של הכספת.
+                    </p>
+
+                    <div class="text-right text-sm md:text-base text-slate-400 mb-6 bg-slate-900/50 p-4 rounded-xl space-y-3">
+                        <p><i class="fa-solid fa-magnifying-glass text-brand-accent ml-2"></i> <strong>ספרה 1:</strong> כמה שנים ברציפות הוא היה אלוף עולם?</p>
+                        <p><i class="fa-solid fa-magnifying-glass text-brand-accent ml-2"></i> <strong>ספרה 2:</strong> באיזה עשור נולד צ'אק? (למשל, 1980=8, 1990=9).</p>
+                        <p><i class="fa-solid fa-magnifying-glass text-brand-accent ml-2"></i> <strong>ספרה 3:</strong> מהי הספרה האחרונה בשנה בה יצא הסרט שלו עם ברוס לי?</p>
+                    </div>
+
+                    <div class="flex justify-center gap-4 mb-8 text-ltr" dir="ltr">
+                        <input type="number" id="safe1" class="safe-input" min="0" max="9" oninput="moveNext(this, 'safe2')">
+                        <input type="number" id="safe2" class="safe-input" min="0" max="9" oninput="moveNext(this, 'safe3')" onkeydown="movePrev(event, this, 'safe1')">
+                        <input type="number" id="safe3" class="safe-input" min="0" max="9" onkeydown="movePrev(event, this, 'safe2')">
+                    </div>
+
+                    <button onclick="checkSafeCode()" class="w-full bg-slate-700 hover:bg-slate-600 border-2 border-slate-500 text-white font-bold text-xl py-4 rounded-xl transition-colors">
+                        בדוק צופן
+                    </button>
+                    
+                    <p class="mt-4 text-sm text-slate-500">שכחתם? <button onclick="goBack()" class="text-brand-accent underline hover:text-white">חזרו מסך אחד אחורה</button> וקראו שוב.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 6: Fact or Myth (Swipe/Click game) -->
+        <section id="screen-6" class="screen flex-col items-center justify-center p-6">
+            <div class="max-w-2xl w-full mx-auto space-y-6 text-center">
+                <span class="text-brand-accent font-bold tracking-widest text-sm md:text-base bg-brand-accent/10 px-4 py-1 rounded-full">שלב 5: אמת או שקר</span>
+                <h2 class="text-3xl md:text-5xl font-black mt-4 mb-2">עובדה או מיתוס?</h2>
+                <p class="text-slate-300">הבחינו בין עובדה היסטורית (אמת) להגזמת אינטרנט (מיתוס).<br>צריך <strong class="text-white">5 תשובות נכונות ברצף</strong> כדי לעבור! רצף נוכחי: <span id="streakCounter" class="text-brand-accent font-bold text-2xl">0</span>/5</p>
+
+                <div class="bg-slate-800 p-8 md:p-12 rounded-3xl border border-slate-700 shadow-xl mt-8 mb-8 min-h-[250px] flex items-center justify-center relative overflow-hidden" id="factCard">
+                    <h3 id="factText" class="text-2xl md:text-3xl font-bold text-white text-center leading-tight relative z-10 transition-all duration-300">
+                        <!-- Fact injected here -->
+                    </h3>
+                </div>
+
+                <div class="flex gap-4 w-full">
+                    <button onclick="checkFact(false)" class="flex-1 bg-red-600/20 hover:bg-red-600 border-2 border-red-500 text-white font-bold text-lg py-5 rounded-xl transition-all hover:-translate-y-1">
+                        <i class="fa-solid fa-robot block text-3xl mb-2"></i>
+                        מיתוס רשת
+                    </button>
+                    <button onclick="checkFact(true)" class="flex-1 bg-green-600/20 hover:bg-green-600 border-2 border-green-500 text-white font-bold text-lg py-5 rounded-xl transition-all hover:-translate-y-1">
+                        <i class="fa-solid fa-book-open block text-3xl mb-2"></i>
+                        עובדה היסטורית
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 7: Meme Generator -->
+        <section id="screen-7" class="screen flex-col items-center justify-center p-6">
+            <div class="max-w-4xl w-full mx-auto space-y-6">
+                <div class="text-center mb-8">
+                    <span class="text-brand-accent font-bold tracking-widest text-sm md:text-base bg-brand-accent/10 px-4 py-1 rounded-full">שלב 6 (אחרון): אתגר היצירה</span>
+                    <h2 class="text-3xl md:text-4xl font-black mt-4 mb-2">מחולל הממים של <span class="playerNameDisplay"></span></h2>
+                    <p class="text-slate-300 text-lg">המשימה הסופית: המציאו "עובדת צ'אק נוריס" <strong class="text-white">מקורית משלכם</strong>.<br>נסו להתבסס על מה שלמדנו (קראטה, קוריאה, סרטים...).</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-8 items-center justify-center">
+                    
+                    <!-- Controls -->
+                    <div class="w-full md:w-1/2 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg order-2 md:order-1">
+                        <label class="block text-slate-300 font-bold mb-2">הקלידו את הפאנצ'ליין שלכם:</label>
+                        <textarea id="memeInput" rows="3" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-4 text-white focus:border-brand-accent focus:outline-none resize-none mb-4 text-lg" placeholder="למשל: צ'אק נוריס לא באמת היה בקוריאה, קוריאה באה אליו..."></textarea>
+                        
+                        <button onclick="generateMeme()" class="w-full bg-brand-accent hover:bg-brand-accentHover text-white font-bold text-lg py-3 rounded-xl transition-colors mb-3">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> צור מם!
+                        </button>
+                        <button onclick="nextScreen()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg py-3 rounded-xl transition-colors mt-4 shadow-lg border-2 border-green-400">
+                            סיימתי, תביאו לי תעודה! <i class="fa-solid fa-graduation-cap ml-2"></i>
+                        </button>
+                    </div>
+
+                    <!-- Meme Display (CSS/HTML based to avoid canvas external image issues) -->
+                    <div class="w-full md:w-1/2 order-1 md:order-2 flex justify-center">
+                        <div id="memeContainer" class="relative w-full max-w-[400px] aspect-square bg-slate-900 border-4 border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] overflow-hidden flex items-center justify-center">
+                            <!-- Background Placeholder (Stylized Martial Artist) -->
+                            <div class="absolute inset-0 bg-gradient-to-br from-orange-600 to-red-900 opacity-80 z-0"></div>
+                            <i class="fa-solid fa-user-ninja absolute text-[200px] text-black opacity-30 z-0 bottom-[-20px] left-[-20px]"></i>
+                            
+                            <!-- Text overlays -->
+                            <div class="absolute top-4 w-full px-4 z-10 text-center">
+                                <h2 class="text-white font-black text-2xl uppercase tracking-widest text-shadow-meme" style="text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;">CHUCK NORRIS</h2>
+                            </div>
+                            
+                            <div class="absolute bottom-6 w-full px-6 z-10 text-center flex items-center justify-center min-h-[80px]">
+                                <p id="memeOutputText" class="text-white font-bold text-xl leading-snug break-words" style="text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;">
+                                    [הבדיחה שלכם תופיע כאן]
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 8: Hall of Fame (Outro) -->
+        <section id="screen-8" class="screen flex-col items-center justify-center p-6 text-center">
+            <div class="max-w-3xl w-full mx-auto">
+                <div class="animate-pulse-glow inline-block rounded-full mb-6">
+                    <i class="fa-solid fa-trophy text-7xl text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]"></i>
+                </div>
+                
+                <h1 class="text-5xl md:text-6xl font-black mb-6 text-white">כל הכבוד, <span class="playerNameDisplay text-brand-accent"></span>!</h1>
+                
+                <div class="bg-slate-800 p-8 md:p-12 rounded-2xl border-2 border-brand-accent shadow-2xl relative overflow-hidden my-8">
+                    <div class="absolute -right-10 -top-10 opacity-10 text-[150px]"><i class="fa-solid fa-certificate"></i></div>
+                    
+                    <h2 class="text-3xl font-bold text-white mb-4 relative z-10">תעודת חגורה שחורה</h2>
+                    <p class="text-xl text-slate-300 relative z-10 leading-relaxed mb-6">
+                        מוענקת בזאת על הפגנת ידע היסטורי, הבנת תרבות רשת, פריצת כספות ושליטה מוחלטת בעובדות על צ'אק נוריס.
+                    </p>
+                    <div class="w-full h-2 bg-gradient-to-r from-transparent via-brand-accent to-transparent my-6 relative z-10"></div>
+                    <p class="text-slate-400 italic relative z-10">"אדם אמיתי, עם עבודה קשה והתמדה, הפך לאגדת תרבות גלובלית."</p>
+                </div>
+                
+                <p class="text-lg text-slate-300 mb-8">אתם מוזמנים לצלם מסך ולשלוח לקבוצה הכיתתית!</p>
+                
+                <button onclick="restartGame()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold text-xl py-3 px-8 rounded-xl transition-all">
+                    שחקו שוב <i class="fa-solid fa-rotate-right ml-2"></i>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal for Alerts/Feedback -->
+    <div id="customModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border-2 border-slate-600 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl transform scale-95 transition-transform" id="modalContent">
+            <div id="modalIcon" class="text-5xl mb-4 text-brand-accent">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <h3 id="modalTitle" class="text-2xl font-bold text-white mb-2">כותרת</h3>
+            <p id="modalMessage" class="text-slate-300 mb-6 text-lg">טקסט ההודעה</p>
+            <button onclick="closeModal()" class="w-full bg-brand-accent hover:bg-brand-accentHover text-white font-bold py-3 rounded-xl transition-colors">
+                המשך
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        // --- State Management ---
+        let currentScreenIndex = 1;
+        const totalScreens = 8;
+        let playerName = "";
+        
+        // --- Data ---
+        const jokesData = [
+            {
+                q: "צ'אק נוריס הוכש על ידי נחש קוברה. אחרי חמישה ימים של כאבי תופת...",
+                options: ["צ'אק נוריס נלקח לבית חולים.", "הנחש מת.", "הוא שתה תה חם ונח."],
+                correct: 1
+            },
+            {
+                q: "צ'אק נוריס ספר עד אינסוף...",
+                options: ["לקח לו שלוש שנים.", "אבל טעה במספר 4,321.", "פעמיים."],
+                correct: 2
+            },
+            {
+                q: "כשאלכסנדר גרהם בל המציא את הטלפון...",
+                options: ["כבר היו לו 3 שיחות שלא נענו מצ'אק נוריס.", "הוא התקשר מיד להורים שלו.", "הקו היה מנותק."],
+                correct: 0
+            }
+        ];
+        let currentJokeIndex = 0;
+
+        const factsData = [
+            { text: "נלחם מול ברוס לי בסרט משנת 1972", isFact: true },
+            { text: "יכול לטרוק דלת מסתובבת", isFact: false },
+            { text: "שירת בחיל האוויר בקוריאה הדרומית", isFact: true },
+            { text: "נשכו אותו זומבים, והזומבים הפכו לצ'אק נוריס", isFact: false },
+            { text: "המציא שיטת אומנות לחימה בשם צ'אן קוק דו", isFact: true },
+            { text: "היה אלוף העולם בקראטה 6 שנים ברציפות", isFact: true },
+            { text: "כשצ'אק נוריס חותך בצל, הבצל בוכה", isFact: false },
+        ];
+        // Shuffle facts array
+        let shuffledFacts = factsData.sort(() => 0.5 - Math.random());
+        let currentFactIndex = 0;
+        let factStreak = 0;
+        const requiredStreak = 5;
+
+        // --- Navigation Functions ---
+        function updateUI() {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            
+            // Show current
+            const current = document.getElementById(`screen-${currentScreenIndex}`);
+            if(current) current.classList.add('active');
+
+            // Update Back button visibility
+            const btnBack = document.getElementById('btnBack');
+            if(currentScreenIndex === 1 || currentScreenIndex === totalScreens) {
+                btnBack.classList.add('hidden');
+            } else {
+                btnBack.classList.remove('hidden');
+            }
+
+            // Update Progress Bar
+            const progress = ((currentScreenIndex - 1) / (totalScreens - 1)) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+
+            // Window scroll top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function nextScreen() {
+            if (currentScreenIndex < totalScreens) {
+                currentScreenIndex++;
+                updateUI();
+                initScreenLogic();
+            }
+        }
+
+        function goBack() {
+            if (currentScreenIndex > 1) {
+                currentScreenIndex--;
+                updateUI();
+                initScreenLogic();
+            }
+        }
+
+        function restartGame() {
+            currentScreenIndex = 1;
+            playerName = "";
+            document.getElementById('playerNameInput').value = "";
+            
+            // Reset Mini Games
+            currentJokeIndex = 0;
+            factStreak = 0;
+            currentFactIndex = 0;
+            shuffledFacts = factsData.sort(() => 0.5 - Math.random());
+            document.getElementById('streakCounter').innerText = factStreak;
+            
+            // Reset Safe
+            document.getElementById('safe1').value = "";
+            document.getElementById('safe2').value = "";
+            document.getElementById('safe3').value = "";
+            
+            // Reset Meme
+            document.getElementById('memeInput').value = "";
+            document.getElementById('memeOutputText').innerText = "[הבדיחה שלכם תופיע כאן]";
+
+            updateUI();
+        }
+
+        // --- Screen Specific Logic Initialization ---
+        function initScreenLogic() {
+            // Update all spans showing player name
+            document.querySelectorAll('.playerNameDisplay').forEach(el => {
+                el.innerText = playerName;
+            });
+
+            if(currentScreenIndex === 3) {
+                renderJoke();
+            } else if (currentScreenIndex === 6) {
+                renderFact();
+            }
+        }
+
+        // --- Screen 1 Logic ---
+        function startMission() {
+            const input = document.getElementById('playerNameInput').value.trim();
+            if(input.length < 2) {
+                showModal("רגע חבר...", "אנא הכניסו שם אמיתי כדי שנוכל להדפיס תעודה.", "fa-hand");
+                return;
+            }
+            playerName = input;
+            nextScreen();
+        }
+
+        // --- Screen 3 Logic (Jokes Quiz) ---
+        function renderJoke() {
+            if(currentJokeIndex >= jokesData.length) {
+                // Done with jokes
+                nextScreen();
+                return;
+            }
+            const joke = jokesData[currentJokeIndex];
+            document.getElementById('jokeCurrentNum').innerText = currentJokeIndex + 1;
+            document.getElementById('jokeQuestion').innerText = joke.q;
+            
+            const optionsContainer = document.getElementById('jokeOptions');
+            optionsContainer.innerHTML = '';
+            
+            joke.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-right bg-slate-700 hover:bg-brand-accent hover:text-white border-2 border-slate-600 hover:border-brand-accent text-slate-200 font-medium text-lg p-4 rounded-xl transition-all";
+                btn.innerText = opt;
+                btn.onclick = () => checkJokeAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkJokeAnswer(selectedIndex) {
+            const correctIndex = jokesData[currentJokeIndex].correct;
+            if(selectedIndex === correctIndex) {
+                // Correct
+                currentJokeIndex++;
+                if(currentJokeIndex < jokesData.length) {
+                    // Small visual feedback before next
+                    const container = document.getElementById('jokeContainer');
+                    container.classList.add('border-green-500');
+                    setTimeout(() => {
+                        container.classList.remove('border-green-500');
+                        renderJoke();
+                    }, 400);
+                } else {
+                    showModal("מעולה!", "הבנתם את הראש! ממשיכים הלאה.", "fa-face-grin-beam", true);
+                }
+            } else {
+                // Wrong
+                const container = document.getElementById('jokeContainer');
+                container.classList.add('animate-shake', 'border-red-500');
+                setTimeout(() => {
+                    container.classList.remove('animate-shake', 'border-red-500');
+                }, 500);
+                showModal("לא מדויק...", "נסו לחשוב הכי מוגזם ובלתי אפשרי שיש.", "fa-face-frown-open");
+            }
+        }
+
+        // --- Screen 5 Logic (Safe) ---
+        function moveNext(current, nextFieldID) {
+            if (current.value.length >= 1) {
+                current.value = current.value.slice(0, 1); // Only 1 digit
+                if(nextFieldID) document.getElementById(nextFieldID).focus();
+            }
+        }
+        function movePrev(e, current, prevFieldID) {
+            if (e.key === "Backspace" && current.value === "") {
+                if(prevFieldID) document.getElementById(prevFieldID).focus();
+            }
+        }
+        function checkSafeCode() {
+            const d1 = document.getElementById('safe1').value;
+            const d2 = document.getElementById('safe2').value;
+            const d3 = document.getElementById('safe3').value;
+            const code = d1 + d2 + d3;
+
+            // Logic: 6 years champ, born 1940 (decade 4), movie 1972 (last digit 2). Code: 642.
+            if(code === "642") {
+                document.getElementById('lockIcon').className = "fa-solid fa-lock-open text-3xl text-green-500";
+                setTimeout(() => {
+                    showModal("הכספת נפרצה!", "קראתם בעיון והוכחתם ידע! בואו נמשיך למבחן האמיתי.", "fa-unlock", true);
+                }, 400);
+            } else {
+                document.getElementById('lockIcon').className = "fa-solid fa-lock text-3xl text-red-500";
+                document.getElementById('safe1').parentElement.classList.add('animate-shake');
+                setTimeout(() => {
+                    document.getElementById('safe1').parentElement.classList.remove('animate-shake');
+                    document.getElementById('lockIcon').className = "fa-solid fa-lock text-3xl text-slate-400";
+                }, 500);
+                showModal("שגיאה בצופן", "הקוד שגוי. תוכלו ללחוץ על חזור (או על הטקסט למטה) כדי לקרוא שוב את הנתונים ההיסטוריים.", "fa-circle-xmark");
+                // Clear inputs
+                document.getElementById('safe1').value = "";
+                document.getElementById('safe2').value = "";
+                document.getElementById('safe3').value = "";
+                document.getElementById('safe1').focus();
+            }
+        }
+
+        // --- Screen 6 Logic (Fact/Myth) ---
+        function renderFact() {
+            if (currentFactIndex >= shuffledFacts.length) {
+                // Loop facts if we run out
+                shuffledFacts = factsData.sort(() => 0.5 - Math.random());
+                currentFactIndex = 0;
+            }
+            const factCard = document.getElementById('factText');
+            factCard.style.opacity = 0;
+            setTimeout(() => {
+                factCard.innerText = `"${shuffledFacts[currentFactIndex].text}"`;
+                factCard.style.opacity = 1;
+            }, 200);
+        }
+
+        function checkFact(userGuessIsFact) {
+            const currentFact = shuffledFacts[currentFactIndex];
+            const isCorrect = (userGuessIsFact === currentFact.isFact);
+            
+            const cardBg = document.getElementById('factCard');
+
+            if(isCorrect) {
+                factStreak++;
+                document.getElementById('streakCounter').innerText = factStreak;
+                
+                // Visual success
+                cardBg.classList.add('border-green-500', 'bg-green-900/30');
+                setTimeout(() => cardBg.classList.remove('border-green-500', 'bg-green-900/30'), 300);
+
+                if(factStreak >= requiredStreak) {
+                    showModal("אלוף העולם!", "הצלחתם להבדיל בין העובדות למיתוסים. נותר אתגר אחד אחרון...", "fa-trophy", true);
+                } else {
+                    currentFactIndex++;
+                    renderFact();
+                }
+            } else {
+                // Mistake
+                factStreak = 0; // Reset streak
+                document.getElementById('streakCounter').innerText = factStreak;
+                
+                // Visual fail
+                cardBg.classList.add('animate-shake', 'border-red-500', 'bg-red-900/30');
+                setTimeout(() => cardBg.classList.remove('animate-shake', 'border-red-500', 'bg-red-900/30'), 500);
+                
+                const explanation = currentFact.isFact ? "זאת דווקא עובדה אמיתית מההיסטוריה שלו!" : "זה מיתוס רשת מוגזם, לא באמת קרה!";
+                showModal("טעות!", `${explanation}\n\nרצף התשובות התאפס, מתחילים מחדש.`, "fa-bomb");
+                
+                currentFactIndex++;
+                renderFact();
+            }
+        }
+
+        // --- Screen 7 Logic (Meme) ---
+        function generateMeme() {
+            const input = document.getElementById('memeInput').value.trim();
+            if(input === "") {
+                showModal("רגע...", "לא הקלדתם כלום! תפעילו את היצירתיות.", "fa-pen");
+                return;
+            }
+            document.getElementById('memeOutputText').innerText = input;
+            
+            // Add a small cool animation to the image container
+            const container = document.getElementById('memeContainer');
+            container.classList.add('scale-105', 'border-brand-accent');
+            setTimeout(() => {
+                container.classList.remove('scale-105', 'border-brand-accent');
+            }, 300);
+        }
+
+        // --- Custom Modal System ---
+        let modalNextCallback = null;
+
+        function showModal(title, message, iconClass, proceedOnClose = false) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            
+            const iconEl = document.getElementById('modalIcon');
+            iconEl.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
+            
+            // Set color based on icon type (rough logic)
+            if(iconClass.includes('check') || iconClass.includes('grin') || iconClass.includes('unlock') || iconClass.includes('trophy')) {
+                iconEl.className = "text-5xl mb-4 text-green-500";
+            } else if (iconClass.includes('frown') || iconClass.includes('bomb') || iconClass.includes('xmark')) {
+                iconEl.className = "text-5xl mb-4 text-red-500";
+            } else {
+                iconEl.className = "text-5xl mb-4 text-brand-accent";
+            }
+
+            modalNextCallback = proceedOnClose ? nextScreen : null;
+
+            const modal = document.getElementById('customModal');
+            modal.classList.add('show');
+            // Animate content popup
+            document.getElementById('modalContent').classList.replace('scale-95', 'scale-100');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalContent').classList.replace('scale-100', 'scale-95');
+            modal.classList.remove('show');
+            
+            if(modalNextCallback) {
+                setTimeout(modalNextCallback, 300); // Wait for modal fade out
+                modalNextCallback = null;
+            }
+        }
+
+        // Init on load
+        window.onload = () => {
+            updateUI();
+        };
+
+    </script>
+</body>
+</html>
+
