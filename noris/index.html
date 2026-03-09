@@ -164,14 +164,14 @@
                 </div>
                 
                 <h1 class="text-5xl md:text-7xl font-black mb-2 glitch-text tracking-tight">יום הולדת 86!</h1>
-                <p class="text-xl md:text-2xl text-slate-300 font-medium">מחר, ה-10 במרץ, האגדה חוגגת. האם אתם ראויים לחגורה השחורה?</p>
+                <p class="text-xl md:text-2xl text-slate-300 font-medium">מחר, ה-10 במרץ, האגדה חוגגת. האם יש לך את מה שצריך לחגורה השחורה?</p>
                 
                 <div class="bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl border border-slate-700 mt-8 max-w-md mx-auto">
-                    <label for="playerNameInput" class="block text-lg mb-3 font-semibold text-slate-200">איך קוראים לכם?</label>
-                    <input type="text" id="playerNameInput" placeholder="הקלד/י שם כאן..." class="w-full bg-slate-900 border-2 border-slate-600 rounded-xl p-4 text-center text-xl text-white focus:border-brand-accent focus:outline-none transition-colors mb-6" onkeypress="if(event.key === 'Enter') startMission()">
+                    <label for="playerNameInput" class="block text-xl mb-3 font-semibold text-slate-200">איך קוראים לך?</label>
+                    <input type="text" id="playerNameInput" placeholder="הקלידו שם כאן..." class="w-full bg-slate-900 border-2 border-slate-600 rounded-xl p-4 text-center text-xl text-white focus:border-brand-accent focus:outline-none transition-colors mb-6" onkeypress="if(event.key === 'Enter') startMission()">
                     
                     <button onclick="startMission()" class="w-full bg-brand-accent hover:bg-brand-accentHover text-white font-bold text-xl py-4 px-8 rounded-xl transition-all hover:scale-105 active:scale-95 animate-pulse-glow">
-                        היכנסו לדוג'ו <i class="fa-solid fa-door-open mr-2"></i>
+                        היכנס לדוג'ו <i class="fa-solid fa-door-open mr-2"></i>
                     </button>
                 </div>
             </div>
@@ -211,7 +211,7 @@
                 <div class="text-center">
                     <span class="text-brand-accent font-bold tracking-widest text-sm md:text-base bg-brand-accent/10 px-4 py-1 rounded-full">שלב 2: מבחן ההומור</span>
                     <h2 class="text-3xl md:text-5xl font-black mt-4 mb-2">השלם את הבדיחה</h2>
-                    <p class="text-slate-400">בואו נראה אם הבנתם את ההיגיון של האינטרנט. בחרו את הפאנצ'ליין הנכון (שאלה <span id="jokeCurrentNum">1</span> מתוך 3).</p>
+                    <p class="text-slate-400">בואו נראה אם הבנת את ההיגיון של האינטרנט. בחר את הפאנצ'ליין הנכון (שאלה <span id="jokeCurrentNum">1</span> מתוך 3).</p>
                 </div>
 
                 <div class="bg-slate-800 p-6 md:p-8 rounded-2xl border border-slate-700 shadow-xl mt-6 relative" id="jokeContainer">
@@ -294,10 +294,17 @@
                         <p><i class="fa-solid fa-magnifying-glass text-brand-accent ml-2"></i> <strong>ספרה 3:</strong> מהי הספרה האחרונה בשנה בה יצא הסרט שלו עם ברוס לי?</p>
                     </div>
 
+                    <!-- LTR visual explanation -->
+                    <div class="text-center font-bold text-brand-accent mb-3 flex items-center justify-center gap-2">
+                        הקלידו את הקוד משמאל לימין
+                        <i class="fa-solid fa-arrow-right-long mt-1"></i>
+                    </div>
+
+                    <!-- Input Fields Left-to-Right -->
                     <div class="flex justify-center gap-4 mb-8 text-ltr" dir="ltr">
-                        <input type="number" id="safe1" class="safe-input" min="0" max="9" oninput="moveNext(this, 'safe2')">
-                        <input type="number" id="safe2" class="safe-input" min="0" max="9" oninput="moveNext(this, 'safe3')" onkeydown="movePrev(event, this, 'safe1')">
-                        <input type="number" id="safe3" class="safe-input" min="0" max="9" onkeydown="movePrev(event, this, 'safe2')">
+                        <input type="number" id="safe1" class="safe-input" min="0" max="9" oninput="moveNext(this, 'safe2')" placeholder="1">
+                        <input type="number" id="safe2" class="safe-input" min="0" max="9" oninput="moveNext(this, 'safe3')" onkeydown="movePrev(event, this, 'safe1')" placeholder="2">
+                        <input type="number" id="safe3" class="safe-input" min="0" max="9" onkeydown="movePrev(event, this, 'safe2')" placeholder="3">
                     </div>
 
                     <button onclick="checkSafeCode()" class="w-full bg-slate-700 hover:bg-slate-600 border-2 border-slate-500 text-white font-bold text-xl py-4 rounded-xl transition-colors">
@@ -351,17 +358,25 @@
                         <label class="block text-slate-300 font-bold mb-2">הקלידו את הפאנצ'ליין שלכם:</label>
                         <textarea id="memeInput" rows="3" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-4 text-white focus:border-brand-accent focus:outline-none resize-none mb-4 text-lg" placeholder="למשל: צ'אק נוריס לא באמת היה בקוריאה, קוריאה באה אליו..."></textarea>
                         
-                        <button onclick="generateMeme()" class="w-full bg-brand-accent hover:bg-brand-accentHover text-white font-bold text-lg py-3 rounded-xl transition-colors mb-3">
+                        <button onclick="generateMeme()" class="w-full bg-brand-accent hover:bg-brand-accentHover text-white font-bold text-lg py-3 rounded-xl transition-colors mb-3 shadow-[0_4px_14px_0_rgba(249,115,22,0.39)]">
                             <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> צור מם!
                         </button>
-                        <button onclick="nextScreen()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold text-lg py-3 rounded-xl transition-colors mt-4 shadow-lg border-2 border-green-400">
-                            סיימתי, תביאו לי תעודה! <i class="fa-solid fa-graduation-cap ml-2"></i>
+
+                        <!-- WhatsApp Share Button (Hidden initially) -->
+                        <button id="whatsappBtn" onclick="shareToWhatsApp()" class="hidden w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg py-3 rounded-xl transition-all mb-4 shadow-lg">
+                            <i class="fa-brands fa-whatsapp text-xl mr-2"></i> שתף עם המורה בוואטסאפ!
                         </button>
+                        
+                        <div class="border-t border-slate-700 my-4 pt-4">
+                            <button onclick="nextScreen()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold text-lg py-3 rounded-xl transition-colors shadow-lg border-2 border-slate-500">
+                                סיימתי הכל, תביאו לי תעודה! <i class="fa-solid fa-graduation-cap ml-2"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Meme Display (CSS/HTML based to avoid canvas external image issues) -->
                     <div class="w-full md:w-1/2 order-1 md:order-2 flex justify-center">
-                        <div id="memeContainer" class="relative w-full max-w-[400px] aspect-square bg-slate-900 border-4 border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] overflow-hidden flex items-center justify-center">
+                        <div id="memeContainer" class="relative w-full max-w-[400px] aspect-square bg-slate-900 border-4 border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] overflow-hidden flex items-center justify-center transition-all duration-300">
                             <!-- Background Placeholder (Stylized Martial Artist) -->
                             <div class="absolute inset-0 bg-gradient-to-br from-orange-600 to-red-900 opacity-80 z-0"></div>
                             <i class="fa-solid fa-user-ninja absolute text-[200px] text-black opacity-30 z-0 bottom-[-20px] left-[-20px]"></i>
@@ -402,10 +417,8 @@
                     <p class="text-slate-400 italic relative z-10">"אדם אמיתי, עם עבודה קשה והתמדה, הפך לאגדת תרבות גלובלית."</p>
                 </div>
                 
-                <p class="text-lg text-slate-300 mb-8">אתם מוזמנים לצלם מסך ולשלוח לקבוצה הכיתתית!</p>
-                
                 <button onclick="restartGame()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold text-xl py-3 px-8 rounded-xl transition-all">
-                    שחקו שוב <i class="fa-solid fa-rotate-right ml-2"></i>
+                    שחק שוב <i class="fa-solid fa-rotate-right ml-2"></i>
                 </button>
             </div>
         </section>
@@ -529,6 +542,7 @@
             // Reset Meme
             document.getElementById('memeInput').value = "";
             document.getElementById('memeOutputText').innerText = "[הבדיחה שלכם תופיע כאן]";
+            document.getElementById('whatsappBtn').classList.add('hidden'); // Hide WA button on restart
 
             updateUI();
         }
@@ -639,7 +653,7 @@
                     document.getElementById('safe1').parentElement.classList.remove('animate-shake');
                     document.getElementById('lockIcon').className = "fa-solid fa-lock text-3xl text-slate-400";
                 }, 500);
-                showModal("שגיאה בצופן", "הקוד שגוי. תוכלו ללחוץ על חזור (או על הטקסט למטה) כדי לקרוא שוב את הנתונים ההיסטוריים.", "fa-circle-xmark");
+                showModal("שגיאה בצופן", "הקוד שגוי. תוכלו ללחוץ על חזור כדי לקרוא שוב את הנתונים ההיסטוריים.", "fa-circle-xmark");
                 // Clear inputs
                 document.getElementById('safe1').value = "";
                 document.getElementById('safe2').value = "";
@@ -700,14 +714,17 @@
             }
         }
 
-        // --- Screen 7 Logic (Meme) ---
+        // --- Screen 7 Logic (Meme + WhatsApp) ---
         function generateMeme() {
             const input = document.getElementById('memeInput').value.trim();
             if(input === "") {
-                showModal("רגע...", "לא הקלדתם כלום! תפעילו את היצירתיות.", "fa-pen");
+                showModal("רגע...", "לא הקלדת כלום! הפעל את היצירתיות.", "fa-pen");
                 return;
             }
             document.getElementById('memeOutputText').innerText = input;
+            
+            // Show WhatsApp button
+            document.getElementById('whatsappBtn').classList.remove('hidden');
             
             // Add a small cool animation to the image container
             const container = document.getElementById('memeContainer');
@@ -715,6 +732,19 @@
             setTimeout(() => {
                 container.classList.remove('scale-105', 'border-brand-accent');
             }, 300);
+        }
+
+        function shareToWhatsApp() {
+            const memeText = document.getElementById('memeOutputText').innerText;
+            if (memeText === "[הבדיחה שלכם תופיע כאן]" || memeText === "") return;
+            
+            // Formulate message
+            const message = `היי המורה! סיימתי את המשימה. הנה עובדת צ'אק נוריס שהמצאתי בעצמי:\n\n*"${memeText}"*\n\n😎🥋 מאת: ${playerName}`;
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+            
+            // Open in new tab (will launch WhatsApp App on mobile, or Web on Desktop)
+            window.open(whatsappUrl, '_blank');
         }
 
         // --- Custom Modal System ---
@@ -727,7 +757,7 @@
             const iconEl = document.getElementById('modalIcon');
             iconEl.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
             
-            // Set color based on icon type (rough logic)
+            // Set color based on icon type
             if(iconClass.includes('check') || iconClass.includes('grin') || iconClass.includes('unlock') || iconClass.includes('trophy')) {
                 iconEl.className = "text-5xl mb-4 text-green-500";
             } else if (iconClass.includes('frown') || iconClass.includes('bomb') || iconClass.includes('xmark')) {
@@ -763,4 +793,5 @@
     </script>
 </body>
 </html>
+
 
