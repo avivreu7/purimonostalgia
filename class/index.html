@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תקלה בסימולציה: תיכון אומגה</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050a0f;
+            --text-main: #00ff41;
+            --text-dim: #008f11;
+            --accent: #ff003c;
+            --accent-glow: rgba(255, 0, 60, 0.5);
+            --cyan: #00e5ff;
+            --panel-bg: rgba(0, 20, 10, 0.8);
+            --border: 1px solid var(--text-dim);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Heebo', sans-serif;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* CRT Scanline Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 100;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        header {
+            background: var(--panel-bg);
+            border-bottom: var(--border);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Share Tech Mono', monospace;
+            z-index: 10;
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--cyan);
+            text-shadow: 0 0 10px var(--cyan);
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+
+        #energy-bar-container {
+            width: 100px;
+            height: 15px;
+            background: #222;
+            border: 1px solid var(--text-dim);
+            position: relative;
+        }
+
+        #energy-bar {
+            height: 100%;
+            background: var(--text-main);
+            width: 100%;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+
+        #energy-bar.danger {
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .story-container {
+            background: var(--panel-bg);
+            border: var(--border);
+            padding: 30px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            min-height: 250px;
+            box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.1);
+            position: relative;
+        }
+
+        .story-image {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px var(--text-main));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .story-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--text-main);
+            padding: 15px;
+            font-size: 1.1rem;
+            font-family: 'Heebo', sans-serif;
+            cursor: pointer;
+            text-align: right;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            border-radius: 3px;
+        }
+
+        button:hover {
+            background: var(--text-main);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px var(--text-main);
+        }
+
+        button::before {
+            content: "> ";
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Puzzle Input */
+        .puzzle-input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            padding: 15px;
+            font-size: 1.2rem;
+            font-family: 'Heebo', sans-serif;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        .submit-btn {
+            background: var(--cyan);
+            color: #000;
+            border: none;
+            font-weight: bold;
+        }
+        .submit-btn:hover {
+            background: #fff;
+            color: #000;
+            box-shadow: 0 0 15px var(--cyan);
+        }
+
+        /* Glitch Animation */
+        .glitch {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+        }
+        
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 var(--accent);
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 var(--cyan);
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim 2.5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(13px, 9999px, 83px, 0); transform: skew(0.2deg); }
+            5% { clip: rect(61px, 9999px, 55px, 0); transform: skew(0.5deg); }
+            10% { clip: rect(29px, 9999px, 34px, 0); transform: skew(0.6deg); }
+            15% { clip: rect(96px, 9999px, 19px, 0); transform: skew(0.2deg); }
+            20% { clip: rect(78px, 9999px, 63px, 0); transform: skew(0.1deg); }
+            25% { clip: rect(4px, 9999px, 45px, 0); transform: skew(0.8deg); }
+            30% { clip: rect(15px, 9999px, 23px, 0); transform: skew(0.4deg); }
+            35% { clip: rect(54px, 9999px, 11px, 0); transform: skew(0.6deg); }
+            40% { clip: rect(87px, 9999px, 73px, 0); transform: skew(0.3deg); }
+            45% { clip: rect(31px, 9999px, 48px, 0); transform: skew(0.5deg); }
+            50% { clip: rect(66px, 9999px, 92px, 0); transform: skew(0.1deg); }
+            55% { clip: rect(2px, 9999px, 5px, 0); transform: skew(0.7deg); }
+            60% { clip: rect(91px, 9999px, 67px, 0); transform: skew(0.2deg); }
+            65% { clip: rect(42px, 9999px, 88px, 0); transform: skew(0.4deg); }
+            70% { clip: rect(19px, 9999px, 37px, 0); transform: skew(0.6deg); }
+            75% { clip: rect(74px, 9999px, 25px, 0); transform: skew(0.3deg); }
+            80% { clip: rect(55px, 9999px, 59px, 0); transform: skew(0.8deg); }
+            85% { clip: rect(38px, 9999px, 12px, 0); transform: skew(0.5deg); }
+            90% { clip: rect(83px, 9999px, 95px, 0); transform: skew(0.1deg); }
+            95% { clip: rect(11px, 9999px, 44px, 0); transform: skew(0.7deg); }
+            100% { clip: rect(69px, 9999px, 71px, 0); transform: skew(0.2deg); }
+        }
+
+        .inventory-panel {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px dashed var(--text-dim);
+            font-family: 'Share Tech Mono', monospace;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .inventory-title {
+            color: var(--cyan);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .inventory-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .item {
+            background: var(--text-dim);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .system-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: flex-end;
+        }
+        
+        .sys-btn {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-color: #555;
+            color: #888;
+        }
+        .sys-btn:hover {
+            background: #555;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        /* Message Overlay */
+        #msg-overlay {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent);
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 5px;
+            box-shadow: 0 0 20px var(--accent);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .show-msg {
+            opacity: 1 !important;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(-50%) translate(1px, 1px) rotate(0deg); }
+            10% { transform: translateX(-50%) translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translateX(-50%) translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translateX(-50%) translate(3px, 2px) rotate(0deg); }
+            40% { transform: translateX(-50%) translate(1px, -1px) rotate(1deg); }
+            50% { transform: translateX(-50%) translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translateX(-50%) translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translateX(-50%) translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translateX(-50%) translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translateX(-50%) translate(1px, 2px) rotate(0deg); }
+            100% { transform: translateX(-50%) translate(1px, -2px) rotate(-1deg); }
+        }
+
+        @media (max-width: 600px) {
+            .story-text { font-size: 1.1rem; }
+            button { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title glitch" data-text="SYSTEM.OS//OMEGA">SYSTEM.OS//OMEGA</div>
+        <div class="stats">
+            <div class="stat-box">
+                <span>⚡</span>
+                <div id="energy-bar-container">
+                    <div id="energy-bar"></div>
+                </div>
+                <span id="energy-text" style="width: 35px; text-align: left;">100%</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="story-container">
+            <div class="story-image" id="scene-image">👁️</div>
+            <div class="story-text" id="story-text">מאתחל מערכת...</div>
+        </div>
+
+        <div class="choices-container" id="choices-container">
+            <!-- Choices or Puzzle input will be injected here -->
+        </div>
+
+        <div class="inventory-panel">
+            <div class="inventory-title">/// רשימת חפצים [INVENTORY]</div>
+            <div class="inventory-items" id="inventory-list">
+                <!-- Items injected here -->
+            </div>
+        </div>
+
+        <div class="system-controls">
+            <button class="sys-btn" onclick="saveGame()">💾 שמור התקדמות</button>
+            <button class="sys-btn" onclick="resetGame(true)">🔄 איפוס מלא</button>
+        </div>
+    </main>
+
+    <div id="msg-overlay">הודעה!</div>
+
+    <script>
+        // --- GAME ENGINE & STATE ---
+        let gameState = {
+            currentNode: 'start',
+            energy: 100,
+            inventory: [],
+            flags: {}
+        };
+
+        const itemNames = {
+            'energy_drink': '🥤 משקה אנרגיה מוקרן',
+            'magnet': '🧲 מגנט תעשייתי',
+            'blue_card': '💳 כרטיס גישה כחול',
+            'red_card': '💳 כרטיס גישה אדום',
+            'binary_scroll': '📜 מגילת קוד בינארי',
+            'source_crystal_1': '💎 קריסטל מקור: אלפא',
+            'source_crystal_2': '💎 קריסטל מקור: בטא',
+            'source_crystal_3': '💎 קריסטל מקור: גמא'
+        };
+
+        // --- STORY DATA ---
+        const storyNodes = {
+            // --- INTRODUCTION ---
+            'start': {
+                img: '🏫',
+                text: "אתה יושב בשיעור מדעים בתיכון 'אומגה'. המורה מדברת על כוח המשיכה, אבל משהו מוזר קורה. אתה מסתכל על השעון שעל הקיר, והוא מראה 25:61. פתאום, המורה קופאת באמצע משפט. ציפור שעפה מחוץ לחלון נעצרת באוויר.",
+                choices: [
+                    { text: "קום מהכיסא ובדוק את המורה", target: 'touch_teacher' },
+                    { text: "בדוק את מסך הטלפון שלך", target: 'check_phone' }
+                ]
+            },
+            'touch_teacher': {
+                img: '⚡',
+                text: "אתה נוגע בכתף של המורה. מכת חשמל סטטי קטנה מעיפה לך את היד אחורה. היא לא אנושית. המרקם של הבגדים שלה מרגיש כמו פיקסלים. הטלפון בכיס שלך מתחיל לרטוט בטירוף.",
+                choices: [
+                    { text: "הוצא את הטלפון", target: 'check_phone' }
+                ]
+            },
+            'check_phone': {
+                img: '📱',
+                text: "על מסך הטלפון שלך יש הודעה משולח לא ידוע: 'הסימולציה קורסת. מנגנון המחיקה הופעל. מצא את 3 קריסטלי קוד המקור כדי להפעיל את שער המילוט. היזהר, כל פעולה שגויה תרוקן את הסוללה הקיומית שלך. אם תגיע ל-0, תחזור להתחלה.'",
+                choices: [
+                    { text: "צא למסדרון", target: 'hallway_main' },
+                    { text: "חפש במגירות השולחן של המורה", target: 'teacher_desk' }
+                ]
+            },
+            'teacher_desk': {
+                img: '🗄️',
+                text: "המגירות חצי שקופות. בתוך אחת מהן אתה מוצא מגנט תעשייתי כבד. זה נראה שימושי. אתה שומע רעשים מתכתיים מהמסדרון.",
+                onEnter: () => giveItem('magnet'),
+                choices: [
+                    { text: "קח את המגנט וצא למסדרון", target: 'hallway_main' }
+                ]
+            },
+
+            // --- MAIN HALLWAY (HUB) ---
+            'hallway_main': {
+                img: '🚪',
+                text: "המסדרון ריק וקפוא. התאורה מהבהבת באדום. ישנן מספר דרכים: דלת ענקית עם סורגי לייזר (אולם הספורט), הכניסה לקפיטריה (חסומה על ידי השרת הרובוטי), המדרגות למרתף, ודלת הספרייה שזוהרת בכחול.",
+                choices: [
+                    { text: "גש לקפיטריה (אל השרת)", target: 'janitor_meet' },
+                    { text: "כנס לספרייה הזוהרת", target: 'library_door' },
+                    { text: "רד למרתף השרתים", target: 'basement_stairs' },
+                    { text: "נסה לפתוח את אולם הספורט", target: 'gym_door' },
+                    { text: "גש למעבדת הכימיה", target: 'chem_lab' }
+                ]
+            },
+
+            // --- THE JANITOR & CAFETERIA ---
+            'janitor_meet': {
+                img: '🤖',
+                text: "השרת של בית הספר עומד בכניסה לקפיטריה. עיניו זוהרות באדום והמטאטא שלו נראה כמו נשק חשמלי. קול מתכתי אומר: 'אין כניסה לתלמידים ללא אישור. ענה על השאלה כדי להוכיח בגרות אנושית.'",
+                choices: [
+                    { text: "אני מוכן לשאלה.", target: 'janitor_riddle' },
+                    { text: "ברח חזרה למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'janitor_riddle': {
+                img: '❓',
+                text: "'אני תמיד רעב, חייב תמיד לאכול. האצבעות שלי חמות, כל מה שאגע בו אכלה. מה אני?'",
+                type: 'puzzle',
+                answer: 'אש',
+                onCorrect: 'janitor_success',
+                onWrong: 'janitor_fail'
+            },
+            'janitor_fail': {
+                img: '⚡',
+                text: "'זיהוי אנושי נכשל. סילוק!' השרת יורה עליך קרן חשמלית. אתה מאבד אנרגיה ונהדף למסדרון.",
+                onEnter: () => loseEnergy(25),
+                choices: [
+                    { text: "התאושש וחזור למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'janitor_success': {
+                img: '✅',
+                text: "'זיהוי אנושי אומת. ברוך הבא לקפיטריה המקודדת.' הוא זז הצידה. על שולחן בפנים אתה מוצא 'משקה אנרגיה מוקרן' וכרטיס גישה כחול.",
+                onEnter: () => {
+                    if(!gameState.flags.cafeteriaLooted) {
+                        giveItem('energy_drink');
+                        giveItem('blue_card');
+                        gameState.flags.cafeteriaLooted = true;
+                    }
+                },
+                choices: [
+                    { text: "שתה את משקה האנרגיה (+30 אנרגיה)", target: 'drink_energy', condition: () => hasItem('energy_drink') },
+                    { text: "חזור למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'drink_energy': {
+                img: '🔋',
+                text: "המשקה בטעם קוד פיקסלים, אבל זה מעיר אותך מיד. אנרגיה שוחזרה!",
+                onEnter: () => {
+                    gainEnergy(30);
+                    removeItem('energy_drink');
+                },
+                choices: [
+                    { text: "חזור למסדרון", target: 'hallway_main' }
+                ]
+            },
+
+            // --- LIBRARY & OWL ---
+            'library_door': {
+                img: '🔒',
+                text: "דלת הספרייה נעולה אלקטרונית. קורא כרטיסים מהבהב בכחול ומבקש כרטיס מתאים.",
+                choices: [
+                    { text: "העבר את כרטיס הגישה הכחול", target: 'library_inside', condition: () => hasItem('blue_card') },
+                    { text: "נסה לשבור את הקוד בכוח (-10 אנרגיה)", target: 'library_force' },
+                    { text: "חזור למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'library_force': {
+                img: '⚠️',
+                text: "אתה בועט בדלת. מכת חשמל מחזירה אותך אחורה. זה לא יעבוד בלי הכרטיס המתאים.",
+                onEnter: () => loseEnergy(10),
+                choices: [
+                    { text: "חזור למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'library_inside': {
+                img: '📚',
+                text: "הדלת נפתחת בצפצוף. הספרייה נראית כמו מאגר נתונים עצום מ'המטריקס'. במרכז החדר, על ערימת ספרים שקופים, יושבת הולוגרמה של ינשוף מכני. 'חיכיתי לך, סטייה במערכת. כדי לקבל את הקריסטל הראשון, עליך לפתור את חידת הלוגיקה שלי.'",
+                choices: [
+                    { text: "הקשב לחידה של הינשוף", target: 'owl_riddle' },
+                    { text: "חפש בספרייה במקום", target: 'library_search' },
+                    { text: "צא למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'library_search': {
+                img: '📜',
+                text: "אתה מתעלם מהינשוף ומחטט במדפים. בין עמודי ספר היסטוריה, אתה מוצא 'מגילת קוד בינארי'. פתאום הינשוף צורח 'גנב נתונים!' ושולח גל הדף שמוריד לך אנרגיה.",
+                onEnter: () => {
+                    giveItem('binary_scroll');
+                    loseEnergy(15);
+                },
+                choices: [
+                    { text: "גש חזרה לינשוף", target: 'library_inside' },
+                    { text: "ברח למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'owl_riddle': {
+                img: '🦉',
+                text: "'אני מספר אי-זוגי. אם תיקח ממני אות אחת, אהפוך לזוגי. איזה מספר אני? (הקלד במילה אחת בעברית)'",
+                type: 'puzzle',
+                answer: 'שבע',
+                onCorrect: 'owl_success',
+                onWrong: 'owl_fail'
+            },
+            'owl_fail': {
+                img: '❌',
+                text: "'מוח רופף!' הינשוף מנפנף בכנפיו ויוצר סופת קוד שפוגעת בך.",
+                onEnter: () => loseEnergy(20),
+                choices: [
+                    { text: "נסה שוב", target: 'owl_riddle' },
+                    { text: "ברח למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'owl_success': {
+                img: '💎',
+                text: "'מרשים... נראה שאתה באמת חי.' הינשוף המכני מתפרק למיליון פיקסלים ומשאיר אחריו אבן בוהקת באור לבן. מצאת את קריסטל מקור: אלפא!",
+                onEnter: () => giveItem('source_crystal_1'),
+                choices: [
+                    { text: "קח את הקריסטל וצא למסדרון", target: 'hallway_main' }
+                ]
+            },
+
+            // --- SCIENCE LAB ---
+            'chem_lab': {
+                img: '🧪',
+                text: "מעבדת הכימיה הפוכה. חומצה וירטואלית ירוקה (שנראית רעילה במיוחד) נשפכה על כל הרצפה. בצד השני של החדר, בתוך צינור ניקוז, משהו מנצנץ באדום (נראה כמו כרטיס גישה). אי אפשר לחצות את החומצה בלי להיפגע.",
+                choices: [
+                    { text: "השתמש במגנט כדי למשוך את הכרטיס", target: 'lab_magnet', condition: () => hasItem('magnet') },
+                    { text: "נסה לרוץ דרך החומצה", target: 'lab_run' },
+                    { text: "חזור למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'lab_run': {
+                img: '☠️',
+                text: "אתה דורך על החומצה. זה מרגיש כאילו הרגל שלך עולה באש קוד. אתה מאבד המון אנרגיה ונסוג.",
+                onEnter: () => loseEnergy(40),
+                choices: [
+                    { text: "גרור את עצמך למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'lab_magnet': {
+                img: '🧲',
+                text: "אתה זורק את המגנט הכבד שקשור לחוט, הוא נדבק לחפץ המתכתי ואתה מושך אותו אליך בזהירות. זה 'כרטיס גישה אדום'!",
+                onEnter: () => giveItem('red_card'),
+                choices: [
+                    { text: "מעולה, צא למסדרון", target: 'hallway_main' }
+                ]
+            },
+
+            // --- GYM (SPORTS HALL) ---
+            'gym_door': {
+                img: '🏀',
+                text: "דלת אולם הספורט שקופה. בפנים, המורה לספורט נראה כמו גורילה קיברנטית. הוא זורק כדורים בוערים על הקירות. במרכז האולם מונח הקריסטל השני.",
+                choices: [
+                    { text: "היכנס פנימה ונסה להתחמק מהכדורים", target: 'gym_dodge' },
+                    { text: "חזור למסדרון. זה מסוכן מדי עכשיו.", target: 'hallway_main' }
+                ]
+            },
+            'gym_dodge': {
+                img: '🔥',
+                text: "אתה פורץ פנימה. 'ספרינט!' שואג המורה וזורק עליך כדור אש בקצב מטורף.",
+                choices: [
+                    { text: "הפעל 'מצב טורבו' עם משקה האנרגיה ששתית", target: 'gym_success', condition: () => gameState.flags.drankEnergy || hasItem('energy_drink') },
+                    { text: "נסה לברוח בכוח רגיל", target: 'gym_fail' }
+                ]
+            },
+            'gym_fail': {
+                img: '💥',
+                text: "אתה איטי מדי. כדור וירטואלי פוגע בך בעוצמה ומטיח אותך מחוץ לאולם. הראייה שלך מיטשטשת.",
+                onEnter: () => loseEnergy(35),
+                choices: [
+                    { text: "קוסם... חזור למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'gym_success': {
+                img: '💎',
+                text: "בזכות משקה האנרגיה ששתית קודם, הרפלקסים שלך חדים כתער. אתה מתחמק משלושה כדורים, מבצע גלגול, ותופס את הקריסטל! 'התעמלות טובה...' נוהם המורה ונכבה.",
+                onEnter: () => giveItem('source_crystal_2'),
+                choices: [
+                    { text: "יש! צא למסדרון עם הקריסטל", target: 'hallway_main' }
+                ]
+            },
+
+            // --- BASEMENT / SERVER ROOM ---
+            'basement_stairs': {
+                img: ' پله',
+                text: "מדרגות חשוכות יורדות למרתף. דלת פלדה כבדה חוסמת את הדרך לחדר השרתים הראשי. יש לידה שני חריצים: אחד כחול ואחד אדום.",
+                choices: [
+                    { text: "הכנס את הכרטיס הכחול והאדום", target: 'basement_inside', condition: () => hasItem('blue_card') && hasItem('red_card') },
+                    { text: "נסה להכניס כרטיס אחד ולבעוט בדלת", target: 'basement_fail' },
+                    { text: "חזור למעלה למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'basement_fail': {
+                img: '🚨',
+                text: "האזעקה מופעלת. מערכת ההגנה משחררת גז מחק-זיכרון. אתה משתעל ומאבד כוח.",
+                onEnter: () => loseEnergy(20),
+                choices: [
+                    { text: "ברח למעלה", target: 'hallway_main' }
+                ]
+            },
+            'basement_inside': {
+                img: '🖥️',
+                text: "הדלת נפתחת. חדר השרתים קפוא. במרכז יש מחשב ליבה מהבהב. על המסך כתוב: 'כדי להוציא את הקריסטל השלישי, המר את הקוד הבינארי 1010 למספר עשרוני.'",
+                choices: [
+                    { text: "בדוק את המגילה הבינארית שלך", target: 'read_scroll', condition: () => hasItem('binary_scroll') },
+                    { text: "אני יודע את התשובה!", target: 'server_riddle' },
+                    { text: "צא למסדרון", target: 'hallway_main' }
+                ]
+            },
+            'read_scroll': {
+                img: '📜',
+                text: "במגילה שמצאת בספרייה כתוב: '1 זה 1. 10 זה 2. 100 זה 4. 1000 זה 8. לחבר את מה שדולק'.",
+                choices: [
+                    { text: "הקש את התשובה במחשב", target: 'server_riddle' }
+                ]
+            },
+            'server_riddle': {
+                img: '⌨️',
+                text: "הקש את המספר העשרוני עבור הקוד 1010:",
+                type: 'puzzle',
+                answer: '10',
+                onCorrect: 'server_success',
+                onWrong: 'server_fail'
+            },
+            'server_fail': {
+                img: '❌',
+                text: "שגיאת מערכת. השרת מתחמם ופולט גל חום צורב.",
+                onEnter: () => loseEnergy(15),
+                choices: [
+                    { text: "נסה שוב", target: 'server_riddle' }
+                ]
+            },
+            'server_success': {
+                img: '💎',
+                text: "המסך הופך לירוק. מגירה קטנה נפתחת, ובתוכה זוהר קריסטל מקור: גמא! אספת את כל מה שצריך. לפתע, כריזה נשמעת: 'אזהרה. קודי מקור נחשפו. מנהלת המערכת ממתינה במשרד.'",
+                onEnter: () => giveItem('source_crystal_3'),
+                choices: [
+                    { text: "גש למשרד המנהלת (הדלת האחרונה)", target: 'principal_office' }
+                ]
+            },
+
+            // --- FINAL BOSS: PRINCIPAL ---
+            'principal_office': {
+                img: '👑',
+                text: "אתה נכנס למשרד המנהלת. אין שם אדם, אלא עין דיגיטלית ענקית צפה באוויר. 'סטייה זוהתה,' אומרת העין בקול אישה. 'יש לך את שלושת הקריסטלים. הנח אותם במסוף, אבל שער המילוט ייפתח רק אם תפתור את החידה הסופית.'",
+                choices: [
+                    { text: "הכנס את הקריסטלים והתמודד", target: 'final_riddle', condition: () => hasItem('source_crystal_1') && hasItem('source_crystal_2') && hasItem('source_crystal_3') },
+                    { text: "אין לי את כל הקריסטלים...", target: 'principal_kick', condition: () => !(hasItem('source_crystal_1') && hasItem('source_crystal_2') && hasItem('source_crystal_3')) }
+                ]
+            },
+            'principal_kick': {
+                img: '🕳️',
+                text: "'אין לך אישור שהייה כאן.' העין יורה קרן מחיקה. אתה מושלך החוצה ומאבד חצי מהאנרגיה שלך.",
+                onEnter: () => loseEnergy(50),
+                choices: [
+                    { text: "חזור למסדרון להמשיך לחפש", target: 'hallway_main' }
+                ]
+            },
+            'final_riddle': {
+                img: '👁️',
+                text: "העין הדיגיטלית שואלת: 'זה שייך לך, אבל אחרים משתמשים בזה יותר ממך. מה זה?' (תשובה במילה אחת או שתיים)",
+                type: 'puzzle',
+                answer: 'השם שלי', // Also accept just "שם" or "השם" which will be handled in checkPuzzle
+                onCorrect: 'victory',
+                onWrong: 'final_fail'
+            },
+            'final_fail': {
+                img: '☠️',
+                text: "'תשובה שגויה. מתחילה מחיקה סופית.' האנרגיה שלך נשאבת במהירות.",
+                onEnter: () => loseEnergy(35),
+                choices: [
+                    { text: "נסה שוב לחשוב...", target: 'final_riddle' }
+                ]
+            },
+
+            // --- ENDINGS ---
+            'victory': {
+                img: '🌟',
+                text: "'בלתי אפשרי...' רוטנת העין. קיר המשרד מתפרק וחושף דלת של אור לבן. אתה עובר דרכה. אתה פוקח את העיניים. המורה למדעים ממשיכה לדבר על כוח המשיכה. השעון מראה 10:15. חזרת לעולם האמיתי. ניצחת!",
+                choices: [
+                    { text: "שחק שוב מהתחלה", target: 'start', onEnter: () => resetGame(true) }
+                ]
+            },
+            'game_over': {
+                img: '💀',
+                text: "האנרגיה שלך אזלה לחלוטין. המסך הופך לשחור. אתה מרגיש שאתה נשאב לתוך ריק דיגיטלי... ואז, מכת חשמל. אתה פוקח עיניים.",
+                choices: [
+                    { text: "אתחול לולאת הזמן (אתה שומר על החפצים!)", target: 'start', onEnter: () => loopReset() }
+                ]
+            }
+        };
+
+        // --- GAME LOGIC FUNCTIONS ---
+
+        const domStoryText = document.getElementById('story-text');
+        const domImage = document.getElementById('scene-image');
+        const domChoices = document.getElementById('choices-container');
+        const domEnergyBar = document.getElementById('energy-bar');
+        const domEnergyText = document.getElementById('energy-text');
+        const domInventory = document.getElementById('inventory-list');
+
+        let typewriterInterval;
+
+        function initGame() {
+            loadGame();
+            if(!gameState.currentNode || !storyNodes[gameState.currentNode]) {
+                gameState.currentNode = 'start';
+            }
+            updateUI();
+            renderNode(gameState.currentNode);
+        }
+
+        function renderNode(nodeId) {
+            const node = storyNodes[nodeId];
+            gameState.currentNode = nodeId;
+            
+            if(node.onEnter) node.onEnter();
+
+            // Check if dead (done after onEnter logic)
+            if(gameState.energy <= 0 && nodeId !== 'game_over') {
+                renderNode('game_over');
+                return;
+            }
+
+            domImage.innerText = node.img;
+            domChoices.innerHTML = '';
+            
+            // Typewriter effect
+            typewriter(node.text, () => {
+                if (node.type === 'puzzle') {
+                    renderPuzzle(node);
+                } else {
+                    renderChoices(node.choices);
+                }
+            });
+            updateUI();
+        }
+
+        function typewriter(text, callback) {
+            clearInterval(typewriterInterval);
+            domStoryText.innerHTML = '';
+            let i = 0;
+            typewriterInterval = setInterval(() => {
+                domStoryText.innerHTML += text.charAt(i);
+                i++;
+                if (i >= text.length) {
+                    clearInterval(typewriterInterval);
+                    if(callback) callback();
+                }
+            }, 25); // Speed of typing
+        }
+
+        function renderChoices(choices) {
+            domChoices.innerHTML = '';
+            choices.forEach(choice => {
+                if(choice.condition && !choice.condition()) return; // Hide if condition not met
+                
+                const btn = document.createElement('button');
+                btn.innerText = choice.text;
+                btn.onclick = () => {
+                    if(choice.onEnter) choice.onEnter(); // some choices have instant actions
+                    renderNode(choice.target);
+                };
+                domChoices.appendChild(btn);
+            });
+        }
+
+        function renderPuzzle(node) {
+            const container = document.createElement('div');
+            container.className = 'puzzle-input-container';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'הכנס תשובה כאן...';
+            input.id = 'puzzle-answer';
+
+            const btn = document.createElement('button');
+            btn.className = 'submit-btn';
+            btn.innerText = 'שלח';
+            
+            btn.onclick = () => checkPuzzle(input.value, node);
+            input.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    checkPuzzle(input.value, node);
+                }
+            });
+
+            container.appendChild(input);
+            container.appendChild(btn);
+            domChoices.appendChild(container);
+            input.focus();
+        }
+
+        function checkPuzzle(userAnswer, node) {
+            // Clean input: remove whitespace, make lowercase (if english used), remove punctuation
+            const cleanUser = userAnswer.replace(/[.,!?]/g, '').trim();
+            
+            // Special flexible logic for final boss
+            let isCorrect = false;
+            if(node.answer === 'השם שלי' && (cleanUser === 'שם' || cleanUser === 'השם' || cleanUser === 'השם שלי' || cleanUser === 'שמי')) {
+                isCorrect = true;
+            } else if(cleanUser === node.answer) {
+                isCorrect = true;
+            }
+
+            if (isCorrect) {
+                showMessage("קוד נכון!", true);
+                renderNode(node.onCorrect);
+            } else {
+                showMessage("שגיאה קריטית!", false);
+                renderNode(node.onWrong);
+            }
+        }
+
+        // --- INVENTORY & STATS ---
+
+        function hasItem(itemId) {
+            return gameState.inventory.includes(itemId);
+        }
+
+        function giveItem(itemId) {
+            if (!hasItem(itemId)) {
+                gameState.inventory.push(itemId);
+                showMessage(`אספת: ${itemNames[itemId]}`, true);
+                updateUI();
+            }
+        }
+
+        function removeItem(itemId) {
+            const index = gameState.inventory.indexOf(itemId);
+            if (index > -1) {
+                gameState.inventory.splice(index, 1);
+                updateUI();
+            }
+        }
+
+        function loseEnergy(amount) {
+            gameState.energy -= amount;
+            if (gameState.energy < 0) gameState.energy = 0;
+            showMessage(`נפגעת! -${amount} אנרגיה`, false);
+            updateUI();
+        }
+
+        function gainEnergy(amount) {
+            gameState.energy += amount;
+            if (gameState.energy > 100) gameState.energy = 100;
+            showMessage(`התאוששות! +${amount} אנרגיה`, true);
+            updateUI();
+        }
+
+        function loopReset() {
+            // Time loop resets energy and location, keeps inventory and flags!
+            gameState.energy = 100;
+            gameState.currentNode = 'start';
+            showMessage("אתחול מערכת... הידע נשמר.", true);
+        }
+
+        function updateUI() {
+            // Energy
+            domEnergyBar.style.width = gameState.energy + '%';
+            domEnergyText.innerText = gameState.energy + '%';
+            
+            if (gameState.energy <= 20) {
+                domEnergyBar.classList.add('danger');
+            } else {
+                domEnergyBar.classList.remove('danger');
+            }
+
+            // Inventory
+            domInventory.innerHTML = '';
+            if (gameState.inventory.length === 0) {
+                domInventory.innerHTML = '<span style="color:#555;">[ריק]</span>';
+            } else {
+                gameState.inventory.forEach(item => {
+                    const span = document.createElement('span');
+                    span.className = 'item';
+                    span.innerText = itemNames[item] || item;
+                    domInventory.appendChild(span);
+                });
+            }
+        }
+
+        function showMessage(msg, isPositive) {
+            const overlay = document.getElementById('msg-overlay');
+            overlay.innerText = msg;
+            overlay.style.background = isPositive ? 'var(--text-dim)' : 'var(--accent)';
+            overlay.classList.add('show-msg');
+            setTimeout(() => {
+                overlay.classList.remove('show-msg');
+            }, 2000);
+        }
+
+        // --- SAVE SYSTEM (Local Storage) ---
+
+        function saveGame() {
+            localStorage.setItem('omega_high_save', JSON.stringify(gameState));
+            showMessage("המשחק נשמר בהצלחה", true);
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('omega_high_save');
+            if (saved) {
+                try {
+                    gameState = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Save file corrupted");
+                    resetGame(false);
+                }
+            }
+        }
+
+        function resetGame(reload = false) {
+            localStorage.removeItem('omega_high_save');
+            gameState = {
+                currentNode: 'start',
+                energy: 100,
+                inventory: [],
+                flags: {}
+            };
+            if(reload) {
+                showMessage("המשחק אופס", false);
+                renderNode('start');
+            }
+        }
+
+        // Start
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
+
