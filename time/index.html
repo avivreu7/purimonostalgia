@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>האקדמיה לחוסן פנימי - מפקדת הזמן</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rubik', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .screen.active {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(56, 189, 248, 0.9); }
+        }
+        .agent-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem;
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.5);
+        }
+        /* Schedule Builder Styles */
+        .activity-item {
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .activity-item:hover {
+            transform: translateY(-2px);
+        }
+        .activity-item.selected {
+            ring: 2px solid #34d399;
+            background-color: rgba(52, 211, 153, 0.2);
+            transform: scale(1.05);
+        }
+        .time-slot {
+            min-height: 60px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .time-slot.highlight {
+            background-color: rgba(56, 189, 248, 0.2);
+            border-color: #38bdf8;
+        }
+        .time-slot.filled {
+            border-style: solid;
+            border-color: transparent;
+        }
+        .meter-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Header / Status Bar -->
+    <div class="fixed top-0 left-0 w-full p-4 flex justify-between items-center bg-black/30 backdrop-blur-md z-50">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">🛡️</span>
+            <h1 class="font-bold text-lg md:text-xl tracking-wider text-blue-300">סוכנות החוסן</h1>
+        </div>
+        <div id="status-indicator" class="text-sm bg-blue-900/50 px-3 py-1 rounded-full border border-blue-500/50 flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+            מערכת מקוונת
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-4xl mt-16 flex-grow flex items-center justify-center">
+
+        <!-- SCREEN 1: Welcome & Emotion -->
+        <div id="screen-1" class="screen active flex-col items-center text-center w-full max-w-2xl agent-card p-8 shadow-2xl">
+            <div class="w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center mb-6" style="animation: pulse-glow 2s infinite;">
+                <span class="text-5xl">👋</span>
+            </div>
+            <h2 class="text-3xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">ברוך הבא למפקדה!</h2>
+            <p class="text-lg text-gray-300 mb-8 leading-relaxed">
+                בימים של מלחמת "שאגת הארי", כשהכל בחוץ מרגיש קצת סוער ומבולגן, זה לגמרי טבעי להרגיש כל מיני דברים. המפקדה שלנו נועדה לעזור לך להחזיר את השליטה.
+                <br><br>
+                <span class="font-bold text-white">לפני שמתחילים במשימה, איך אתה מרגיש עכשיו?</span>
+            </p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mb-8">
+                <button onclick="handleEmotion('משועמם')" class="bg-slate-800 hover:bg-slate-700 p-4 rounded-xl border border-slate-600 transition flex flex-col items-center gap-2">
+                    <span class="text-4xl">🥱</span>
+                    <span>משועמם</span>
+                </button>
+                <button onclick="handleEmotion('מודאג')" class="bg-slate-800 hover:bg-slate-700 p-4 rounded-xl border border-slate-600 transition flex flex-col items-center gap-2">
+                    <span class="text-4xl">😟</span>
+                    <span>מודאג</span>
+                </button>
+                <button onclick="handleEmotion('מלא אנרגיה')" class="bg-slate-800 hover:bg-slate-700 p-4 rounded-xl border border-slate-600 transition flex flex-col items-center gap-2">
+                    <span class="text-4xl">⚡</span>
+                    <span>מלא אנרגיה</span>
+                </button>
+                <button onclick="handleEmotion('עייף')" class="bg-slate-800 hover:bg-slate-700 p-4 rounded-xl border border-slate-600 transition flex flex-col items-center gap-2">
+                    <span class="text-4xl">🔋</span>
+                    <span>עייף</span>
+                </button>
+            </div>
+            
+            <div id="emotion-feedback" class="hidden text-xl font-bold text-green-400 mb-6 bg-green-900/30 p-4 rounded-lg w-full"></div>
+            
+            <button id="btn-next-1" onclick="nextScreen(2)" class="hidden btn-primary px-8 py-4 rounded-full text-xl font-bold w-full md:w-auto">
+                המשך לתדרוך הסודי 🚀
+            </button>
+        </div>
+
+        <!-- SCREEN 2: Psycho-education (The Brain) -->
+        <div id="screen-2" class="screen flex-col items-center text-center w-full max-w-2xl agent-card p-8">
+            <span class="text-6xl mb-4">🧠</span>
+            <h2 class="text-3xl font-black mb-4 text-purple-400">המוח שלך הוא גיבור-על!</h2>
+            <div class="bg-slate-800/50 p-6 rounded-xl text-right text-lg text-gray-200 leading-relaxed mb-8 border border-slate-700">
+                <p class="mb-4">
+                    כשאנחנו הולכים לבית הספר, יש לנו צלצול, שיעור, הפסקה. המוח שלנו אוהב את זה! זה כמו <strong>מפה</strong> שמראה לו את הדרך.
+                </p>
+                <p class="mb-4">
+                    אבל עכשיו, כשנשארים בבית ואין סדר יום, המוח שלנו מאבד את המפה. הוא מתחיל לבזבז המון אנרגיה על לחשוב: <em>"מה עושים עכשיו? ומה אחר כך?"</em> - בגלל זה אנחנו מרגישים עייפים, עצבניים או משועממים.
+                </p>
+                <p class="font-bold text-yellow-300">
+                    הסוד של הסוכנים המיוחדים: ברגע שאנחנו כותבים לעצמנו סדר יום, אנחנו מציירים למוח מפה חדשה! זה מרגיע אותו ומחזיר לנו את השליטה.
+                </p>
+            </div>
+            <button onclick="nextScreen(3)" class="btn-primary px-8 py-4 rounded-full text-xl font-bold w-full md:w-auto">
+                הבנתי! בוא נתאמן 💪
+            </button>
+        </div>
+
+        <!-- SCREEN 3: Empowerment & Humor (Master of Time) -->
+        <div id="screen-3" class="screen flex-col items-center text-center w-full max-w-2xl agent-card p-8">
+            <span class="text-6xl mb-4">⏱️</span>
+            <h2 class="text-3xl font-black mb-4 text-orange-400">מבחן מאסטר הזמן!</h2>
+            <p class="text-lg text-gray-300 mb-6">כדי לקבל גישה למערכת בניית הלו"ז, עליך להוכיח שאתה הבוס של הזמן שלך ולא להפך. ענה על השאלה הבאה:</p>
+            
+            <div class="w-full bg-slate-800 p-6 rounded-xl border border-orange-500/30 mb-8">
+                <h3 class="text-xl font-bold mb-4">מי מחליט מתי מתחיל יום טוב ומנצח?</h3>
+                <div class="flex flex-col gap-3">
+                    <button onclick="wrongAnswer()" class="bg-slate-700 hover:bg-slate-600 p-3 rounded-lg text-right transition border border-transparent hover:border-slate-400">
+                        א. השעון המעורר המעצבן
+                    </button>
+                    <button onclick="wrongAnswer()" class="bg-slate-700 hover:bg-slate-600 p-3 rounded-lg text-right transition border border-transparent hover:border-slate-400">
+                        ב. החדשות בטלוויזיה
+                    </button>
+                    <button onclick="correctAnswer()" class="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 p-3 rounded-lg text-right font-bold transition transform hover:scale-105">
+                        ג. אני! אני הבוס של היום שלי! 👑
+                    </button>
+                    <button onclick="wrongAnswer()" class="bg-slate-700 hover:bg-slate-600 p-3 rounded-lg text-right transition border border-transparent hover:border-slate-400">
+                        ד. אלגוריתם של טיקטוק
+                    </button>
+                </div>
+            </div>
+            
+            <div id="quiz-feedback" class="hidden text-xl font-bold mb-6 p-4 rounded-lg w-full"></div>
+            
+            <button id="btn-next-3" onclick="nextScreen(4)" class="hidden btn-primary px-8 py-4 rounded-full text-xl font-bold w-full md:w-auto">
+                הפעל את מעבדת הזמן ⚡
+            </button>
+        </div>
+
+        <!-- SCREEN 4: Schedule Builder (The Core Activity) -->
+        <div id="screen-4" class="screen flex-col w-full max-w-5xl agent-card p-4 md:p-8">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-black text-blue-300 mb-2">מעבדת הזמן: הרכבת סדר היום</h2>
+                <p class="text-sm md:text-base text-gray-300">בחר פעילות מהמאגר למטה, ואז לחץ על המשבצת הריקה שבה תרצה לשבץ אותה. כדי למלא את מצברי האנרגיה, וודא שיש לך גיוון!</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Energy Meters -->
+                <div class="w-full lg:w-1/4 bg-slate-800/80 p-4 rounded-xl border border-slate-600 flex flex-col gap-4 order-2 lg:order-1">
+                    <h3 class="font-bold text-center border-b border-slate-600 pb-2">מדדי אנרגיה נדרשים</h3>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>🧠 כוח מוח</span>
+                            <span id="score-brain">0/2</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-3">
+                            <div id="meter-brain" class="meter-bar bg-purple-500 h-3 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>💪 כוח גוף</span>
+                            <span id="score-body">0/2</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-3">
+                            <div id="meter-body" class="meter-bar bg-green-500 h-3 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>❤️ כוח לב/רגש</span>
+                            <span id="score-heart">0/2</span>
+                        </div>
+                        <div class="w-full bg-slate-700 rounded-full h-3">
+                            <div id="meter-heart" class="meter-bar bg-red-500 h-3 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div id="builder-warning" class="mt-4 text-sm text-yellow-300 bg-yellow-900/30 p-2 rounded hidden text-center border border-yellow-500/50">
+                        <!-- Warnings go here -->
+                    </div>
+
+                    <button id="btn-finish-build" onclick="checkAndFinishBuild()" class="mt-auto w-full bg-slate-600 text-gray-300 font-bold py-3 rounded-lg cursor-not-allowed transition" disabled>
+                        המערכת דורשת איזון לאישור
+                    </button>
+                </div>
+
+                <!-- Schedule Board -->
+                <div class="w-full lg:w-2/4 bg-slate-800/80 p-4 rounded-xl border border-slate-600 order-1 lg:order-2">
+                    <div class="grid grid-cols-3 gap-2 md:gap-4 h-full">
+                        
+                        <!-- Morning -->
+                        <div class="flex flex-col gap-2">
+                            <h3 class="text-center font-bold text-yellow-300 bg-yellow-900/40 py-1 rounded">בוקר ☀️</h3>
+                            <div class="time-slot" onclick="placeActivity(this)" data-time="morning" data-index="0"></div>
+                            <div class="time-slot" onclick="placeActivity(this)" data-time="morning" data-index="1"></div>
+                            <div class="time-slot" onclick="placeActivity(this)" data-time="morning" data-index="2"></div>
+                        </div>
+                        
+                        <!-- Noon -->
+                        <div class="flex flex-col gap-2">
+                            <h3 class="text-center font-bold text-orange-300 bg-orange-900/40 py-1 rounded">צהריים 🌤️</h3>
+                            <div class="time-slot" onclick="placeActivity(this)" data-time="noon" data-index="3"></div>
+                            <div class="time-slot" onclick="placeActivity(this)" data-time="noon" data-index="4"></div>
+                            <div class="time-slot" onclick="placeActivity(this)" data-time="noon" data-index="5"></div>
+                        </div>
+                        
+                        <!-- Evening -->
+                        <div class="flex flex-col gap-2">
+                            <h3 class="text-center font-bold text-blue-300 bg-blue-900/40 py-1 rounded">ערב 🌙</h3>
+                            <div class="time-slot" onclick="placeActivity(this)" data-time="evening" data-index="6"></div>
+                            <div class="time-slot" onclick="placeActivity(this)" data-time="evening" data-index="7"></div>
+                            <div class="time-slot" onclick="placeActivity(this)" data-time="evening" data-index="8"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Activity Bank -->
+                <div class="w-full lg:w-1/4 bg-slate-800/80 p-4 rounded-xl border border-slate-600 order-3 flex flex-col max-h-[60vh] overflow-y-auto custom-scrollbar">
+                    <h3 class="font-bold text-center border-b border-slate-600 pb-2 mb-3 sticky top-0 bg-slate-800/90 z-10">בנק הפעילויות</h3>
+                    <div class="text-xs text-center text-gray-400 mb-2">לחץ על פעילות, ואז לחץ על משבצת ריקה בלוח</div>
+                    
+                    <div class="flex flex-col gap-2 pb-2" id="activity-bank">
+                        <!-- Activities generated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 5: Summary & Certificate -->
+        <div id="screen-5" class="screen flex-col items-center w-full max-w-3xl agent-card p-6 md:p-10 text-center relative overflow-hidden">
+            <!-- Decorative badge -->
+            <div class="absolute -top-10 -right-10 text-9xl opacity-10">🏅</div>
+            
+            <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500 mb-2 z-10">כל הכבוד, סוכן!</h2>
+            <p class="text-lg text-gray-200 mb-6 z-10">הפעלת את "כור ההיתוך הפנימי" שלך. עכשיו יש לך מפה ברורה, והמוח שלך רגוע ושולט במצב.</p>
+            
+            <div class="bg-slate-900/80 p-6 rounded-2xl border-2 border-green-400/50 w-full mb-8 z-10 shadow-[0_0_30px_rgba(74,222,128,0.2)]">
+                <h3 class="text-2xl font-bold mb-4 text-white border-b border-slate-700 pb-2">תוכנית הפעולה היומית שלי</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-right">
+                    <div class="bg-slate-800 p-4 rounded-xl">
+                        <h4 class="font-bold text-yellow-300 mb-2 text-center text-lg">בוקר</h4>
+                        <ul id="summary-morning" class="space-y-2"></ul>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl">
+                        <h4 class="font-bold text-orange-300 mb-2 text-center text-lg">צהריים</h4>
+                        <ul id="summary-noon" class="space-y-2"></ul>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded-xl">
+                        <h4 class="font-bold text-blue-300 mb-2 text-center text-lg">ערב</h4>
+                        <ul id="summary-evening" class="space-y-2"></ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-4 z-10 w-full justify-center">
+                <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                    <span>🖨️</span> הדפס / שמור כ-PDF
+                </button>
+                <button onclick="location.reload()" class="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                    <span>🔄</span> בנה לו"ז חדש למחר
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Data Configuration
+        const activities = [
+            { id: 'b1', title: 'קריאת ספר', icon: '📚', type: 'brain', color: 'bg-purple-900/60 border-purple-500' },
+            { id: 'b2', title: 'פאזל / משחק קופסא', icon: '🧩', type: 'brain', color: 'bg-purple-900/60 border-purple-500' },
+            { id: 'b3', title: 'למידה / שיעורי בית', icon: '📝', type: 'brain', color: 'bg-purple-900/60 border-purple-500' },
+            { id: 'b4', title: 'ציור או יצירה', icon: '🎨', type: 'brain', color: 'bg-purple-900/60 border-purple-500' },
+            
+            { id: 'p1', title: 'ארוחה בריאה', icon: '🥗', type: 'body', color: 'bg-green-900/60 border-green-500' },
+            { id: 'p2', title: 'אימון כושר ביוטיוב', icon: '🏋️‍♂️', type: 'body', color: 'bg-green-900/60 border-green-500' },
+            { id: 'p3', title: 'ריקודים בסלון', icon: '🕺', type: 'body', color: 'bg-green-900/60 border-green-500' },
+            { id: 'p4', title: 'מנוחה צהריים/שינה', icon: '😴', type: 'body', color: 'bg-green-900/60 border-green-500' },
+            
+            { id: 'h1', title: 'עזרה בעבודות הבית', icon: '🧹', type: 'heart', color: 'bg-red-900/60 border-red-500' },
+            { id: 'h2', title: 'שיחת וידאו עם סבא/סבתא', icon: '📞', type: 'heart', color: 'bg-red-900/60 border-red-500' },
+            { id: 'h3', title: 'זמן משפחה', icon: '👨‍👩‍👧‍👦', type: 'heart', color: 'bg-red-900/60 border-red-500' },
+            { id: 'h4', title: 'נשימות והרפיה', icon: '🧘‍♂️', type: 'heart', color: 'bg-red-900/60 border-red-500' },
+            
+            { id: 'f1', title: 'משחקי וידאו/מחשב', icon: '🎮', type: 'free', color: 'bg-blue-900/60 border-blue-500' },
+            { id: 'f2', title: 'זמן מסכים (טלוויזיה/טלפון)', icon: '📱', type: 'free', color: 'bg-blue-900/60 border-blue-500' },
+            { id: 'f3', title: 'זמן חופשי לבד', icon: '🎧', type: 'free', color: 'bg-blue-900/60 border-blue-500' }
+        ];
+
+        // State Management
+        let selectedActivity = null;
+        let schedule = Array(9).fill(null); // 0-2 morning, 3-5 noon, 6-8 evening
+
+        // UI Helpers
+        function nextScreen(screenNumber) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${screenNumber}`).classList.add('active');
+            window.scrollTo(0,0);
+            
+            if(screenNumber === 4) {
+                initBuilder();
+            }
+        }
+
+        // Screen 1 Logic
+        function handleEmotion(emotion) {
+            const feedback = document.getElementById('emotion-feedback');
+            const btnNext = document.getElementById('btn-next-1');
+            
+            let message = '';
+            if (emotion === 'משועמם') message = "זה טבעי לחלוטין. כשהשגרה נעלמת, המוח מחפש עניין. אנחנו נייצר אותו יחד!";
+            else if (emotion === 'מודאג') message = "זה כל כך מובן. המצב בחוץ באמת מלחיץ. אנחנו כאן כדי לבנות אי של שקט בתוך הבית.";
+            else if (emotion === 'מלא אנרגיה') message = "מעולה! אנחנו הולכים לתעל את כל האנרגיה הזו כדי לבנות משהו מדהים.";
+            else if (emotion === 'עייף') message = "הגיוני מאוד. מתח גוזל מאיתנו כוחות. נבנה יום רגוע עם הרבה זמני מנוחה והתאוששות.";
+
+            feedback.innerHTML = `<strong>בחרת: ${emotion}.</strong> <br> ${message}`;
+            feedback.classList.remove('hidden');
+            btnNext.classList.remove('hidden');
+        }
+
+        // Screen 3 Logic (Quiz)
+        function wrongAnswer() {
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.innerHTML = "❌ טעות! אל תתן לדברים מבחוץ לנהל אותך. נסה שוב סוכן!";
+            feedback.className = "text-xl font-bold mb-6 p-4 rounded-lg w-full bg-red-900/50 text-red-300 border border-red-500/50";
+            feedback.classList.remove('hidden');
+        }
+
+        function correctAnswer() {
+            const feedback = document.getElementById('quiz-feedback');
+            const btnNext = document.getElementById('btn-next-3');
+            
+            feedback.innerHTML = "🎯 בינגו! רק אתה קובע את הקצב. יש לך אישור כניסה למעבדה.";
+            feedback.className = "text-xl font-bold mb-6 p-4 rounded-lg w-full bg-green-900/50 text-green-300 border border-green-500/50";
+            feedback.classList.remove('hidden');
+            btnNext.classList.remove('hidden');
+        }
+
+        // Screen 4 Logic (Builder)
+        function initBuilder() {
+            const bank = document.getElementById('activity-bank');
+            bank.innerHTML = '';
+            
+            activities.forEach(act => {
+                const el = document.createElement('div');
+                el.className = `activity-item p-3 rounded-lg border flex items-center gap-3 ${act.color}`;
+                el.innerHTML = `<span class="text-2xl">${act.icon}</span> <span class="font-bold">${act.title}</span>`;
+                el.onclick = () => selectActivity(act, el);
+                bank.appendChild(el);
+            });
+        }
+
+        function selectActivity(act, element) {
+            // Deselect previous
+            document.querySelectorAll('.activity-item').forEach(el => el.classList.remove('selected'));
+            
+            selectedActivity = act;
+            element.classList.add('selected');
+            
+            // Highlight empty slots to show where they can click
+            document.querySelectorAll('.time-slot:not(.filled)').forEach(slot => {
+                slot.classList.add('highlight');
+            });
+        }
+
+        function placeActivity(slotElement) {
+            if (!selectedActivity) return;
+            
+            const index = slotElement.getAttribute('data-index');
+            schedule[index] = selectedActivity;
+            
+            // Render slot
+            slotElement.innerHTML = `<div class="w-full h-full flex items-center justify-center p-2 rounded-lg ${selectedActivity.color} text-sm md:text-base font-bold gap-2 animation-bounce-short">
+                <span>${selectedActivity.icon}</span> <span>${selectedActivity.title}</span>
+            </div>`;
+            slotElement.classList.add('filled');
+            slotElement.classList.remove('highlight');
+            
+            // Clear selection
+            selectedActivity = null;
+            document.querySelectorAll('.activity-item').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('.time-slot').forEach(slot => slot.classList.remove('highlight'));
+
+            updateMeters();
+        }
+
+        function updateMeters() {
+            let counts = { brain: 0, body: 0, heart: 0, free: 0 };
+            let totalFilled = 0;
+            
+            schedule.forEach(act => {
+                if (act) {
+                    counts[act.type]++;
+                    totalFilled++;
+                }
+            });
+
+            // Target is 2 of each to unlock
+            const target = 2;
+            
+            document.getElementById('score-brain').innerText = `${counts.brain}/${target}`;
+            document.getElementById('meter-brain').style.width = `${Math.min((counts.brain/target)*100, 100)}%`;
+            
+            document.getElementById('score-body').innerText = `${counts.body}/${target}`;
+            document.getElementById('meter-body').style.width = `${Math.min((counts.body/target)*100, 100)}%`;
+            
+            document.getElementById('score-heart').innerText = `${counts.heart}/${target}`;
+            document.getElementById('meter-heart').style.width = `${Math.min((counts.heart/target)*100, 100)}%`;
+
+            // Warnings logic
+            const warningEl = document.getElementById('builder-warning');
+            const btnFinish = document.getElementById('btn-finish-build');
+            
+            warningEl.classList.add('hidden');
+            
+            if (counts.free > 3) {
+                warningEl.innerHTML = "⚠️ שים לב: יותר מדי זמן מסכים מרוקן את הסוללה! נסה לאזן עם פעולות אחרות.";
+                warningEl.classList.remove('hidden');
+            } else if (totalFilled === 9) {
+                if (counts.brain >= target && counts.body >= target && counts.heart >= target) {
+                    // Success!
+                    btnFinish.disabled = false;
+                    btnFinish.className = "mt-auto w-full btn-primary text-white font-bold py-3 rounded-lg text-lg shadow-lg";
+                    btnFinish.innerText = "אשר תוכנית מבצעית! 🚀";
+                } else {
+                    warningEl.innerHTML = "⚠️ הלוח מלא, אבל חסרה אנרגיה מסוג מסוים (גוף/מוח/לב). רענן משבצת ולחץ שוב.";
+                    warningEl.classList.remove('hidden');
+                }
+            }
+        }
+
+        function checkAndFinishBuild() {
+            // Populate screen 5
+            const mor = document.getElementById('summary-morning');
+            const noo = document.getElementById('summary-noon');
+            const eve = document.getElementById('summary-evening');
+            
+            mor.innerHTML = ''; noo.innerHTML = ''; eve.innerHTML = '';
+            
+            schedule.slice(0,3).forEach(act => mor.innerHTML += `<li class="bg-slate-700/50 p-2 rounded flex items-center gap-2"><span>${act.icon}</span> ${act.title}</li>`);
+            schedule.slice(3,6).forEach(act => noo.innerHTML += `<li class="bg-slate-700/50 p-2 rounded flex items-center gap-2"><span>${act.icon}</span> ${act.title}</li>`);
+            schedule.slice(6,9).forEach(act => eve.innerHTML += `<li class="bg-slate-700/50 p-2 rounded flex items-center gap-2"><span>${act.icon}</span> ${act.title}</li>`);
+            
+            nextScreen(5);
+            fireConfetti();
+        }
+
+        // --- Simple Confetti Implementation ---
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#34d399', '#38bdf8', '#fbbf24', '#f472b6', '#a78bfa'];
+
+            for (let i = 0; i < 150; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 + 100,
+                    r: Math.random() * 6 + 2,
+                    dx: Math.random() * 20 - 10,
+                    dy: Math.random() * -20 - 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    tilt: Math.random() * 10,
+                    tiltAngle: 0,
+                    tiltAngleInc: (Math.random() * 0.07) + 0.05
+                });
+            }
+
+            let animationId;
+            function render() {
+                requestAnimationFrame(render);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(p => {
+                    p.tiltAngle += p.tiltAngleInc;
+                    p.y += (Math.cos(p.tiltAngle) + p.dy + p.r / 2) / 2;
+                    p.x += Math.sin(p.tiltAngle) * 2;
+                    p.dy += 0.2; // gravity
+
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r);
+                    ctx.stroke();
+                });
+            }
+            render();
+            
+            // Stop confetti after 4 seconds
+            setTimeout(() => {
+                canvas.style.opacity = '0';
+                canvas.style.transition = 'opacity 2s';
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
+
