@@ -23,7 +23,7 @@
             color: #ffffff;
             margin: 0;
             padding: 0;
-            overflow: hidden;
+            overflow: hidden; /* נועל את גלילת הדף הכללית */
             user-select: none;
         }
 
@@ -32,7 +32,7 @@
             letter-spacing: 0.05em;
         }
 
-        /* Letterboxing (פסים שחורים) */
+        /* Letterboxing (פסים שחורים קבועים) */
         .letterbox {
             position: fixed;
             left: 0; right: 0; height: 12vh;
@@ -45,6 +45,35 @@
         }
         .letterbox-top { top: 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .letterbox-bottom { bottom: 0; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        /* אזור גלילה מרכזי (מותאם לטאץ') */
+        .scroll-area {
+            position: absolute;
+            top: 12vh; /* מתחיל מתחת לפס העליון */
+            bottom: 12vh; /* מסתיים מעל הפס התחתון */
+            left: 0;
+            right: 0;
+            overflow-y: auto; /* מאפשר גלילה אנכית */
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; /* החלקה חלקה בניידים */
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .scroll-content {
+            margin: auto; /* ממרכז תוכן קצר, ושומר על גלילה נכונה בתוכן ארוך */
+            width: 100%;
+            max-width: 64rem;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* עיצוב פס הגלילה */
+        .scroll-area::-webkit-scrollbar { width: 6px; }
+        .scroll-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 
         /* Film Grain */
         .film-grain {
@@ -93,6 +122,14 @@
 
         @keyframes revealUp {
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: simpleFade 0.8s ease-in forwards;
+        }
+        @keyframes simpleFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         /* Texts */
@@ -164,18 +201,6 @@
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
-
-        /* Scrollbar */
-        .edu-scroll {
-            max-height: 60vh;
-            overflow-y: auto;
-            padding-right: 15px;
-            direction: rtl;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.3) transparent;
-        }
-        .edu-scroll::-webkit-scrollbar { width: 6px; }
-        .edu-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -184,7 +209,8 @@
     <div id="letterbox-top" class="letterbox letterbox-top"></div>
     <div id="letterbox-bottom" class="letterbox letterbox-bottom"></div>
     
-    <main id="main-content" class="flex-grow relative flex flex-col items-center justify-center overflow-hidden z-10 pt-[12vh] pb-[12vh] h-screen w-screen"></main>
+    <!-- ה-Wrapper הראשי (נפרש על כל המסך אבל מכיל בתוכו את אזור הגלילה) -->
+    <main id="main-content" class="fixed inset-0 z-10 w-full h-full"></main>
 
     <script>
         // --- DATA: SCENES ---
@@ -264,7 +290,7 @@
                 subtitle: "התרה",
                 text: "הכעס מתמוסס. החברים סולחים ומבינים את גודל ההקרבה. יותר מכך, הם מעריצים את הכישרון שלו. <br/>הקונפליקט נפתר לחלוטין, והחברות ניצחה.",
                 dialogue: "אדק: \"זה יהיה סרט יפה מאוד! כשתגדל ותהיה במאי... אני אהיה נהג ואוביל שמה אנשים.\"",
-                choices: [{ text: "המשך לחדר הבמאי (למידה ומושגים)", next: "END" }]
+                choices: [{ text: "לחדר העריכה (למידה ומושגים)", next: "END" }]
             }
         ];
 
@@ -328,7 +354,7 @@
             {
                 id: "vocab", icon: "📜", title: "מילון מונחים", subtitle: "השפה הקולנועית של הספר",
                 content: `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-right text-lg text-slate-200">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-right text-lg text-slate-200 w-full">
                         <div class="bg-slate-800/80 p-3 rounded border border-slate-700"><strong class="text-yellow-400">למן:</strong> מן / החל מ-</div>
                         <div class="bg-slate-800/80 p-3 rounded border border-slate-700"><strong class="text-yellow-400">לסו / פלצור:</strong> חבל לאסו</div>
                         <div class="bg-slate-800/80 p-3 rounded border border-slate-700"><strong class="text-yellow-400">הדמים:</strong> נעשה דומם (שקט)</div>
@@ -389,12 +415,11 @@
             main: document.getElementById('main-content')
         };
 
-        // Trigger animations by reflowing
         function triggerAnimation(selector) {
             const elements = document.querySelectorAll(selector);
             elements.forEach(el => {
                 el.style.animation = 'none';
-                el.offsetHeight; /* trigger reflow */
+                el.offsetHeight; 
                 el.style.animation = null; 
             });
         }
@@ -416,22 +441,24 @@
             DOM.top.innerHTML = scene.id > 0 ? `<div class="text-gray-500 font-cinema tracking-[0.2em] text-sm opacity-50 fade-in">סצנה ${scene.id} מתוך 7</div>` : '';
             
             const btns = scene.choices.map(c => 
-                `<button onclick="window.actions.nextScene('${c.next}')" class="glass-btn px-6 md:px-10 py-3 rounded-md font-cinema text-lg md:text-xl tracking-wide flex-1 md:flex-none uppercase">${c.text}</button>`
+                `<button onclick="window.actions.nextScene('${c.next}')" class="glass-btn px-6 md:px-10 py-3 rounded-md font-cinema text-lg md:text-xl tracking-wide w-full md:w-auto uppercase">${c.text}</button>`
             ).join('');
-            DOM.bottom.innerHTML = `<div class="flex gap-4 px-4 w-full justify-center max-w-3xl reveal-text" style="animation-delay: 1s">${btns}</div>`;
+            DOM.bottom.innerHTML = `<div class="flex flex-col md:flex-row gap-4 px-4 w-full justify-center max-w-3xl reveal-text" style="animation-delay: 1s">${btns}</div>`;
 
             const dialogue = scene.dialogue ? 
-                `<div class="mt-4 text-xl md:text-3xl text-yellow-400 italic font-light text-center reveal-text drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] max-w-4xl px-4 border-l-4 border-r-4 border-yellow-500/30 py-2 bg-black/30" style="animation-delay: 0.8s">${scene.dialogue}</div>` : '';
+                `<div class="mt-8 text-xl md:text-3xl text-yellow-400 italic font-light text-center reveal-text drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] w-full border-l-4 border-r-4 border-yellow-500/30 py-4 bg-black/40 rounded" style="animation-delay: 0.8s">${scene.dialogue}</div>` : '';
 
             DOM.main.innerHTML = `
                 <div class="scene-bg" style="background: ${scene.bgGradient}"></div>
                 <div class="vignette"></div>
-                <div class="z-20 flex flex-col items-center w-full px-4 md:px-12">
-                    <div class="text-6xl md:text-8xl mb-6 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] reveal-text" style="animation-delay: 0.1s">${scene.icon}</div>
-                    <div class="text-yellow-500 font-cinema tracking-widest uppercase text-sm md:text-lg mb-2 reveal-text" style="animation-delay: 0.2s">${scene.subtitle}</div>
-                    <h1 class="text-4xl md:text-6xl lg:text-7xl font-cinema font-bold text-center mb-10 text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)] reveal-text leading-tight" style="animation-delay: 0.4s">${scene.title}</h1>
-                    <div class="subtitle-text text-center reveal-text max-w-4xl px-4" style="animation-delay: 0.6s">${scene.text}</div>
-                    ${dialogue}
+                <div class="scroll-area w-full">
+                    <div class="scroll-content text-center">
+                        <div class="text-6xl md:text-8xl mb-6 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] reveal-text" style="animation-delay: 0.1s">${scene.icon}</div>
+                        <div class="text-yellow-500 font-cinema tracking-widest uppercase text-sm md:text-lg mb-2 reveal-text" style="animation-delay: 0.2s">${scene.subtitle}</div>
+                        <h1 class="text-4xl md:text-6xl lg:text-7xl font-cinema font-bold text-center mb-8 text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)] reveal-text leading-tight" style="animation-delay: 0.4s">${scene.title}</h1>
+                        <div class="subtitle-text text-center reveal-text w-full" style="animation-delay: 0.6s">${scene.text}</div>
+                        ${dialogue}
+                    </div>
                 </div>
             `;
         }
@@ -442,11 +469,11 @@
             DOM.bottom.innerHTML = `<button onclick="window.actions.restart()" class="text-gray-500 hover:text-white font-cinema tracking-widest uppercase transition-colors fade-in">צפה בסרט מחדש 🔄</button>`;
 
             let categoriesHTML = eduCategories.map((cat, idx) => `
-                <div onclick="window.actions.openModal('${cat.id}')" class="glass-btn p-5 rounded-xl flex items-center gap-6 group cursor-pointer" style="animation: revealUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${idx * 0.1}s; opacity: 0; transform: translateY(20px)">
-                    <div class="text-4xl group-hover:scale-110 transition-transform">${cat.icon}</div>
+                <div onclick="window.actions.openModal('${cat.id}')" class="glass-btn p-5 rounded-xl flex items-center gap-4 group cursor-pointer" style="animation: revealUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: ${idx * 0.1}s; opacity: 0; transform: translateY(20px)">
+                    <div class="text-3xl md:text-4xl group-hover:scale-110 transition-transform">${cat.icon}</div>
                     <div class="text-right flex-1">
-                        <h3 class="text-xl font-cinema font-bold text-white mb-1">${cat.title}</h3>
-                        <p class="text-slate-400 text-sm">${cat.subtitle}</p>
+                        <h3 class="text-lg md:text-xl font-cinema font-bold text-white mb-1">${cat.title}</h3>
+                        <p class="text-slate-400 text-xs md:text-sm">${cat.subtitle}</p>
                     </div>
                     <div class="text-slate-500 group-hover:text-yellow-400 transition-colors text-xl">←</div>
                 </div>
@@ -455,21 +482,23 @@
             DOM.main.innerHTML = `
                 <div class="scene-bg" style="background: radial-gradient(circle at 50% 50%, #0f172a 0%, #000000 100%)"></div>
                 <div class="vignette"></div>
-                <div class="z-20 flex flex-col items-center w-full px-4 max-w-5xl fade-in">
-                    <div class="text-yellow-500 font-cinema tracking-widest uppercase text-lg mb-2">מאחורי הקלעים</div>
-                    <h2 class="text-4xl md:text-5xl font-cinema font-bold text-center mb-4 text-white">חדר העריכה של הבמאי</h2>
-                    <p class="text-slate-300 mb-8 text-center text-lg max-w-2xl">הסרט נגמר, אבל הלמידה רק מתחילה. <br/>חקרו את המושגים הספרותיים בתסריט, או בחנו את עצמכם.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                        ${categoriesHTML}
+                <div class="scroll-area w-full">
+                    <div class="scroll-content text-center">
+                        <div class="text-yellow-500 font-cinema tracking-widest uppercase text-lg mb-2 fade-in">מאחורי הקלעים</div>
+                        <h2 class="text-4xl md:text-5xl font-cinema font-bold text-center mb-4 text-white fade-in">חדר העריכה של הבמאי</h2>
+                        <p class="text-slate-300 mb-8 text-center text-base md:text-lg max-w-2xl fade-in">הסרט נגמר, אבל הלמידה רק מתחילה. <br/>חקרו את המושגים הספרותיים בתסריט, או בחנו את עצמכם.</p>
                         
-                        <div onclick="window.actions.startQuiz()" class="glass-btn p-5 rounded-xl flex items-center gap-6 group col-span-1 md:col-span-2 bg-yellow-900/20 hover:bg-yellow-900/40 border-yellow-500/30 cursor-pointer" style="animation: revealUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: 0.5s; opacity: 0; transform: translateY(20px)">
-                            <div class="text-4xl group-hover:scale-110 transition-transform">🎯</div>
-                            <div class="text-right flex-1">
-                                <h3 class="text-2xl font-cinema font-bold text-yellow-400 mb-1">מבחן בד - תרגול מושגים</h3>
-                                <p class="text-slate-300 text-sm">הפגנו את הידע שצברתם וענו על שאלות טריוויה מהעלילה</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                            ${categoriesHTML}
+                            
+                            <div onclick="window.actions.startQuiz()" class="glass-btn p-5 rounded-xl flex items-center gap-4 group col-span-1 md:col-span-2 bg-yellow-900/20 hover:bg-yellow-900/40 border-yellow-500/30 cursor-pointer" style="animation: revealUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: 0.5s; opacity: 0; transform: translateY(20px)">
+                                <div class="text-3xl md:text-4xl group-hover:scale-110 transition-transform">🎯</div>
+                                <div class="text-right flex-1">
+                                    <h3 class="text-xl md:text-2xl font-cinema font-bold text-yellow-400 mb-1">מבחן בד - תרגול מושגים</h3>
+                                    <p class="text-slate-300 text-xs md:text-sm">הפגנו את הידע שצברתם וענו על שאלות טריוויה מהעלילה</p>
+                                </div>
+                                <div class="text-yellow-500 group-hover:text-white transition-colors text-lg md:text-xl font-bold">התחל ←</div>
                             </div>
-                            <div class="text-yellow-500 group-hover:text-white transition-colors text-xl font-bold">התחל ←</div>
                         </div>
                     </div>
                 </div>
@@ -481,18 +510,19 @@
             const edu = eduCategories.find(e => e.id === state.activeEduId);
             
             DOM.top.innerHTML = '';
-            DOM.bottom.innerHTML = `<button onclick="window.actions.closeModal()" class="glass-btn px-10 py-3 rounded-md font-cinema text-xl uppercase tracking-widest reveal-text" style="animation-delay: 0.2s">חזור לחדר העריכה</button>`;
+            DOM.bottom.innerHTML = `<button onclick="window.actions.closeModal()" class="glass-btn px-6 md:px-10 py-3 rounded-md font-cinema text-lg md:text-xl uppercase tracking-widest reveal-text" style="animation-delay: 0.2s">חזור לחדר העריכה</button>`;
 
             DOM.main.innerHTML = `
                 <div class="scene-bg" style="background: radial-gradient(circle at center, #1e293b 0%, #000000 100%)"></div>
-                <div class="z-20 w-full max-w-4xl px-4 flex flex-col h-full py-8 fade-in">
-                    <div class="text-center mb-8 border-b border-slate-700 pb-6 reveal-text" style="animation-delay: 0.1s">
-                        <div class="text-6xl mb-4">${edu.icon}</div>
-                        <h2 class="text-3xl md:text-5xl font-cinema font-bold text-yellow-400 mb-2">${edu.title}</h2>
-                        <div class="text-slate-400 tracking-widest uppercase">${edu.subtitle}</div>
-                    </div>
-                    <div class="flex-grow edu-scroll reveal-text" style="animation-delay: 0.2s">
-                        ${edu.content}
+                <div class="scroll-area w-full">
+                    <div class="scroll-content text-center">
+                        <div class="text-6xl mb-4 reveal-text" style="animation-delay: 0.1s">${edu.icon}</div>
+                        <h2 class="text-3xl md:text-5xl font-cinema font-bold text-yellow-400 mb-2 reveal-text" style="animation-delay: 0.1s">${edu.title}</h2>
+                        <div class="text-slate-400 tracking-widest uppercase mb-8 border-b border-slate-700 pb-6 w-full reveal-text" style="animation-delay: 0.1s">${edu.subtitle}</div>
+                        
+                        <div class="w-full reveal-text" style="animation-delay: 0.2s">
+                            ${edu.content}
+                        </div>
                     </div>
                 </div>
             `;
@@ -502,19 +532,21 @@
         function renderQuiz() {
             if (state.quizCompleted) {
                 DOM.top.innerHTML = `<div class="text-gray-500 font-cinema tracking-[0.2em] text-sm opacity-50 fade-in">מבחן בד - סיכום</div>`;
-                DOM.bottom.innerHTML = `<button onclick="window.actions.closeModal()" class="glass-btn px-10 py-3 rounded-md font-cinema text-xl uppercase tracking-widest fade-in">חזור לחדר העריכה</button>`;
+                DOM.bottom.innerHTML = `<button onclick="window.actions.closeModal()" class="glass-btn px-6 md:px-10 py-3 rounded-md font-cinema text-lg md:text-xl uppercase tracking-widest fade-in">חזור לחדר העריכה</button>`;
                 
                 const isPerfect = state.score === quizQuestions.length;
                 DOM.main.innerHTML = `
                     <div class="scene-bg" style="background: radial-gradient(circle at center, #3f000f 0%, #000000 100%)"></div>
                     <div class="vignette"></div>
-                    <div class="z-20 w-full max-w-3xl px-4 flex flex-col items-center fade-in">
-                        <div class="text-6xl mb-6">🏆</div>
-                        <h2 class="text-4xl md:text-5xl font-cinema font-bold text-yellow-400 mb-4">CUT! סיום צילומים!</h2>
-                        <p class="text-2xl text-white mb-8">הציון שלכם: <span class="font-bold text-yellow-400">${state.score}</span> מתוך ${quizQuestions.length}</p>
-                        <p class="text-slate-300 text-lg max-w-lg mx-auto text-center">
-                            ${isPerfect ? "ביצוע ברמת אוסקר! אתם שולטים בכל המושגים הקולנועיים של הסיפור לחלוטין." : "עבודה טובה! חזרו ל'חדר הבמאי' כדי לרענן את הזיכרון על המושגים שנותרו."}
-                        </p>
+                    <div class="scroll-area w-full">
+                        <div class="scroll-content text-center fade-in">
+                            <div class="text-6xl mb-6">🏆</div>
+                            <h2 class="text-4xl md:text-5xl font-cinema font-bold text-yellow-400 mb-4">CUT! סיום צילומים!</h2>
+                            <p class="text-2xl text-white mb-8">הציון שלכם: <span class="font-bold text-yellow-400">${state.score}</span> מתוך ${quizQuestions.length}</p>
+                            <p class="text-slate-300 text-lg max-w-lg mx-auto text-center">
+                                ${isPerfect ? "ביצוע ברמת אוסקר! אתם שולטים בכל המושגים הקולנועיים של הסיפור לחלוטין." : "עבודה טובה! חזרו ל'חדר הבמאי' כדי לרענן את הזיכרון על המושגים שנותרו."}
+                            </p>
+                        </div>
                     </div>
                 `;
                 return;
@@ -522,7 +554,7 @@
 
             const q = quizQuestions[state.quizIndex];
             
-            DOM.top.innerHTML = `<div class="text-gray-500 font-cinema tracking-[0.2em] text-sm opacity-50 fade-in">מבחן בד - שאלה ${state.quizIndex + 1} מתוך ${quizQuestions.length}</div>`;
+            DOM.top.innerHTML = `<div class="text-gray-500 font-cinema tracking-[0.2em] text-sm opacity-50 fade-in">שאלה ${state.quizIndex + 1} / ${quizQuestions.length}</div>`;
             DOM.bottom.innerHTML = `<button onclick="window.actions.closeModal()" class="text-gray-500 hover:text-white font-cinema tracking-widest uppercase transition-colors text-sm fade-in">צא מהמבחן ✕</button>`;
 
             let optionsHTML = q.options.map((opt, idx) => {
@@ -546,11 +578,13 @@
             DOM.main.innerHTML = `
                 <div class="scene-bg" style="background: radial-gradient(circle at center, #3f000f 0%, #000000 100%)"></div>
                 <div class="vignette"></div>
-                <div class="z-20 w-full max-w-3xl px-4 flex flex-col items-center reveal-text" style="animation-duration: 0.5s">
-                    <div class="text-yellow-500 font-cinema tracking-widest uppercase text-xl mb-6">אקשן! 🎬</div>
-                    <h2 class="text-2xl md:text-4xl font-bold text-center mb-10 text-white drop-shadow-md leading-tight">${q.q}</h2>
-                    <div class="w-full space-y-4">
-                        ${optionsHTML}
+                <div class="scroll-area w-full">
+                    <div class="scroll-content text-center reveal-text" style="animation-duration: 0.5s">
+                        <div class="text-yellow-500 font-cinema tracking-widest uppercase text-xl mb-6">אקשן! 🎬</div>
+                        <h2 class="text-2xl md:text-4xl font-bold text-center mb-8 text-white drop-shadow-md leading-tight">${q.q}</h2>
+                        <div class="w-full space-y-4">
+                            ${optionsHTML}
+                        </div>
                     </div>
                 </div>
             `;
@@ -593,7 +627,7 @@
                 if (idx === quizQuestions[state.quizIndex].answer) {
                     state.score++;
                 }
-                render(); // Show colors immediately
+                render(); // Show colors
 
                 setTimeout(() => {
                     if (state.quizIndex + 1 < quizQuestions.length) {
@@ -602,7 +636,7 @@
                     } else {
                         state.quizCompleted = true;
                     }
-                    render(); // Move to next or complete
+                    render(); // Next question
                 }, 1800);
             }
         };
