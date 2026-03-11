@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>התסריט הראשון של סבק - Director's Cut</title>
+    <title>התסריט הראשון של סבק - הקאט של הבמאי</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -30,7 +30,7 @@
             color: #ffffff;
             margin: 0;
             padding: 0;
-            overflow: hidden; /* נועל גלילה לחווית מסך מלא */
+            overflow: hidden;
             user-select: none;
         }
 
@@ -39,7 +39,7 @@
             letter-spacing: 0.05em;
         }
 
-        /* פס קולנוע עליון ותחתון - Letterboxing */
+        /* Letterboxing */
         .letterbox {
             position: fixed;
             left: 0;
@@ -51,18 +51,19 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 0 30px rgba(0,0,0,0.9);
+            transition: all 0.5s ease;
         }
         .letterbox-top { top: 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .letterbox-bottom { bottom: 0; border-top: 1px solid rgba(255,255,255,0.05); }
 
-        /* פילטר סרט צילום (Film Grain) */
+        /* Film Grain */
         .film-grain {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
             pointer-events: none;
             z-index: 40;
-            background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
-            opacity: 0.06;
+            background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+            opacity: 0.07;
             animation: grainShift 0.2s steps(2) infinite;
         }
 
@@ -72,7 +73,7 @@
             100% { transform: translate(1%, -1%); }
         }
 
-        /* מעבר רקע דרמטי (Ken Burns פשוט וצבעים עמוקים) */
+        /* Backgrounds & Vignette */
         .scene-bg {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -80,12 +81,13 @@
             background-size: cover;
             background-position: center;
             animation: breathe 15s ease-in-out infinite alternate;
+            transition: background 1.5s ease;
         }
         
         .vignette {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.85) 90%, #000 100%);
+            background: radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.85) 90%, #000 100%);
             z-index: 1;
         }
 
@@ -94,7 +96,7 @@
             100% { transform: scale(1.05); }
         }
 
-        /* אנימציות חשיפה דרמטיות */
+        /* Animations */
         .reveal-text {
             opacity: 0;
             transform: translateY(20px);
@@ -105,7 +107,15 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* עיצוב כתוביות קולנוע */
+        .fade-in {
+            animation: simpleFade 0.8s ease-in forwards;
+        }
+        @keyframes simpleFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Text Styles */
         .subtitle-text {
             color: #f1f5f9;
             text-shadow: 0px 2px 4px rgba(0,0,0,0.8), 0px 4px 15px rgba(0,0,0,0.5);
@@ -114,7 +124,7 @@
             font-weight: 300;
         }
 
-        /* כפתורי זכוכית דרמטיים (Glassmorphism) */
+        /* Glass Buttons */
         .glass-btn {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -124,6 +134,7 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            cursor: pointer;
         }
         
         .glass-btn::before {
@@ -145,17 +156,22 @@
             left: 200%;
         }
 
-        /* הבהוב למילים מרכזיות */
-        .glow-word {
-            color: #fbbf24;
-            text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
-            font-weight: 700;
+        /* Highlights */
+        .glow-word { color: #fbbf24; text-shadow: 0 0 15px rgba(251, 191, 36, 0.4); font-weight: 700; }
+        .glow-red { color: #ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.4); font-weight: 700; }
+
+        /* Educational Modal / Scroll Area */
+        .edu-scroll {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 15px;
+            direction: rtl;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
         }
-        .glow-red {
-            color: #ef4444;
-            text-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-            font-weight: 700;
-        }
+        .edu-scroll::-webkit-scrollbar { width: 6px; }
+        .edu-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 10px; }
+
     </style>
 </head>
 <body>
@@ -165,22 +181,23 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // --- STORY SCRIPT ---
         const scenes = [
             {
                 id: 0,
                 bgGradient: "radial-gradient(circle at 50% 40%, #2a0a0a 0%, #000000 80%)",
                 icon: "🎬",
                 title: "התסריט הראשון של סבק",
-                subtitle: "חוויה אינטראקטיבית | מאת בנימין טנא",
+                subtitle: "חוויה קולנועית | מאת בנימין טנא",
                 text: "ברוכים הבאים לאולם הקולנוע.\nהסיפור שאתם עומדים לחוות עוסק בחברות, נאמנות, וסוד שנשמר בחושך.\nהיכנסו לנעלי הדמויות, קבלו את ההחלטות, וגלו את האמת.",
-                choices: [{ text: "התחל צפייה", next: 1 }]
+                choices: [{ text: "התחל הקרנה", next: 1 }]
             },
             {
                 id: 1,
                 bgGradient: "radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%)",
                 icon: "❄️",
                 title: "וורשה. חורף. לפני המלחמה.",
-                subtitle: "האקספוזיציה",
+                subtitle: "פתיחת העלילה",
                 text: "קור עז ברחובות. מתחת לעץ הערמון, בין הרובע היהודי לשכונות הנוצריות, עומדת חבורת נערים מול קופות בית הקולנוע. \nהקולנוע הוא המפלט שלהם, אבל יש <span class='glow-red'>בעיה אחת גדולה</span>: אין להם כסף לכרטיסים.",
                 choices: [{ text: "המשך לסצנת המועצה", next: 2 }]
             },
@@ -189,21 +206,20 @@
                 bgGradient: "radial-gradient(circle at 50% 30%, #1e1b4b 0%, #000000 90%)",
                 icon: "👥",
                 title: "מועצת החבורה",
-                subtitle: "נקודת ההתחלה של העלילה",
+                subtitle: "חיפוש פתרון",
                 text: "הם מרוקנים כיסים. יחד, יש להם בקושי כסף לכרטיס אחד בודד. \n<span class='glow-word'>שימק התחרותי</span> דורש לעשות הגרלה. אבל אז מתערב אדק.",
                 dialogue: "אדק: \"בלי הגרלות. סבק חייב ללכת באופן קבוע. הוא המבוגר, והוא יודע לספר את הסרט הכי טוב.\"",
-                choices: [{ text: "תנו לסבק את הכסף והמתינו שיחזור", next: 3 }]
+                choices: [{ text: "תנו לסבק את הכסף", next: 3 }]
             },
             {
                 id: 3,
                 bgGradient: "radial-gradient(circle at center, #451a03 0%, #000000 80%)",
                 icon: "🤠",
                 title: "ההופעה מתחילה",
-                subtitle: "העלילה מתפתחת",
+                subtitle: "האקשן בסרטים",
                 text: "ימי שלישי ושישי. סבק חוזר מהקולנוע, עומד מול החברים המרותקים ומספר להם על סרטי המערב הפרוע. הוא מתאר <span class='glow-word'>מוסטנגים</span> (סוסי פרא) ומדגים תפיסה ב<span class='glow-word'>לסו</span>.",
                 dialogue: "סבק: \"ואז, הגיבור שולף את האקדח שלו מהחגורה ומסתער על הפושעים!\"",
                 choices: [
-                    { text: "הקשב בהתלהבות", next: 4 },
                     { text: "עצור רגע - משהו כאן לא הגיוני...", next: 4 }
                 ]
             },
@@ -221,9 +237,9 @@
                 id: 5,
                 bgGradient: "radial-gradient(circle at center, #020617 0%, #000000 100%)",
                 icon: "⚖️",
-                title: "זמן החלטה",
-                subtitle: "הקונפליקטים של סבק",
-                text: "סבק קופא. הוא לכוד בין שני עולמות.\n<span class='glow-red'>חיצונית:</span> חבריו מרגישים נבגדים ואמון נשבר.\n<span class='glow-word'>פנימית:</span> הדילמה בין הנאמנות לחברים (שהביאו לו את כספם), לבין אביו שחולה מאוד וזקוק לכסף לתרופות.",
+                title: "הקונפליקט נחשף",
+                subtitle: "זמן החלטה",
+                text: "סבק קופא. הוא לכוד בין שני עולמות.\nמצד אחד חבריו מרגישים נבגדים ואמון נשבר. מצד שני, נאמנותו לאביו שחולה מאוד וזקוק לכסף לתרופות.",
                 choices: [{ text: "כיצד סבק יבחר לפעול?", next: 6 }]
             },
             {
@@ -234,7 +250,7 @@
                 subtitle: "נקודת השיא והמפנה",
                 text: "במקום להמשיך להילחם, סבק משפיל מבט. הוא מסביר שאביו גוסס והוא קנה לו תרופות. \nהחברים המומים. \"אז מאיפה כל הסרטים המדהימים שסיפרת לנו?\"",
                 dialogue: "סבק: \"חבר'ה, לא פעם אמרתי לכם שאני חולם להיות במאי. הנה, חיברתי תסריט. את התסריט הראשון שלי.\"",
-                choices: [{ text: "צפה בסיום", next: 7 }]
+                choices: [{ text: "צפה בסיום הסיפור", next: 7 }]
             },
             {
                 id: 7,
@@ -242,22 +258,106 @@
                 icon: "🤝",
                 title: "סיום סגור",
                 subtitle: "התרה",
-                text: "הכעס מתמוסס. החברים סולחים ומבינים את גודל ההקרבה. יותר מכך, הם מעריצים את הכישרון שלו. <span class='glow-word'>הסוף סגור:</span> הקונפליקט נפתר, והחברות ניצחה.",
+                text: "הכעס מתמוסס. החברים סולחים ומבינים את גודל ההקרבה. יותר מכך, הם מעריצים את הכישרון שלו. \nהקונפליקט נפתר לחלוטין, והחברות ניצחה.",
                 dialogue: "אדק: \"זה יהיה סרט יפה מאוד! כשתגדל ותהיה במאי... אני אהיה נהג ואוביל שמה אנשים.\"",
-                choices: [{ text: "סיכום הבמאי (מושגים)", next: 8 }]
-            },
-            {
-                id: 8,
-                bgGradient: "radial-gradient(circle at 50% 50%, #0f172a 0%, #000000 100%)",
-                icon: "🎬",
-                title: "DIRECTOR'S CUT",
-                subtitle: "מה לקחת איתכם למבחן?",
-                text: "• אקספוזיציה: וורשה, חבורה חסרת אמצעים חולמת על קולנוע.\n• סיבוך: סבק מתבלבל בעלילות ונתפס בשקרו.\n• קונפליקט: נאמנות לחברים מול הצלת האב (פנימי), סבק מול שימק (חיצוני).\n• שיא: הוידוי - הסרטים הם למעשה 'התסריט הראשון שלי'.\n• סיום סגור: מחילה מוחלטת והערכה ליצירתיות.",
-                choices: [{ text: "הקרן מחדש", next: 0 }]
+                choices: [{ text: "סוף הסרט", next: "END" }]
             }
         ];
 
-        // Typewriter/Reveal component for inner HTML
+        // --- EDUCATIONAL CONTENT ---
+        const eduCategories = [
+            {
+                id: "author",
+                icon: "✍️",
+                title: "חדר הבמאי",
+                subtitle: "על הסופר: בנימין טנא",
+                content: (
+                    <div className="space-y-4 text-right text-lg text-slate-200">
+                        <p><strong>שנת לידה:</strong> 1914 בוורשה, פולין. (נפטר בתל אביב ב-1999).</p>
+                        <p><strong>עלייתו ארצה:</strong> בגיל 23, בשנת 1937, עלה לארץ ישראל כחניך "השומר הצעיר" והיה ממייסדי קיבוץ אילון.</p>
+                        <p><strong>הטרגדיה והשליחות:</strong> אביו ואחת מאחיותיו נספו בשואה. ב-1946 נסע לפולין לסייע בהעלאת ילדים יהודים שהוסתרו במנזרים בזמן המלחמה.</p>
+                        <p className="text-yellow-400 font-bold mt-4 border-t border-slate-700 pt-4">חזון הכתיבה:</p>
+                        <p>כתב סיפורים לילדים ולנוער על ילדותו בוורשה. הוא ראה בכתיבה שליחות – להראות במה חיי הילדים בגולה (לפני המלחמה) דומים לחיים של הילדים בארץ ישראל.</p>
+                    </div>
+                )
+            },
+            {
+                id: "exposition",
+                icon: "🎬",
+                title: "התפאורה",
+                subtitle: "אקספוזיציה ודמויות",
+                content: (
+                    <div className="space-y-6 text-right text-lg text-slate-200">
+                        <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                            <h4 className="text-yellow-400 font-bold mb-2">📍 מקום וזמן ההתרחשות:</h4>
+                            <p><strong>איפה:</strong> העיר ורשה. מתחם הקולנוע המחבר בין הרובע היהודי לשכונות הנוצריות. מקום המפגש הקבוע הוא מתחת לעץ הערמון.</p>
+                            <p><strong>מתי:</strong> לפני מלחמת העולם השנייה. עונת החורף. הסיפור מתפרס על פני מספר שבועות (ימי שלישי ושישי).</p>
+                        </div>
+                        <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                            <h4 className="text-yellow-400 font-bold mb-2">👥 הדמויות הראשיות (חבורת נערים ענייה):</h4>
+                            <ul className="list-disc list-inside space-y-2">
+                                <li><strong>סבק:</strong> המבוגר מבין הילדים, מנהיג החבורה. נאמן למשפחתו ובעל דמיון מפותח.</li>
+                                <li><strong>שימק:</strong> היריב של סבק. מחפש לערער על מעמדו ולהפוך למנהיג בעצמו (תחרותי).</li>
+                                <li><strong>אדק:</strong> הילד החלש יותר. מעריץ את סבק, תומך בו ומציע שהוא ילך תמיד לקולנוע.</li>
+                                <li><strong>קובה:</strong> נער נוסף בחבורה (המפשר).</li>
+                            </ul>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: "conflict",
+                icon: "⚔️",
+                title: "מאחורי הקלעים",
+                subtitle: "הסיבוך, הקונפליקטים ונקודת השיא",
+                content: (
+                    <div className="space-y-6 text-right text-lg text-slate-200">
+                        <div className="bg-red-900/20 p-4 rounded-lg border border-red-900/50">
+                            <h4 className="text-red-400 font-bold mb-2">⚡ הסיבוך:</h4>
+                            <p>סבק מתחיל להתבלבל בסיפורים שלו (למשל, אקדח שאבד פתאום חוזר). החברים שמים לב לכך. הסיבוך מגיע לשיאו כששימק טוען שראה את סבק יוצא מבית מרקחת ומאשים אותו שהוא שקרן וגנב את כספם.</p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-blue-900/20 p-4 rounded-lg border border-blue-900/50">
+                                <h4 className="text-blue-400 font-bold mb-1">🧠 קונפליקט פנימי:</h4>
+                                <p className="text-sm">הקונפליקט של סבק הוא בין הנאמנות לחברים (שנתנו לו כסף וסומכים עליו) לבין הנאמנות לאביו הגוסס שזקוק בדחיפות לתרופות.</p>
+                            </div>
+                            <div className="bg-orange-900/20 p-4 rounded-lg border border-orange-900/50">
+                                <h4 className="text-orange-400 font-bold mb-1">🥊 קונפליקט חיצוני:</h4>
+                                <p className="text-sm">הוויכוח בין שימק לסבק. שימק מטיח בו שהוא שקרן, מה שיוצר שבר עמוק באמינות וביחסים בין סבק לכלל החבורה.</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-yellow-900/20 p-4 rounded-lg border border-yellow-900/50">
+                            <h4 className="text-yellow-400 font-bold mb-2">🎯 השיא והמפנה (סיום סגור):</h4>
+                            <p>נקודת השיא היא הוידוי של סבק: <em>"חיברתי תסריט, התסריט הראשון שלי"</em>. הוא בוחר באמת. <br/>הסיפור מסתיים ב<strong>סיום סגור</strong>: החברים סולחים לו, מצטרפים למשחק הדמיון, הרגשות השליליים נפתרים לחלוטין והחברות יוצאת מחוזקת.</p>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: "vocab",
+                icon: "📜",
+                title: "מילון מונחים",
+                subtitle: "שפת הקולנוע והספר",
+                content: (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-right text-lg text-slate-200">
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">למן:</strong> מן / החל מ-</div>
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">לסו / פלצור:</strong> חבל לאסו (ללכידת סוסים)</div>
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">הדמים:</strong> נעשה דומם (שקט)</div>
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">כלתה:</strong> כמיהה עזה, תשוקה פנימית חזקה</div>
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">אנוסים היינו להודות:</strong> נאלצנו להודות</div>
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">מוסטנגים:</strong> סוסים (סוסי פרא)</div>
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">טומהוק:</strong> גרזן (המשמש אינדיאנים)</div>
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">חנות סדקית:</strong> חנות קטנה שמוכרת חפצים קטנים לבית/תפירה</div>
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">דאבון לב:</strong> עצב גדול או צער עמוק</div>
+                        <div className="bg-slate-800/80 p-3 rounded border border-slate-700"><strong className="text-yellow-400">פרריות גדולות:</strong> שדות ענקיים ופתוחים (כמו במערב הפרוע)</div>
+                    </div>
+                )
+            }
+        ];
+
+        // Component: Render the Text with inner HTML support
         const CinematicText = ({ htmlString, trigger }) => {
             return (
                 <div 
@@ -272,98 +372,169 @@
         const App = () => {
             const [currentScene, setCurrentScene] = useState(0);
             const [animationKey, setAnimationKey] = useState(0);
+            const [viewMode, setViewMode] = useState('story'); // 'story' | 'edu-menu' | 'edu-modal'
+            const [activeEdu, setActiveEdu] = useState(null);
 
-            const scene = scenes[currentScene];
-
-            const handleNext = (nextIndex) => {
+            const handleNext = (nextValue) => {
                 setAnimationKey(prev => prev + 1);
-                setCurrentScene(nextIndex);
+                if (nextValue === "END") {
+                    setViewMode('edu-menu');
+                } else {
+                    setCurrentScene(nextValue);
+                }
             };
 
-            return (
-                <>
-                    {/* אפקטים גלובליים */}
-                    <div className="film-grain"></div>
-                    <div className="letterbox letterbox-top">
-                        {scene.id > 0 && scene.id < 8 && (
-                            <div className="text-gray-500 font-cinema tracking-[0.2em] text-sm opacity-50">
-                                סצנה {scene.id} מתוך 7
-                            </div>
-                        )}
-                    </div>
-                    <div className="letterbox letterbox-bottom">
-                        {/* כפתורי הבחירה בתוך הפס השחור התחתון */}
-                        <div key={`btn-${animationKey}`} className="flex gap-4 px-4 w-full justify-center max-w-3xl reveal-text" style={{ animationDelay: '1.2s' }}>
-                            {scene.choices.map((choice, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => handleNext(choice.next)}
-                                    className="glass-btn px-6 md:px-10 py-3 rounded-md font-cinema text-lg md:text-xl tracking-wide flex-1 md:flex-none uppercase"
-                                >
-                                    {choice.text}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+            const openEduModal = (category) => {
+                setAnimationKey(prev => prev + 1);
+                setActiveEdu(category);
+                setViewMode('edu-modal');
+            };
 
-                    {/* האזור המרכזי (מסך הקולנוע) */}
-                    <main className="flex-grow relative flex flex-col items-center justify-center overflow-hidden z-10 pt-[12vh] pb-[12vh]">
-                        {/* רקע דינמי מתחלף */}
-                        <div 
-                            key={`bg-${currentScene}`}
-                            className="scene-bg"
-                            style={{ background: scene.bgGradient }}
-                        ></div>
-                        <div className="vignette"></div>
+            const closeEduModal = () => {
+                setAnimationKey(prev => prev + 1);
+                setActiveEdu(null);
+                setViewMode('edu-menu');
+            };
 
-                        {/* תוכן הסצנה */}
-                        <div className="z-20 flex flex-col items-center w-full px-4 md:px-12">
-                            
-                            {/* אייקון דרמטי */}
-                            <div 
-                                key={`icon-${animationKey}`}
-                                className="text-6xl md:text-8xl mb-6 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] reveal-text"
-                                style={{ animationDelay: '0.1s' }}
-                            >
-                                {scene.icon}
-                            </div>
+            const restartExperience = () => {
+                setAnimationKey(prev => prev + 1);
+                setCurrentScene(0);
+                setViewMode('story');
+            };
 
-                            {/* תת כותרת קטנה */}
-                            <div 
-                                key={`sub-${animationKey}`}
-                                className="text-yellow-500 font-cinema tracking-widest uppercase text-sm md:text-lg mb-2 reveal-text"
-                                style={{ animationDelay: '0.2s' }}
-                            >
-                                {scene.subtitle}
-                            </div>
-
-                            {/* כותרת הסצנה */}
-                            <h1 
-                                key={`title-${animationKey}`}
-                                className="text-4xl md:text-6xl lg:text-7xl font-cinema font-bold text-center mb-10 text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)] reveal-text leading-tight"
-                                style={{ animationDelay: '0.4s' }}
-                            >
-                                {scene.title}
-                            </h1>
-
-                            {/* הטקסט הראשי - כתוביות */}
-                            <CinematicText htmlString={scene.text} trigger={animationKey} />
-
-                            {/* שורת דיאלוג צהובה (אם קיימת) */}
-                            {scene.dialogue && (
-                                <div 
-                                    key={`dialogue-${animationKey}`}
-                                    className="mt-2 text-xl md:text-3xl text-yellow-400 italic font-light text-center reveal-text drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] max-w-4xl px-4 border-l-4 border-r-4 border-yellow-500/30 py-2 bg-black/30"
-                                    style={{ animationDelay: '0.9s' }}
-                                >
-                                    {scene.dialogue}
+            // --- RENDER: STORY VIEW ---
+            if (viewMode === 'story') {
+                const scene = scenes[currentScene];
+                return (
+                    <>
+                        <div className="film-grain"></div>
+                        <div className="letterbox letterbox-top">
+                            {scene.id > 0 && (
+                                <div className="text-gray-500 font-cinema tracking-[0.2em] text-sm opacity-50">
+                                    סצנה {scene.id} מתוך 7
                                 </div>
                             )}
-
                         </div>
-                    </main>
-                </>
-            );
+                        <div className="letterbox letterbox-bottom">
+                            <div key={`btn-${animationKey}`} className="flex gap-4 px-4 w-full justify-center max-w-3xl reveal-text" style={{ animationDelay: '1.2s' }}>
+                                {scene.choices.map((choice, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleNext(choice.next)}
+                                        className="glass-btn px-6 md:px-10 py-3 rounded-md font-cinema text-lg md:text-xl tracking-wide flex-1 md:flex-none uppercase"
+                                    >
+                                        {choice.text}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <main className="flex-grow relative flex flex-col items-center justify-center overflow-hidden z-10 pt-[12vh] pb-[12vh]">
+                            <div key={`bg-${currentScene}`} className="scene-bg" style={{ background: scene.bgGradient }}></div>
+                            <div className="vignette"></div>
+
+                            <div className="z-20 flex flex-col items-center w-full px-4 md:px-12">
+                                <div key={`icon-${animationKey}`} className="text-6xl md:text-8xl mb-6 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] reveal-text" style={{ animationDelay: '0.1s' }}>
+                                    {scene.icon}
+                                </div>
+                                <div key={`sub-${animationKey}`} className="text-yellow-500 font-cinema tracking-widest uppercase text-sm md:text-lg mb-2 reveal-text" style={{ animationDelay: '0.2s' }}>
+                                    {scene.subtitle}
+                                </div>
+                                <h1 key={`title-${animationKey}`} className="text-4xl md:text-6xl lg:text-7xl font-cinema font-bold text-center mb-10 text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)] reveal-text leading-tight" style={{ animationDelay: '0.4s' }}>
+                                    {scene.title}
+                                </h1>
+                                <CinematicText htmlString={scene.text} trigger={animationKey} />
+                                {scene.dialogue && (
+                                    <div key={`dialogue-${animationKey}`} className="mt-2 text-xl md:text-3xl text-yellow-400 italic font-light text-center reveal-text drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] max-w-4xl px-4 border-l-4 border-r-4 border-yellow-500/30 py-2 bg-black/30" style={{ animationDelay: '0.9s' }}>
+                                        {scene.dialogue}
+                                    </div>
+                                )}
+                            </div>
+                        </main>
+                    </>
+                );
+            }
+
+            // --- RENDER: EDUCATIONAL HUB (MENU) ---
+            if (viewMode === 'edu-menu') {
+                return (
+                    <>
+                        <div className="film-grain"></div>
+                        <div className="letterbox letterbox-top">
+                            <div className="text-gray-500 font-cinema tracking-[0.2em] text-sm opacity-50">DIRECTOR's ROOM</div>
+                        </div>
+                        <div className="letterbox letterbox-bottom">
+                            <button onClick={restartExperience} className="text-gray-500 hover:text-white font-cinema tracking-widest uppercase transition-colors">
+                                צפה בסרט מחדש 🔄
+                            </button>
+                        </div>
+
+                        <main className="flex-grow relative flex flex-col items-center justify-center overflow-hidden z-10 pt-[12vh] pb-[12vh]">
+                            <div className="scene-bg" style={{ background: "radial-gradient(circle at 50% 50%, #0f172a 0%, #000000 100%)" }}></div>
+                            <div className="vignette"></div>
+
+                            <div className="z-20 flex flex-col items-center w-full px-4 max-w-5xl fade-in" key={animationKey}>
+                                <div className="text-yellow-500 font-cinema tracking-widest uppercase text-lg mb-2">מאחורי הקלעים</div>
+                                <h2 className="text-4xl md:text-5xl font-cinema font-bold text-center mb-4 text-white">חדר העריכה של הבמאי</h2>
+                                <p className="text-slate-300 mb-12 text-center text-lg max-w-2xl">
+                                    הסרט נגמר, אבל הלמידה רק מתחילה. בחרו את אחת מהתיקיות כדי לחקור את המושגים הספרותיים והמסרים שמסתתרים בתסריט.
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                                    {eduCategories.map((category, idx) => (
+                                        <div 
+                                            key={category.id}
+                                            onClick={() => openEduModal(category)}
+                                            className="glass-btn p-6 rounded-xl flex items-center gap-6 group"
+                                            style={{ animation: `revealUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards`, animationDelay: `${idx * 0.15}s`, opacity: 0, transform: 'translateY(20px)' }}
+                                        >
+                                            <div className="text-5xl group-hover:scale-110 transition-transform">{category.icon}</div>
+                                            <div className="text-right flex-1">
+                                                <h3 className="text-2xl font-cinema font-bold text-white mb-1">{category.title}</h3>
+                                                <p className="text-slate-400 text-sm">{category.subtitle}</p>
+                                            </div>
+                                            <div className="text-slate-500 group-hover:text-yellow-400 transition-colors text-2xl">←</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </main>
+                    </>
+                );
+            }
+
+            // --- RENDER: EDUCATIONAL HUB (MODAL DETAIL) ---
+            if (viewMode === 'edu-modal' && activeEdu) {
+                return (
+                    <>
+                        <div className="film-grain"></div>
+                        <div className="letterbox letterbox-top"></div>
+                        <div className="letterbox letterbox-bottom">
+                            <button onClick={closeEduModal} className="glass-btn px-10 py-3 rounded-md font-cinema text-xl uppercase tracking-widest reveal-text" style={{ animationDelay: '0.4s' }}>
+                                חזור לחדר העריכה
+                            </button>
+                        </div>
+
+                        <main className="flex-grow relative flex flex-col items-center justify-center overflow-hidden z-10 pt-[12vh] pb-[12vh]">
+                            <div className="scene-bg" style={{ background: "radial-gradient(circle at center, #1e293b 0%, #000000 100%)" }}></div>
+                            
+                            <div className="z-20 w-full max-w-4xl px-4 flex flex-col h-full py-8 fade-in" key={animationKey}>
+                                <div className="text-center mb-8 border-b border-slate-700 pb-6 reveal-text" style={{ animationDelay: '0.1s' }}>
+                                    <div className="text-6xl mb-4">{activeEdu.icon}</div>
+                                    <h2 className="text-3xl md:text-5xl font-cinema font-bold text-yellow-400 mb-2">{activeEdu.title}</h2>
+                                    <div className="text-slate-400 tracking-widest uppercase">{activeEdu.subtitle}</div>
+                                </div>
+
+                                <div className="flex-grow edu-scroll reveal-text" style={{ animationDelay: '0.3s' }}>
+                                    {activeEdu.content}
+                                </div>
+                            </div>
+                        </main>
+                    </>
+                );
+            }
+
+            return null;
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
