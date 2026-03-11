@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מה שלומי? - סיכום שבוע מורחב</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Rubik', sans-serif;
+            background-color: #f0fdf4;
+            background-image: radial-gradient(#dcfce7 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        
+        .radio-emoji:checked + label {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+        }
+
+        .radio-chip:checked + label {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        /* Smooth fade in */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .textarea-focus-ring:focus-within {
+            ring: 2px;
+            ring-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col items-center py-8 px-4">
+
+    <div class="max-w-lg w-full bg-white rounded-3xl shadow-xl overflow-hidden fade-in">
+        
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-teal-500 p-8 text-white text-center relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-8 -mb-8 blur-xl"></div>
+            
+            <i data-lucide="heart-handshake" class="w-12 h-12 mx-auto mb-3 opacity-90"></i>
+            <h1 class="text-3xl font-bold mb-3">איך אני באמת מרגיש/ה?</h1>
+            <p class="text-blue-50 text-sm leading-relaxed max-w-sm mx-auto">
+                עברו כבר שבועיים מאז שהחלה מלחמת שאגת הארי. המורה שלך חושב/ת עליך ורוצה לדעת מה שלומך. 
+                השאלות כאן נועדו לעזור לך לעשות קצת סדר במחשבות, ולשתף את מה שמרגיש לך נכון.
+            </p>
+        </div>
+
+        <!-- Form Content -->
+        <div class="p-6 md:p-8 space-y-10">
+            
+            <!-- Section: Names -->
+            <div class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">השם שלי:</label>
+                    <input type="text" id="studentName" placeholder="איך קוראים לך?" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">שם המורה שלי:</label>
+                    <input type="text" id="teacherName" placeholder="למי נשלח את ההודעה?" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
+                </div>
+            </div>
+
+            <!-- Section: Mood -->
+            <div class="space-y-4">
+                <label class="block text-lg font-semibold text-gray-800 border-b-2 border-teal-100 pb-2 inline-block">בגדול, איך עבר עליי השבוע?</label>
+                <div class="flex justify-between gap-1 sm:gap-2">
+                    <div class="flex-1 text-center">
+                        <input type="radio" name="mood" id="mood-great" value="מצוין, אני מחזיק/ה מעמד יפה" class="hidden radio-emoji">
+                        <label for="mood-great" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">💪</label>
+                        <span class="text-xs text-gray-500 mt-1 block">חזק/ה</span>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <input type="radio" name="mood" id="mood-good" value="בסדר, משתדל/ת להתמודד עם המצב" class="hidden radio-emoji">
+                        <label for="mood-good" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">🙂</label>
+                        <span class="text-xs text-gray-500 mt-1 block">בסדר</span>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <input type="radio" name="mood" id="mood-meh" value="ככה ככה, יש עליות וירידות" class="hidden radio-emoji">
+                        <label for="mood-meh" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">😶</label>
+                        <span class="text-xs text-gray-500 mt-1 block">ככה ככה</span>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <input type="radio" name="mood" id="mood-sad" value="לא פשוט, אני די עצוב/ה או דואג/ת" class="hidden radio-emoji">
+                        <label for="mood-sad" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">😔</label>
+                        <span class="text-xs text-gray-500 mt-1 block">לא פשוט</span>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <input type="radio" name="mood" id="mood-anxious" value="קשה לי מאוד, יש לי הרבה פחדים" class="hidden radio-emoji">
+                        <label for="mood-anxious" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">😰</label>
+                        <span class="text-xs text-gray-500 mt-1 block">קשה לי</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Challenges (Chips) -->
+            <div class="space-y-4">
+                <label class="block text-lg font-semibold text-gray-800 border-b-2 border-teal-100 pb-2 inline-block">מה הדבר שהכי מאתגר אותי כרגע?</label>
+                <div class="flex flex-wrap gap-2 sm:gap-3">
+                    <div>
+                        <input type="radio" name="challenge" id="chal-sirens" value="האזעקות והפחד מהן" class="hidden radio-chip">
+                        <label for="chal-sirens" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">האזעקות והפחד</label>
+                    </div>
+                    <div>
+                        <input type="radio" name="challenge" id="chal-friends" value="הניתוק והגעגוע לחברים ולשגרה" class="hidden radio-chip">
+                        <label for="chal-friends" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">געגוע לחברים</label>
+                    </div>
+                    <div>
+                        <input type="radio" name="challenge" id="chal-sleep" value="שקשה לי לישון בלילה או להירגע" class="hidden radio-chip">
+                        <label for="chal-sleep" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">קושי לישון / מתח</label>
+                    </div>
+                    <div>
+                        <input type="radio" name="challenge" id="chal-bored" value="השעמום וחוסר התעסוקה בבית" class="hidden radio-chip">
+                        <label for="chal-bored" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">שעמום בבית</label>
+                    </div>
+                    <div>
+                        <input type="radio" name="challenge" id="chal-family" value="הדאגה לבני משפחה או לאנשים שאני אוהב/ת" class="hidden radio-chip">
+                        <label for="chal-family" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">דאגה למשפחה</label>
+                    </div>
+                    <div>
+                        <input type="radio" name="challenge" id="chal-none" value="שאין משהו ספציפי, פשוט אווירה כללית קשה ומעיקה" class="hidden radio-chip">
+                        <label for="chal-none" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">אווירה כללית קשה</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Guiding Questions (New/Expanded) -->
+            <div class="space-y-5 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="compass" class="w-5 h-5 text-blue-600"></i>
+                    <label class="block text-lg font-semibold text-gray-800">נקודות למחשבה...</label>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">השאלות האלו נועדו לעזור לך לשתף קצת יותר לעומק. אפשר לענות על כולן, על חלקן, או פשוט לכתוב מה שבא לך.</p>
+
+                <!-- Q1: The Good -->
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all textarea-focus-ring">
+                    <div class="bg-yellow-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+                        <i data-lucide="sun" class="w-4 h-4 text-yellow-600"></i>
+                        <span class="text-sm font-medium text-yellow-800">משהו קטן שעזר לי השבוע או עשה לי טוב:</span>
+                    </div>
+                    <textarea id="goodThing" rows="2" placeholder="למשל: שיחקתי במחשב עם חבר, ראיתי סדרה שהצחיקה אותי, או שפשוט הצלחתי לנוח..." class="w-full px-4 py-3 outline-none resize-none text-sm"></textarea>
+                </div>
+
+                <!-- Q2: The Hard -->
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all textarea-focus-ring">
+                    <div class="bg-indigo-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+                        <i data-lucide="cloud-rain" class="w-4 h-4 text-indigo-600"></i>
+                        <span class="text-sm font-medium text-indigo-800">רגע שהיה לי קשה במיוחד או מחשבה שמטרידה אותי:</span>
+                    </div>
+                    <textarea id="hardThing" rows="2" placeholder="למשל: כשהייתה אזעקה חזקה, כשדאגתי לאח שלי, או כשהרגשתי מאוד לבד בבית..." class="w-full px-4 py-3 outline-none resize-none text-sm"></textarea>
+                </div>
+
+                <!-- Q3: Free text -->
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all textarea-focus-ring">
+                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+                        <i data-lucide="message-square-dashed" class="w-4 h-4 text-gray-600"></i>
+                        <span class="text-sm font-medium text-gray-800">עוד משהו שהייתי רוצה שהמורה ידע/תדע עליי עכשיו:</span>
+                    </div>
+                    <textarea id="openText" rows="2" placeholder="אפשר לכתוב כאן כל דבר אחר שעולה לך לראש..." class="w-full px-4 py-3 outline-none resize-none text-sm"></textarea>
+                </div>
+            </div>
+
+            <!-- Section: Needs -->
+            <div class="space-y-4">
+                <label class="block text-lg font-semibold text-gray-800 border-b-2 border-teal-100 pb-2 inline-block">איך המורה יכול/ה לעזור לי?</label>
+                <div class="relative">
+                    <select id="teacherHelp" class="w-full px-4 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white appearance-none cursor-pointer text-gray-700 shadow-sm">
+                        <option value="" disabled selected>לחץ/י לבחירת אפשרות מהרשימה...</option>
+                        <option value="אני רק צריך/ה שיקשיבו לי ויבינו אותי">רק לדעת ששומעים אותי, אין צורך במשהו מיוחד</option>
+                        <option value="הייתי שמח/ה שנדבר קצת בטלפון או בהודעות">אשמח שנדבר קצת בטלפון כדי לפרוק</option>
+                        <option value="אשמח לעזרה בלשמור על קשר עם חברים מהכיתה">עזרה בחיבור עם חברים מהכיתה</option>
+                        <option value="אשמח לקבל קצת משימות ולמידה כדי להעסיק את עצמי">לשלוח לי קצת חומר או תעסוקה כדי לא להשתעמם</option>
+                        <option value="אני לא צריך/ה עזרה מיוחדת כרגע, פשוט תודה ששאלת">מסתדר/ת כרגע, רק רציתי לעדכן</option>
+                    </select>
+                    <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none"></i>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <div class="pt-4 border-t border-gray-100">
+                <button onclick="generateMessage()" class="w-full bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition transform active:scale-95 shadow-lg text-lg">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    הכן הודעה יפה למורה
+                </button>
+                <p id="error-msg" class="text-red-500 text-sm text-center mt-3 hidden font-medium bg-red-50 p-2 rounded-lg border border-red-100">
+                    <i data-lucide="alert-circle" class="w-4 h-4 inline-block ml-1 relative -top-0.5"></i>
+                    אנא מלא/י את השם שלך ואת שם המורה כדי שנוכל להכין את ההודעה.
+                </p>
+            </div>
+        </div>
+
+        <!-- Result Section (Hidden initially) -->
+        <div id="result-section" class="hidden bg-gray-50 p-6 md:p-8 border-t border-gray-200">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="w-6 h-6 text-green-500"></i>
+                ההודעה שלך מוכנה לשליחה!
+            </h3>
+            
+            <p class="text-sm text-gray-600 mb-3">ככה זה ייראה בוואטסאפ (אפשר לערוך את זה שם לפני ששולחים):</p>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-5 mb-5 relative shadow-inner">
+                <p id="final-message" class="text-gray-800 whitespace-pre-wrap text-[15px] leading-relaxed font-medium"></p>
+                <button onclick="copyToClipboard()" class="absolute top-3 left-3 p-2 text-gray-400 hover:text-blue-600 transition rounded-lg hover:bg-blue-50 bg-white shadow-sm border border-gray-100" title="העתק טקסט">
+                    <i data-lucide="copy" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <a id="whatsapp-btn" href="#" target="_blank" class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-4 rounded-xl flex justify-center items-center gap-3 transition shadow-md text-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                </svg>
+                מעבר לשליחה בוואטסאפ
+            </a>
+            
+            <p id="copy-feedback" class="text-blue-600 text-sm text-center mt-3 font-medium opacity-0 transition-opacity flex justify-center items-center gap-1">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                הטקסט הועתק בהצלחה ללוח!
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        function generateMessage() {
+            const studentName = document.getElementById('studentName').value.trim();
+            const teacherName = document.getElementById('teacherName').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+            
+            if (!studentName || !teacherName) {
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            errorMsg.classList.add('hidden');
+
+            const moodElement = document.querySelector('input[name="mood"]:checked');
+            const challengeElement = document.querySelector('input[name="challenge"]:checked');
+            
+            // Guiding questions
+            const goodThing = document.getElementById('goodThing').value.trim();
+            const hardThing = document.getElementById('hardThing').value.trim();
+            const openText = document.getElementById('openText').value.trim();
+            
+            const teacherHelp = document.getElementById('teacherHelp').value;
+
+            // Constructing the message dynamically
+            let message = `היי ${teacherName},\nזה/זו ${studentName}.\n\n`;
+            message += `רציתי לעדכן אותך קצת במה שעובר עליי עכשיו, שבועיים אחרי שהתחילה מלחמת שאגת הארי.\n\n`;
+
+            if (moodElement) {
+                message += `באופן כללי, אני מרגיש/ה ש${moodElement.value}.\n`;
+            }
+
+            if (challengeElement) {
+                message += `כרגע, הדבר שהכי מאתגר אותי זה ${challengeElement.value}.\n`;
+            }
+
+            // Adding the guiding questions if filled
+            if (goodThing || hardThing || openText) {
+                message += `\nחשבתי קצת על השבוע האחרון ורציתי לשתף גם ש:\n`;
+                if (goodThing) {
+                    message += `🌟 משהו שעשה לי קצת טוב השבוע: ${goodThing}\n`;
+                }
+                if (hardThing) {
+                    message += `🌧️ רגע שהיה לי קשה או משהו שמטריד אותי: ${hardThing}\n`;
+                }
+                if (openText) {
+                    message += `💭 ועוד משהו שהיה לי חשוב להגיד: ${openText}\n`;
+                }
+            }
+
+            if (teacherHelp) {
+                message += `\nלגבי איך שאפשר לעזור לי עכשיו - ${teacherHelp}.\n`;
+            }
+
+            message += `\nתודה רבה שאת/ה שואל/ת ודואג/ת לי 🙏`;
+
+            // Display message
+            document.getElementById('final-message').textContent = message;
+            
+            // Set WhatsApp Link
+            const encodedMessage = encodeURIComponent(message);
+            document.getElementById('whatsapp-btn').href = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+
+            // Show result section smoothly
+            const resultSection = document.getElementById('result-section');
+            resultSection.classList.remove('hidden');
+            
+            // Small delay to allow display:block to apply before scrolling
+            setTimeout(() => {
+                resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('final-message').textContent;
+            
+            // Fallback for iFrame environments or older browsers
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(showCopyFeedback);
+            } else {
+                let textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                textArea.style.top = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showCopyFeedback();
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+                textArea.remove();
+            }
+        }
+
+        function showCopyFeedback() {
+            const feedback = document.getElementById('copy-feedback');
+            feedback.style.opacity = '1';
+            setTimeout(() => {
+                feedback.style.opacity = '0';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+
