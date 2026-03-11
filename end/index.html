@@ -2,326 +2,650 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מה שלומי? - סיכום שבוע מורחב</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>מה שלומי? - סדר במחשבות</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        :root {
+            --primary: #6366f1; /* Indigo 500 */
+            --primary-light: #a5b4fc;
+            --bg-color: #f8fafc;
+        }
+
         body {
             font-family: 'Rubik', sans-serif;
-            background-color: #f0fdf4;
-            background-image: radial-gradient(#dcfce7 1px, transparent 1px);
-            background-size: 20px 20px;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            margin: 0;
         }
-        
+
+        /* כרטיסייה מרכזית */
+        .app-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.15), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-w: 26rem; /* רוחב מותאם למובייל */
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+
+        /* אנימציות מעבר מסכים */
+        .animate-fade-in {
+            animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* עיצוב כפתורי רדיו וכפתורי בחירה */
+        .gender-card {
+            transition: all 0.3s ease;
+        }
+        .gender-card.selected {
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 8px 15px -3px rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
         .radio-emoji:checked + label {
-            background-color: #dbeafe;
-            border-color: #3b82f6;
-            transform: scale(1.05);
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5);
+            background-color: #e0e7ff;
+            border-color: var(--primary);
+            transform: scale(1.1);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2);
+        }
+        .radio-emoji + label {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .radio-chip:checked + label {
-            background-color: #3b82f6;
+            background-color: var(--primary);
             color: white;
-            border-color: #3b82f6;
+            border-color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
         }
 
-        /* Smooth fade in */
-        .fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
-            opacity: 0;
+        /* סליידר אנרגיה מותאם */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            height: 12px;
+            border-radius: 10px;
+            outline: none;
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 12px;
+            cursor: pointer;
+            background: linear-gradient(to left, #22c55e, #facc15, #ef4444);
+            border-radius: 10px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 28px;
+            width: 28px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            border: 3px solid var(--primary);
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.15);
         }
 
-        .textarea-focus-ring:focus-within {
-            ring: 2px;
-            ring-color: #3b82f6;
-            border-color: #3b82f6;
+        textarea {
+            resize: none;
+        }
+
+        /* הסתרת פס גלילה אבל השארת יכולת גלילה */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
-<body class="text-gray-800 antialiased min-h-screen flex flex-col items-center py-8 px-4">
+<body class="text-gray-800 antialiased">
 
-    <div class="max-w-lg w-full bg-white rounded-3xl shadow-xl overflow-hidden fade-in">
+    <div class="app-container">
         
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-teal-500 p-8 text-white text-center relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-10 -mt-10 blur-2xl"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-8 -mb-8 blur-xl"></div>
-            
-            <i data-lucide="heart-handshake" class="w-12 h-12 mx-auto mb-3 opacity-90"></i>
-            <h1 class="text-3xl font-bold mb-3">איך אני באמת מרגיש/ה?</h1>
-            <p class="text-blue-50 text-sm leading-relaxed max-w-sm mx-auto">
-                עברו כבר שבועיים מאז שהחלה מלחמת שאגת הארי. המורה שלך חושב/ת עליך ורוצה לדעת מה שלומך. 
-                השאלות כאן נועדו לעזור לך לעשות קצת סדר במחשבות, ולשתף את מה שמרגיש לך נכון.
-            </p>
-        </div>
-
-        <!-- Form Content -->
-        <div class="p-6 md:p-8 space-y-10">
-            
-            <!-- Section: Names -->
-            <div class="space-y-4 bg-gray-50 p-5 rounded-2xl border border-gray-100">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">השם שלי:</label>
-                    <input type="text" id="studentName" placeholder="איך קוראים לך?" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">שם המורה שלי:</label>
-                    <input type="text" id="teacherName" placeholder="למי נשלח את ההודעה?" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white">
-                </div>
-            </div>
-
-            <!-- Section: Mood -->
-            <div class="space-y-4">
-                <label class="block text-lg font-semibold text-gray-800 border-b-2 border-teal-100 pb-2 inline-block">בגדול, איך עבר עליי השבוע?</label>
-                <div class="flex justify-between gap-1 sm:gap-2">
-                    <div class="flex-1 text-center">
-                        <input type="radio" name="mood" id="mood-great" value="מצוין, אני מחזיק/ה מעמד יפה" class="hidden radio-emoji">
-                        <label for="mood-great" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">💪</label>
-                        <span class="text-xs text-gray-500 mt-1 block">חזק/ה</span>
-                    </div>
-                    <div class="flex-1 text-center">
-                        <input type="radio" name="mood" id="mood-good" value="בסדר, משתדל/ת להתמודד עם המצב" class="hidden radio-emoji">
-                        <label for="mood-good" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">🙂</label>
-                        <span class="text-xs text-gray-500 mt-1 block">בסדר</span>
-                    </div>
-                    <div class="flex-1 text-center">
-                        <input type="radio" name="mood" id="mood-meh" value="ככה ככה, יש עליות וירידות" class="hidden radio-emoji">
-                        <label for="mood-meh" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">😶</label>
-                        <span class="text-xs text-gray-500 mt-1 block">ככה ככה</span>
-                    </div>
-                    <div class="flex-1 text-center">
-                        <input type="radio" name="mood" id="mood-sad" value="לא פשוט, אני די עצוב/ה או דואג/ת" class="hidden radio-emoji">
-                        <label for="mood-sad" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">😔</label>
-                        <span class="text-xs text-gray-500 mt-1 block">לא פשוט</span>
-                    </div>
-                    <div class="flex-1 text-center">
-                        <input type="radio" name="mood" id="mood-anxious" value="קשה לי מאוד, יש לי הרבה פחדים" class="hidden radio-emoji">
-                        <label for="mood-anxious" class="cursor-pointer block p-2 sm:p-3 rounded-2xl border-2 border-transparent hover:bg-gray-50 transition text-2xl sm:text-3xl">😰</label>
-                        <span class="text-xs text-gray-500 mt-1 block">קשה לי</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section: Challenges (Chips) -->
-            <div class="space-y-4">
-                <label class="block text-lg font-semibold text-gray-800 border-b-2 border-teal-100 pb-2 inline-block">מה הדבר שהכי מאתגר אותי כרגע?</label>
-                <div class="flex flex-wrap gap-2 sm:gap-3">
-                    <div>
-                        <input type="radio" name="challenge" id="chal-sirens" value="האזעקות והפחד מהן" class="hidden radio-chip">
-                        <label for="chal-sirens" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">האזעקות והפחד</label>
-                    </div>
-                    <div>
-                        <input type="radio" name="challenge" id="chal-friends" value="הניתוק והגעגוע לחברים ולשגרה" class="hidden radio-chip">
-                        <label for="chal-friends" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">געגוע לחברים</label>
-                    </div>
-                    <div>
-                        <input type="radio" name="challenge" id="chal-sleep" value="שקשה לי לישון בלילה או להירגע" class="hidden radio-chip">
-                        <label for="chal-sleep" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">קושי לישון / מתח</label>
-                    </div>
-                    <div>
-                        <input type="radio" name="challenge" id="chal-bored" value="השעמום וחוסר התעסוקה בבית" class="hidden radio-chip">
-                        <label for="chal-bored" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">שעמום בבית</label>
-                    </div>
-                    <div>
-                        <input type="radio" name="challenge" id="chal-family" value="הדאגה לבני משפחה או לאנשים שאני אוהב/ת" class="hidden radio-chip">
-                        <label for="chal-family" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">דאגה למשפחה</label>
-                    </div>
-                    <div>
-                        <input type="radio" name="challenge" id="chal-none" value="שאין משהו ספציפי, פשוט אווירה כללית קשה ומעיקה" class="hidden radio-chip">
-                        <label for="chal-none" class="cursor-pointer inline-block px-4 py-2 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition shadow-sm">אווירה כללית קשה</label>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section: Guiding Questions (New/Expanded) -->
-            <div class="space-y-5 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-                <div class="flex items-center gap-2 mb-2">
-                    <i data-lucide="compass" class="w-5 h-5 text-blue-600"></i>
-                    <label class="block text-lg font-semibold text-gray-800">נקודות למחשבה...</label>
-                </div>
-                <p class="text-sm text-gray-600 mb-4">השאלות האלו נועדו לעזור לך לשתף קצת יותר לעומק. אפשר לענות על כולן, על חלקן, או פשוט לכתוב מה שבא לך.</p>
-
-                <!-- Q1: The Good -->
-                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all textarea-focus-ring">
-                    <div class="bg-yellow-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
-                        <i data-lucide="sun" class="w-4 h-4 text-yellow-600"></i>
-                        <span class="text-sm font-medium text-yellow-800">משהו קטן שעזר לי השבוע או עשה לי טוב:</span>
-                    </div>
-                    <textarea id="goodThing" rows="2" placeholder="למשל: שיחקתי במחשב עם חבר, ראיתי סדרה שהצחיקה אותי, או שפשוט הצלחתי לנוח..." class="w-full px-4 py-3 outline-none resize-none text-sm"></textarea>
-                </div>
-
-                <!-- Q2: The Hard -->
-                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all textarea-focus-ring">
-                    <div class="bg-indigo-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
-                        <i data-lucide="cloud-rain" class="w-4 h-4 text-indigo-600"></i>
-                        <span class="text-sm font-medium text-indigo-800">רגע שהיה לי קשה במיוחד או מחשבה שמטרידה אותי:</span>
-                    </div>
-                    <textarea id="hardThing" rows="2" placeholder="למשל: כשהייתה אזעקה חזקה, כשדאגתי לאח שלי, או כשהרגשתי מאוד לבד בבית..." class="w-full px-4 py-3 outline-none resize-none text-sm"></textarea>
-                </div>
-
-                <!-- Q3: Free text -->
-                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all textarea-focus-ring">
-                    <div class="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center gap-2">
-                        <i data-lucide="message-square-dashed" class="w-4 h-4 text-gray-600"></i>
-                        <span class="text-sm font-medium text-gray-800">עוד משהו שהייתי רוצה שהמורה ידע/תדע עליי עכשיו:</span>
-                    </div>
-                    <textarea id="openText" rows="2" placeholder="אפשר לכתוב כאן כל דבר אחר שעולה לך לראש..." class="w-full px-4 py-3 outline-none resize-none text-sm"></textarea>
-                </div>
-            </div>
-
-            <!-- Section: Needs -->
-            <div class="space-y-4">
-                <label class="block text-lg font-semibold text-gray-800 border-b-2 border-teal-100 pb-2 inline-block">איך המורה יכול/ה לעזור לי?</label>
-                <div class="relative">
-                    <select id="teacherHelp" class="w-full px-4 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white appearance-none cursor-pointer text-gray-700 shadow-sm">
-                        <option value="" disabled selected>לחץ/י לבחירת אפשרות מהרשימה...</option>
-                        <option value="אני רק צריך/ה שיקשיבו לי ויבינו אותי">רק לדעת ששומעים אותי, אין צורך במשהו מיוחד</option>
-                        <option value="הייתי שמח/ה שנדבר קצת בטלפון או בהודעות">אשמח שנדבר קצת בטלפון כדי לפרוק</option>
-                        <option value="אשמח לעזרה בלשמור על קשר עם חברים מהכיתה">עזרה בחיבור עם חברים מהכיתה</option>
-                        <option value="אשמח לקבל קצת משימות ולמידה כדי להעסיק את עצמי">לשלוח לי קצת חומר או תעסוקה כדי לא להשתעמם</option>
-                        <option value="אני לא צריך/ה עזרה מיוחדת כרגע, פשוט תודה ששאלת">מסתדר/ת כרגע, רק רציתי לעדכן</option>
-                    </select>
-                    <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none"></i>
-                </div>
-            </div>
-
-            <!-- Generate Button -->
-            <div class="pt-4 border-t border-gray-100">
-                <button onclick="generateMessage()" class="w-full bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-700 hover:to-teal-600 text-white font-bold py-4 rounded-xl flex justify-center items-center gap-2 transition transform active:scale-95 shadow-lg text-lg">
-                    <i data-lucide="sparkles" class="w-6 h-6"></i>
-                    הכן הודעה יפה למורה
+        <!-- Header & Progress -->
+        <div class="bg-white/80 px-6 py-5 border-b border-gray-100 z-10 sticky top-0">
+            <div class="flex justify-between items-center mb-4">
+                <button id="backBtn" onclick="prevStep()" class="text-gray-400 hover:text-indigo-600 transition p-2 rounded-full hover:bg-gray-50 opacity-0 pointer-events-none">
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
                 </button>
-                <p id="error-msg" class="text-red-500 text-sm text-center mt-3 hidden font-medium bg-red-50 p-2 rounded-lg border border-red-100">
-                    <i data-lucide="alert-circle" class="w-4 h-4 inline-block ml-1 relative -top-0.5"></i>
-                    אנא מלא/י את השם שלך ואת שם המורה כדי שנוכל להכין את ההודעה.
-                </p>
+                <h2 class="text-lg font-bold text-gray-800 mx-auto tracking-wide" id="headerTitle">רגע עם עצמי</h2>
+                <div class="w-9 h-9"></div> <!-- Spacer -->
+            </div>
+            
+            <div class="flex justify-center gap-2">
+                <div class="h-1.5 flex-1 rounded-full transition-all duration-300 step-dot bg-indigo-500" data-step="1"></div>
+                <div class="h-1.5 flex-1 rounded-full transition-all duration-300 step-dot bg-gray-200" data-step="2"></div>
+                <div class="h-1.5 flex-1 rounded-full transition-all duration-300 step-dot bg-gray-200" data-step="3"></div>
+                <div class="h-1.5 flex-1 rounded-full transition-all duration-300 step-dot bg-gray-200" data-step="4"></div>
+                <div class="h-1.5 flex-1 rounded-full transition-all duration-300 step-dot bg-gray-200" data-step="5"></div>
             </div>
         </div>
 
-        <!-- Result Section (Hidden initially) -->
-        <div id="result-section" class="hidden bg-gray-50 p-6 md:p-8 border-t border-gray-200">
-            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <i data-lucide="check-circle-2" class="w-6 h-6 text-green-500"></i>
-                ההודעה שלך מוכנה לשליחה!
-            </h3>
+        <!-- Main Content Area (Scrollable) -->
+        <div class="p-6 flex-grow overflow-y-auto no-scrollbar relative flex flex-col">
             
-            <p class="text-sm text-gray-600 mb-3">ככה זה ייראה בוואטסאפ (אפשר לערוך את זה שם לפני ששולחים):</p>
+            <!-- ================= STEP 1: פתיחה ופרטים ================= -->
+            <div id="step-1" class="step-content animate-fade-in flex-grow flex flex-col">
+                <div class="text-center mb-8 mt-2">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-50 text-indigo-500 mb-4 shadow-inner">
+                        <i data-lucide="coffee" class="w-8 h-8"></i>
+                    </div>
+                    <h1 class="text-2xl font-extrabold text-gray-800 mb-2">עושים סדר במחשבות</h1>
+                    <p class="text-gray-500 text-sm leading-relaxed px-2">
+                        זה מקום בטוח עבורך לעצור רגע, לנשום, ולשתף את המורה במה שעובר עליך. השיתוף יכול לעזור לשחרר ולעשות קצת סדר.
+                    </p>
+                </div>
 
-            <div class="bg-white border border-gray-200 rounded-xl p-5 mb-5 relative shadow-inner">
-                <p id="final-message" class="text-gray-800 whitespace-pre-wrap text-[15px] leading-relaxed font-medium"></p>
-                <button onclick="copyToClipboard()" class="absolute top-3 left-3 p-2 text-gray-400 hover:text-blue-600 transition rounded-lg hover:bg-blue-50 bg-white shadow-sm border border-gray-100" title="העתק טקסט">
-                    <i data-lucide="copy" class="w-5 h-5"></i>
-                </button>
+                <div class="space-y-5 mt-auto mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">איך נוח לך שאפנה אליך?</label>
+                        <div class="flex gap-3">
+                            <button onclick="setGender('M')" id="btn-gender-m" class="gender-card flex-1 py-4 px-4 rounded-2xl border-2 border-gray-100 font-medium text-gray-600 bg-white shadow-sm">זכר 👦</button>
+                            <button onclick="setGender('F')" id="btn-gender-f" class="gender-card flex-1 py-4 px-4 rounded-2xl border-2 border-gray-100 font-medium text-gray-600 bg-white shadow-sm">נקבה 👧</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <input type="text" id="studentName" placeholder="איך קוראים לך?" class="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 outline-none transition bg-white text-base">
+                        <input type="text" id="teacherName" placeholder="שם המורה (למי נשלח?)" class="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 outline-none transition bg-white text-base">
+                    </div>
+                </div>
             </div>
 
-            <a id="whatsapp-btn" href="#" target="_blank" class="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-4 rounded-xl flex justify-center items-center gap-3 transition shadow-md text-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
-                </svg>
-                מעבר לשליחה בוואטסאפ
-            </a>
-            
-            <p id="copy-feedback" class="text-blue-600 text-sm text-center mt-3 font-medium opacity-0 transition-opacity flex justify-center items-center gap-1">
-                <i data-lucide="check" class="w-4 h-4"></i>
-                הטקסט הועתק בהצלחה ללוח!
-            </p>
+            <!-- ================= STEP 2: כוחות והרגשה ================= -->
+            <div id="step-2" class="step-content hidden animate-fade-in space-y-8">
+                
+                <div class="bg-gradient-to-br from-white to-indigo-50/50 p-6 rounded-3xl border border-indigo-100 shadow-sm">
+                    <label class="block text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                        מד הכוחות שלי השבוע
+                        <i data-lucide="battery-charging" class="w-5 h-5 text-yellow-500"></i>
+                    </label>
+                    <p class="text-sm text-gray-500 mb-6 dyn-text-energy">כמה כוח יש לך בימים אלו מ-1 עד 10?</p>
+                    
+                    <div class="text-center mb-4">
+                        <span id="energyEmoji" class="text-5xl inline-block drop-shadow-md transition-transform">😐</span>
+                    </div>
+                    
+                    <div class="relative pt-2 pb-2">
+                        <input type="range" id="energyMeter" min="1" max="10" value="5" oninput="updateEnergyUI()">
+                        <div class="flex justify-between text-xs text-gray-400 mt-3 font-medium">
+                            <span>1 (ריק)</span>
+                            <span id="energyValue" class="text-lg font-black text-indigo-600 bg-white px-4 py-1 rounded-full shadow-md -mt-4 border border-indigo-50">5</span>
+                            <span>10 (מלא)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-2">
+                    <label class="block text-lg font-bold text-gray-800 mb-4 dyn-text-mood">בגדול, איך עבר עליי השבוע?</label>
+                    <div class="flex justify-between gap-2">
+                        <div class="flex-1 text-center">
+                            <input type="radio" name="mood" id="mood-1" value="great" class="hidden radio-emoji">
+                            <label for="mood-1" class="cursor-pointer block py-3 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:bg-indigo-50 text-3xl">💪</label>
+                        </div>
+                        <div class="flex-1 text-center">
+                            <input type="radio" name="mood" id="mood-2" value="good" class="hidden radio-emoji">
+                            <label for="mood-2" class="cursor-pointer block py-3 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:bg-indigo-50 text-3xl">🙂</label>
+                        </div>
+                        <div class="flex-1 text-center">
+                            <input type="radio" name="mood" id="mood-3" value="meh" class="hidden radio-emoji">
+                            <label for="mood-3" class="cursor-pointer block py-3 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:bg-indigo-50 text-3xl">😶</label>
+                        </div>
+                        <div class="flex-1 text-center">
+                            <input type="radio" name="mood" id="mood-4" value="sad" class="hidden radio-emoji">
+                            <label for="mood-4" class="cursor-pointer block py-3 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:bg-indigo-50 text-3xl">😔</label>
+                        </div>
+                        <div class="flex-1 text-center">
+                            <input type="radio" name="mood" id="mood-5" value="anxious" class="hidden radio-emoji">
+                            <label for="mood-5" class="cursor-pointer block py-3 rounded-2xl border-2 border-transparent bg-white shadow-sm hover:bg-indigo-50 text-3xl">😰</label>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3 text-sm text-indigo-600 font-bold min-h-[20px]" id="moodLabelText"></div>
+                </div>
+
+            </div>
+
+            <!-- ================= STEP 3: אתגרים ================= -->
+            <div id="step-3" class="step-content hidden animate-fade-in space-y-6">
+                
+                <div>
+                    <label class="block text-xl font-bold text-gray-800 mb-2 dyn-text-challenge">מה תופס לי את רוב המחשבות כרגע?</label>
+                    <p class="text-sm text-gray-500 mb-6">אפשר לבחור את מה שהכי מדבר אליך עכשיו.</p>
+                    
+                    <div class="flex flex-col gap-3">
+                        <div>
+                            <input type="radio" name="challenge" id="chal-sirens" value="האזעקות והמתח סביבן" class="hidden radio-chip">
+                            <label for="chal-sirens" class="cursor-pointer block px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white text-base font-medium transition shadow-sm hover:border-indigo-200">
+                                🚨 האזעקות והמתח
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="challenge" id="chal-friends" value="הגעגוע לחברים ולשגרה הרגילה" class="hidden radio-chip">
+                            <label for="chal-friends" class="cursor-pointer block px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white text-base font-medium transition shadow-sm hover:border-indigo-200">
+                                🫂 חוסר בשגרה וחברים
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="challenge" id="chal-bored" value="השעמום והישיבה הממושכת בבית" class="hidden radio-chip">
+                            <label for="chal-bored" class="cursor-pointer block px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white text-base font-medium transition shadow-sm hover:border-indigo-200">
+                                🥱 שעמום בבית
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="challenge" id="chal-family" value="הדאגה לאנשים שאני אוהב/ת" class="hidden radio-chip">
+                            <label for="chal-family" class="cursor-pointer block px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white text-base font-medium transition shadow-sm hover:border-indigo-200">
+                                🏠 דאגה למשפחה
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="challenge" id="chal-none" value="אין משהו ספציפי, סתם הרגשה כללית של בילבול" class="hidden radio-chip">
+                            <label for="chal-none" class="cursor-pointer block px-5 py-4 rounded-2xl border-2 border-gray-100 bg-white text-base font-medium transition shadow-sm hover:border-indigo-200">
+                                ☁️ הרגשה כללית מבלבלת
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ================= STEP 4: מחשבות ================= -->
+            <div id="step-4" class="step-content hidden animate-fade-in space-y-6">
+                
+                <div class="mb-4">
+                    <label class="block text-xl font-bold text-gray-800 flex items-center gap-2 mb-2">
+                        נקודות למחשבה
+                        <i data-lucide="feather" class="w-6 h-6 text-indigo-500"></i>
+                    </label>
+                    <p class="text-sm text-gray-500">זה המקום לכתוב קצת מעבר. לא חייבים לענות על הכל, רק מה שמרגיש נכון.</p>
+                </div>
+
+                <div class="space-y-5">
+                    <div class="bg-white p-1 rounded-2xl shadow-sm border border-gray-100 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+                        <label class="block text-sm font-bold text-indigo-900 bg-indigo-50 px-4 py-2 rounded-t-xl">
+                            ✨ משהו קטן שעשה לי טוב השבוע:
+                        </label>
+                        <textarea id="qGood" rows="2" placeholder="סרטון מצחיק, משהו טעים..." class="w-full px-4 py-3 rounded-b-xl border-0 focus:ring-0 outline-none text-sm bg-white"></textarea>
+                    </div>
+
+                    <div class="bg-white p-1 rounded-2xl shadow-sm border border-gray-100 focus-within:ring-2 focus-within:ring-gray-200 transition-all">
+                        <label class="block text-sm font-bold text-gray-800 bg-gray-50 px-4 py-2 rounded-t-xl">
+                            💭 מחשבה שמעסיקה אותי:
+                        </label>
+                        <textarea id="qThoughts" rows="2" placeholder="מחשבות על המצב, דאגה למשהו..." class="w-full px-4 py-3 rounded-b-xl border-0 focus:ring-0 outline-none text-sm bg-white"></textarea>
+                    </div>
+
+                    <div class="bg-white p-1 rounded-2xl shadow-sm border border-gray-100 focus-within:ring-2 focus-within:ring-teal-100 transition-all">
+                        <label class="block text-sm font-bold text-teal-900 bg-teal-50 px-4 py-2 rounded-t-xl dyn-text-wish">
+                            🎯 מה הייתי מאחל/ת לעצמי לשבוע הקרוב?
+                        </label>
+                        <textarea id="qWish" rows="2" placeholder="להיות רגוע יותר, לחזור ללימודים..." class="w-full px-4 py-3 rounded-b-xl border-0 focus:ring-0 outline-none text-sm bg-white"></textarea>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ================= STEP 5: סיכום ושליחה ================= -->
+            <div id="step-5" class="step-content hidden animate-fade-in flex-col h-full">
+                
+                <div class="mb-5">
+                    <label class="block text-lg font-bold text-gray-800 mb-3 dyn-text-help">מה אתה צריך ממני כרגע?</label>
+                    <div class="relative">
+                        <select id="teacherHelp" class="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 focus:border-indigo-400 outline-none bg-white text-sm font-medium appearance-none shadow-sm cursor-pointer hover:border-gray-200 transition-colors">
+                            <option value="" disabled selected>לחץ/י כאן לבחירה...</option>
+                            <option value="listen" class="dyn-opt-listen">רק רציתי לשתף, אין צורך לדבר על זה במיוחד</option>
+                            <option value="call" class="dyn-opt-call">הייתי שמח/ה שנדבר קצת, סתם כדי לפרוק</option>
+                            <option value="normal" class="dyn-opt-normal">לשמור על קשר רגיל, לדבר על דברים רגילים</option>
+                            <option value="tasks" class="dyn-opt-tasks">קצת משימות שיעזרו לי להעביר את הזמן</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-5 flex-grow flex flex-col min-h-[240px]">
+                    <div class="flex justify-between items-center mb-3 px-1">
+                        <h2 class="text-base font-bold text-indigo-600 flex items-center gap-2">
+                            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                            ההודעה שלך מוכנה
+                        </h2>
+                        <span class="text-[11px] font-medium text-indigo-400 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">ניתן לעריכה חופשית</span>
+                    </div>
+
+                    <!-- Textarea for final review -->
+                    <textarea id="finalMessageText" class="w-full flex-grow px-4 py-4 rounded-2xl border-2 border-indigo-100 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 outline-none text-gray-700 text-sm bg-white mb-4 shadow-inner resize-none"></textarea>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3 mt-auto pt-2">
+                        <!-- Copy Button (Fallback/Alternative) -->
+                        <button id="copyBtn" onclick="copyTextToClipboard()" class="flex-1 bg-white border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold py-3.5 rounded-2xl flex justify-center items-center gap-2 transition text-sm shadow-sm">
+                            <i data-lucide="copy" class="w-5 h-5"></i>
+                            <span id="copyBtnText">העתק טקסט</span>
+                        </button>
+
+                        <!-- Send Button -->
+                        <button onclick="sendToWhatsApp()" class="flex-[2] bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-3.5 rounded-2xl flex justify-center items-center gap-2 transition transform active:scale-95 shadow-lg shadow-green-500/20 text-base">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                            </svg>
+                            שלח בוואטסאפ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
+        <!-- Footer / Controls -->
+        <div id="footerNav" class="bg-white px-6 py-4 border-t border-gray-100 mt-auto rounded-b-3xl z-10">
+            <p id="error-msg" class="text-red-500 text-sm font-medium mb-3 hidden bg-red-50 p-2 rounded-lg text-center"></p>
+            <button id="nextBtn" onclick="nextStep()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl flex justify-center items-center gap-2 transition shadow-lg shadow-indigo-600/30 text-lg">
+                המשך לשלב הבא
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+        </div>
+
     </div>
 
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
 
-        function generateMessage() {
-            const studentName = document.getElementById('studentName').value.trim();
-            const teacherName = document.getElementById('teacherName').value.trim();
-            const errorMsg = document.getElementById('error-msg');
-            
-            if (!studentName || !teacherName) {
-                errorMsg.classList.remove('hidden');
-                return;
+        let currentStep = 1;
+        const totalSteps = 5;
+        let selectedGender = null;
+
+        const textMap = {
+            M: {
+                energyDesc: "כמה כוח יש לך בימים אלו מ-1 עד 10?",
+                moodTitle: "בגדול, איך עבר עליי השבוע?",
+                moodLabels: {
+                    great: "מצוין, אני בסדר גמור",
+                    good: "בסדר, משתדל להתמודד",
+                    meh: "ככה ככה, עליות וירידות",
+                    sad: "לא פשוט, קצת מועקה",
+                    anxious: "מוצף, הרבה מחשבות"
+                },
+                chalTitle: "מה תופס לי את רוב המחשבות כרגע?",
+                wishTitle: "מה הייתי מאחל לעצמי לשבוע הקרוב?",
+                helpTitle: "מה אתה צריך ממני כרגע?", // הניסוח תוקן לפי הבקשה
+                helpOpts: {
+                    listen: "רק רציתי לשתף, אין צורך להרחיב",
+                    call: "הייתי שמח שנדבר קצת, סתם כדי לפרוק",
+                    normal: "לשמור על קשר רגיל, לדבר על דברים רגילים",
+                    tasks: "קצת משימות ואתגרים להעביר את הזמן"
+                },
+                pronoun: "זה",
+                verbs: { 
+                    share: "חשבתי לשתף", 
+                    feel: "ההרגשה שלי היא ש", 
+                    want: "הייתי רוצה",
+                    needFromYou: "לגבי מה שאני צריך ממך כרגע" // תוקן בהתאם לכותרת
+                }
+            },
+            F: {
+                energyDesc: "כמה כוח יש לך בימים אלו מ-1 עד 10?",
+                moodTitle: "בגדול, איך עבר עליי השבוע?",
+                moodLabels: {
+                    great: "מצוין, אני בסדר גמור",
+                    good: "בסדר, משתדלת להתמודד",
+                    meh: "ככה ככה, עליות וירידות",
+                    sad: "לא פשוט, קצת מועקה",
+                    anxious: "מוצפת, הרבה מחשבות"
+                },
+                chalTitle: "מה תופס לי את רוב המחשבות כרגע?",
+                wishTitle: "מה הייתי מאחלת לעצמי לשבוע הקרוב?",
+                helpTitle: "מה את צריכה ממני כרגע?", // הניסוח תוקן לפי הבקשה
+                helpOpts: {
+                    listen: "רק רציתי לשתף, אין צורך להרחיב",
+                    call: "הייתי שמחה שנדבר קצת, סתם כדי לפרוק",
+                    normal: "לשמור על קשר רגיל, לדבר על דברים רגילים",
+                    tasks: "קצת משימות ואתגרים להעביר את הזמן"
+                },
+                pronoun: "זאת",
+                verbs: { 
+                    share: "חשבתי לשתף", 
+                    feel: "ההרגשה שלי היא ש", 
+                    want: "הייתי רוצה",
+                    needFromYou: "לגבי מה שאני צריכה ממך כרגע" // תוקן בהתאם לכותרת
+                }
             }
+        };
+
+        const headers = ["פרטים אישיים", "הרגשה כללית", "האתגרים שלי", "נקודות למחשבה", "סיכום ושליחה"];
+
+        updateEnergyUI();
+        
+        document.querySelectorAll('input[name="mood"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if(!selectedGender) return;
+                document.getElementById('moodLabelText').textContent = textMap[selectedGender].moodLabels[e.target.value];
+            });
+        });
+
+        function setGender(g) {
+            selectedGender = g;
+            document.getElementById('btn-gender-m').classList.remove('selected');
+            document.getElementById('btn-gender-f').classList.remove('selected');
+            
+            if(g === 'M') {
+                document.getElementById('btn-gender-m').classList.add('selected');
+            } else {
+                document.getElementById('btn-gender-f').classList.add('selected');
+            }
+
+            document.querySelector('.dyn-text-energy').textContent = textMap[g].energyDesc;
+            document.querySelector('.dyn-text-mood').textContent = textMap[g].moodTitle;
+            document.querySelector('.dyn-text-challenge').textContent = textMap[g].chalTitle;
+            document.querySelector('.dyn-text-wish').textContent = textMap[g].wishTitle;
+            document.querySelector('.dyn-text-help').textContent = textMap[g].helpTitle;
+            
+            document.querySelector('.dyn-opt-listen').textContent = textMap[g].helpOpts.listen;
+            document.querySelector('.dyn-opt-call').textContent = textMap[g].helpOpts.call;
+            document.querySelector('.dyn-opt-normal').textContent = textMap[g].helpOpts.normal;
+            document.querySelector('.dyn-opt-tasks').textContent = textMap[g].helpOpts.tasks;
+
+            const selectedMood = document.querySelector('input[name="mood"]:checked');
+            if(selectedMood) {
+                document.getElementById('moodLabelText').textContent = textMap[g].moodLabels[selectedMood.value];
+            }
+        }
+
+        function updateEnergyUI() {
+            const val = document.getElementById('energyMeter').value;
+            document.getElementById('energyValue').textContent = val;
+            
+            const emojiEl = document.getElementById('energyEmoji');
+            if(val <= 2) emojiEl.textContent = '😫';
+            else if(val <= 4) emojiEl.textContent = '😕';
+            else if(val <= 6) emojiEl.textContent = '😐';
+            else if(val <= 8) emojiEl.textContent = '🙂';
+            else emojiEl.textContent = '🤩';
+        }
+
+        function showStep(stepIndex) {
+            // הסתרת כל השלבים
+            document.querySelectorAll('.step-content').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('flex', 'animate-fade-in');
+            });
+
+            // הצגת השלב הנבחר
+            const targetStep = document.getElementById(`step-${stepIndex}`);
+            
+            if(stepIndex === 5 || stepIndex === 1) {
+                targetStep.classList.remove('hidden');
+                targetStep.classList.add('flex', 'animate-fade-in');
+            } else {
+                targetStep.classList.remove('hidden');
+                targetStep.classList.add('animate-fade-in');
+            }
+
+            // עדכון נקודות
+            document.querySelectorAll('.step-dot').forEach((dot, index) => {
+                if (index < stepIndex) {
+                    dot.classList.replace('bg-gray-200', 'bg-indigo-500');
+                } else {
+                    dot.classList.replace('bg-indigo-500', 'bg-gray-200');
+                }
+            });
+
+            // עדכון כותרת
+            document.getElementById('headerTitle').textContent = headers[stepIndex - 1];
+
+            // כפתור חזור
+            const backBtn = document.getElementById('backBtn');
+            if (stepIndex > 1) {
+                backBtn.classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                backBtn.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            // ניהול כפתור תחתון של "המשך"
+            const footerNav = document.getElementById('footerNav');
+            if (stepIndex === totalSteps) {
+                footerNav.classList.add('hidden'); // מסתיר את אזור ההמשך
+                generateMessageText(); // מייצר את הטקסט
+            } else {
+                footerNav.classList.remove('hidden');
+            }
+        }
+
+        function validateStep() {
+            const errorMsg = document.getElementById('error-msg');
             errorMsg.classList.add('hidden');
 
+            if (currentStep === 1) {
+                const sName = document.getElementById('studentName').value.trim();
+                const tName = document.getElementById('teacherName').value.trim();
+                if (!selectedGender) {
+                    showError("אנא בחר/י האם לפנות אליך בלשון זכר או נקבה.");
+                    return false;
+                }
+                if (!sName || !tName) {
+                    showError("נא למלא את שמך ואת שם המורה כדי להמשיך.");
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function showError(msg) {
+            const errorMsg = document.getElementById('error-msg');
+            errorMsg.textContent = msg;
+            errorMsg.classList.remove('hidden');
+        }
+
+        function nextStep() {
+            if (!validateStep()) return;
+            currentStep++;
+            showStep(currentStep);
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        function generateMessageText() {
+            const gMap = textMap[selectedGender];
+            const studentName = document.getElementById('studentName').value.trim();
+            const teacherName = document.getElementById('teacherName').value.trim();
+            const energyVal = document.getElementById('energyMeter').value;
+            
             const moodElement = document.querySelector('input[name="mood"]:checked');
             const challengeElement = document.querySelector('input[name="challenge"]:checked');
             
-            // Guiding questions
-            const goodThing = document.getElementById('goodThing').value.trim();
-            const hardThing = document.getElementById('hardThing').value.trim();
-            const openText = document.getElementById('openText').value.trim();
+            const qGood = document.getElementById('qGood').value.trim();
+            const qThoughts = document.getElementById('qThoughts').value.trim();
+            const qWish = document.getElementById('qWish').value.trim();
             
-            const teacherHelp = document.getElementById('teacherHelp').value;
+            const helpSelect = document.getElementById('teacherHelp');
+            let teacherHelp = "";
+            if (helpSelect.selectedIndex > 0) {
+                teacherHelp = helpSelect.options[helpSelect.selectedIndex].text;
+            }
 
-            // Constructing the message dynamically
-            let message = `היי ${teacherName},\nזה/זו ${studentName}.\n\n`;
-            message += `רציתי לעדכן אותך קצת במה שעובר עליי עכשיו, שבועיים אחרי שהתחילה מלחמת שאגת הארי.\n\n`;
+            let message = `היי ${teacherName},\n${gMap.pronoun} ${studentName}.\n\n`;
+            message += `${gMap.verbs.share} אותך קצת במה שעובר עליי בימים אלו, שבועיים מאז שהתחילה מלחמת שאגת הארי.\n\n`;
+            
+            message += `🔋 מדד הכוחות שלי עומד כרגע על ${energyVal} מתוך 10.\n`;
 
             if (moodElement) {
-                message += `באופן כללי, אני מרגיש/ה ש${moodElement.value}.\n`;
+                message += `באופן כללי, ${gMap.verbs.feel}${gMap.moodLabels[moodElement.value]}.\n`;
             }
 
             if (challengeElement) {
-                message += `כרגע, הדבר שהכי מאתגר אותי זה ${challengeElement.value}.\n`;
+                message += `מה שבעיקר תופס לי את המחשבות זה ${challengeElement.value}.\n`;
             }
 
-            // Adding the guiding questions if filled
-            if (goodThing || hardThing || openText) {
-                message += `\nחשבתי קצת על השבוע האחרון ורציתי לשתף גם ש:\n`;
-                if (goodThing) {
-                    message += `🌟 משהו שעשה לי קצת טוב השבוע: ${goodThing}\n`;
-                }
-                if (hardThing) {
-                    message += `🌧️ רגע שהיה לי קשה או משהו שמטריד אותי: ${hardThing}\n`;
-                }
-                if (openText) {
-                    message += `💭 ועוד משהו שהיה לי חשוב להגיד: ${openText}\n`;
-                }
+            if (qGood || qThoughts || qWish) {
+                message += `\nקצת מעבר לזה:\n`;
+                if (qGood) message += `✨ משהו קטן שעשה לי טוב השבוע: ${qGood}\n`;
+                if (qThoughts) message += `💭 מחשבה שקצת מעסיקה אותי: ${qThoughts}\n`;
+                if (qWish) message += `🎯 הייתי מאחל/ת לעצמי לשבוע הקרוב: ${qWish}\n`;
             }
 
             if (teacherHelp) {
-                message += `\nלגבי איך שאפשר לעזור לי עכשיו - ${teacherHelp}.\n`;
+                message += `\n${gMap.verbs.needFromYou} - ${teacherHelp}.\n`;
             }
 
-            message += `\nתודה רבה שאת/ה שואל/ת ודואג/ת לי 🙏`;
-
-            // Display message
-            document.getElementById('final-message').textContent = message;
-            
-            // Set WhatsApp Link
-            const encodedMessage = encodeURIComponent(message);
-            document.getElementById('whatsapp-btn').href = `https://api.whatsapp.com/send?text=${encodedMessage}`;
-
-            // Show result section smoothly
-            const resultSection = document.getElementById('result-section');
-            resultSection.classList.remove('hidden');
-            
-            // Small delay to allow display:block to apply before scrolling
-            setTimeout(() => {
-                resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            document.getElementById('finalMessageText').value = message;
         }
 
-        function copyToClipboard() {
-            const text = document.getElementById('final-message').textContent;
+        // פונקציה חדשה ומשופרת לפתיחת וואטסאפ
+        function sendToWhatsApp() {
+            const currentText = document.getElementById('finalMessageText').value;
+            if(!currentText.trim()) return;
             
-            // Fallback for iFrame environments or older browsers
+            const encodedMessage = encodeURIComponent(currentText);
+            // שימוש ב- API הרשמי של וואטסאפ (תומך גם ב-Web וגם במובייל בצורה הכי חלקה)
+            const url = `https://wa.me/?text=${encodedMessage}`;
+            
+            // פתיחה בחלון חדש/טאב חדש
+            window.open(url, '_blank');
+        }
+
+        // פונקציית העתקה (גיבוי במקרה שהוואטסאפ חסום בדפדפן הספציפי)
+        function copyTextToClipboard() {
+            const text = document.getElementById('finalMessageText').value;
+            
+            // ניסיון ראשון: API מודרני
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text).then(showCopyFeedback);
             } else {
-                let textArea = document.createElement("textarea");
+                // ניסיון שני: שיטה ישנה שפועלת תמיד (טוב ל-iFrames)
+                const textArea = document.createElement("textarea");
                 textArea.value = text;
                 textArea.style.position = "fixed";
                 textArea.style.left = "-999999px";
-                textArea.style.top = "-999999px";
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
@@ -329,19 +653,34 @@
                     document.execCommand('copy');
                     showCopyFeedback();
                 } catch (err) {
-                    console.error('Failed to copy text: ', err);
+                    console.error('Copy failed', err);
                 }
                 textArea.remove();
             }
         }
 
         function showCopyFeedback() {
-            const feedback = document.getElementById('copy-feedback');
-            feedback.style.opacity = '1';
+            const btn = document.getElementById('copyBtn');
+            const originalHtml = btn.innerHTML;
+            
+            btn.innerHTML = `<i data-lucide="check" class="w-5 h-5"></i> <span class="text-sm font-bold">הועתק!</span>`;
+            btn.classList.replace('text-indigo-600', 'text-green-600');
+            btn.classList.replace('border-indigo-100', 'border-green-200');
+            btn.classList.add('bg-green-50');
+            lucide.createIcons();
+            
             setTimeout(() => {
-                feedback.style.opacity = '0';
-            }, 3000);
+                btn.innerHTML = originalHtml;
+                btn.classList.replace('text-green-600', 'text-indigo-600');
+                btn.classList.replace('border-green-200', 'border-indigo-100');
+                btn.classList.remove('bg-green-50');
+                lucide.createIcons();
+            }, 2500);
         }
+
+        // הפעלת שלב ראשון בעליית העמוד
+        showStep(1);
+
     </script>
 </body>
 </html>
