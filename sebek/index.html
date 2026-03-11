@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>התסריט הראשון של סבק - Director's Cut</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --cinematic-black: #050505;
+            --letterbox-bg: #000000;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: var(--cinematic-black);
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* נועל גלילה לחווית מסך מלא */
+            user-select: none;
+        }
+
+        .font-cinema {
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.05em;
+        }
+
+        /* פס קולנוע עליון ותחתון - Letterboxing */
+        .letterbox {
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: 12vh;
+            background: var(--letterbox-bg);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
+        }
+        .letterbox-top { top: 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .letterbox-bottom { bottom: 0; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        /* פילטר סרט צילום (Film Grain) */
+        .film-grain {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 40;
+            background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+            opacity: 0.06;
+            animation: grainShift 0.2s steps(2) infinite;
+        }
+
+        @keyframes grainShift {
+            0% { transform: translate(0, 0); }
+            50% { transform: translate(-1%, 1%); }
+            100% { transform: translate(1%, -1%); }
+        }
+
+        /* מעבר רקע דרמטי (Ken Burns פשוט וצבעים עמוקים) */
+        .scene-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            animation: breathe 15s ease-in-out infinite alternate;
+        }
+        
+        .vignette {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.85) 90%, #000 100%);
+            z-index: 1;
+        }
+
+        @keyframes breathe {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        /* אנימציות חשיפה דרמטיות */
+        .reveal-text {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: revealUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes revealUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* עיצוב כתוביות קולנוע */
+        .subtitle-text {
+            color: #f1f5f9;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.8), 0px 4px 15px rgba(0,0,0,0.5);
+            font-size: clamp(1.2rem, 2.5vw, 2rem);
+            line-height: 1.5;
+            font-weight: 300;
+        }
+
+        /* כפתורי זכוכית דרמטיים (Glassmorphism) */
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.5s;
+        }
+
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5), 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-btn:hover::before {
+            left: 200%;
+        }
+
+        /* הבהוב למילים מרכזיות */
+        .glow-word {
+            color: #fbbf24;
+            text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+            font-weight: 700;
+        }
+        .glow-red {
+            color: #ef4444;
+            text-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root" class="w-full h-full flex flex-col relative"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const scenes = [
+            {
+                id: 0,
+                bgGradient: "radial-gradient(circle at 50% 40%, #2a0a0a 0%, #000000 80%)",
+                icon: "🎬",
+                title: "התסריט הראשון של סבק",
+                subtitle: "חוויה אינטראקטיבית | מאת בנימין טנא",
+                text: "ברוכים הבאים לאולם הקולנוע.\nהסיפור שאתם עומדים לחוות עוסק בחברות, נאמנות, וסוד שנשמר בחושך.\nהיכנסו לנעלי הדמויות, קבלו את ההחלטות, וגלו את האמת.",
+                choices: [{ text: "התחל צפייה", next: 1 }]
+            },
+            {
+                id: 1,
+                bgGradient: "radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%)",
+                icon: "❄️",
+                title: "וורשה. חורף. לפני המלחמה.",
+                subtitle: "האקספוזיציה",
+                text: "קור עז ברחובות. מתחת לעץ הערמון, בין הרובע היהודי לשכונות הנוצריות, עומדת חבורת נערים מול קופות בית הקולנוע. \nהקולנוע הוא המפלט שלהם, אבל יש <span class='glow-red'>בעיה אחת גדולה</span>: אין להם כסף לכרטיסים.",
+                choices: [{ text: "המשך לסצנת המועצה", next: 2 }]
+            },
+            {
+                id: 2,
+                bgGradient: "radial-gradient(circle at 50% 30%, #1e1b4b 0%, #000000 90%)",
+                icon: "👥",
+                title: "מועצת החבורה",
+                subtitle: "נקודת ההתחלה של העלילה",
+                text: "הם מרוקנים כיסים. יחד, יש להם בקושי כסף לכרטיס אחד בודד. \n<span class='glow-word'>שימק התחרותי</span> דורש לעשות הגרלה. אבל אז מתערב אדק.",
+                dialogue: "אדק: \"בלי הגרלות. סבק חייב ללכת באופן קבוע. הוא המבוגר, והוא יודע לספר את הסרט הכי טוב.\"",
+                choices: [{ text: "תנו לסבק את הכסף והמתינו שיחזור", next: 3 }]
+            },
+            {
+                id: 3,
+                bgGradient: "radial-gradient(circle at center, #451a03 0%, #000000 80%)",
+                icon: "🤠",
+                title: "ההופעה מתחילה",
+                subtitle: "העלילה מתפתחת",
+                text: "ימי שלישי ושישי. סבק חוזר מהקולנוע, עומד מול החברים המרותקים ומספר להם על סרטי המערב הפרוע. הוא מתאר <span class='glow-word'>מוסטנגים</span> (סוסי פרא) ומדגים תפיסה ב<span class='glow-word'>לסו</span>.",
+                dialogue: "סבק: \"ואז, הגיבור שולף את האקדח שלו מהחגורה ומסתער על הפושעים!\"",
+                choices: [
+                    { text: "הקשב בהתלהבות", next: 4 },
+                    { text: "עצור רגע - משהו כאן לא הגיוני...", next: 4 }
+                ]
+            },
+            {
+                id: 4,
+                bgGradient: "radial-gradient(circle at 30% 50%, #450a0a 0%, #000000 80%)",
+                icon: "⚡",
+                title: "השקר נחשף",
+                subtitle: "הסיבוך",
+                text: "קובה עוצר אותו: \"אבל אתמול אמרת שהגיבור איבד את האקדח בנהר!\". \nלפני שסבק מספיק לענות, <span class='glow-red'>שימק מתפרץ בזעם.</span>",
+                dialogue: "שימק: \"שקרן! ראיתי אותך יוצא מבית המרקחת בדיוק כשהסרט הוקרן. לא היית בשום קולנוע!\"",
+                choices: [{ text: "רגע של דממה...", next: 5 }]
+            },
+            {
+                id: 5,
+                bgGradient: "radial-gradient(circle at center, #020617 0%, #000000 100%)",
+                icon: "⚖️",
+                title: "זמן החלטה",
+                subtitle: "הקונפליקטים של סבק",
+                text: "סבק קופא. הוא לכוד בין שני עולמות.\n<span class='glow-red'>חיצונית:</span> חבריו מרגישים נבגדים ואמון נשבר.\n<span class='glow-word'>פנימית:</span> הדילמה בין הנאמנות לחברים (שהביאו לו את כספם), לבין אביו שחולה מאוד וזקוק לכסף לתרופות.",
+                choices: [{ text: "כיצד סבק יבחר לפעול?", next: 6 }]
+            },
+            {
+                id: 6,
+                bgGradient: "radial-gradient(circle at 50% 20%, #422006 0%, #000000 85%)",
+                icon: "🎭",
+                title: "הוידוי",
+                subtitle: "נקודת השיא והמפנה",
+                text: "במקום להמשיך להילחם, סבק משפיל מבט. הוא מסביר שאביו גוסס והוא קנה לו תרופות. \nהחברים המומים. \"אז מאיפה כל הסרטים המדהימים שסיפרת לנו?\"",
+                dialogue: "סבק: \"חבר'ה, לא פעם אמרתי לכם שאני חולם להיות במאי. הנה, חיברתי תסריט. את התסריט הראשון שלי.\"",
+                choices: [{ text: "צפה בסיום", next: 7 }]
+            },
+            {
+                id: 7,
+                bgGradient: "radial-gradient(circle at 50% 50%, #064e3b 0%, #000000 90%)",
+                icon: "🤝",
+                title: "סיום סגור",
+                subtitle: "התרה",
+                text: "הכעס מתמוסס. החברים סולחים ומבינים את גודל ההקרבה. יותר מכך, הם מעריצים את הכישרון שלו. <span class='glow-word'>הסוף סגור:</span> הקונפליקט נפתר, והחברות ניצחה.",
+                dialogue: "אדק: \"זה יהיה סרט יפה מאוד! כשתגדל ותהיה במאי... אני אהיה נהג ואוביל שמה אנשים.\"",
+                choices: [{ text: "סיכום הבמאי (מושגים)", next: 8 }]
+            },
+            {
+                id: 8,
+                bgGradient: "radial-gradient(circle at 50% 50%, #0f172a 0%, #000000 100%)",
+                icon: "🎬",
+                title: "DIRECTOR'S CUT",
+                subtitle: "מה לקחת איתכם למבחן?",
+                text: "• אקספוזיציה: וורשה, חבורה חסרת אמצעים חולמת על קולנוע.\n• סיבוך: סבק מתבלבל בעלילות ונתפס בשקרו.\n• קונפליקט: נאמנות לחברים מול הצלת האב (פנימי), סבק מול שימק (חיצוני).\n• שיא: הוידוי - הסרטים הם למעשה 'התסריט הראשון שלי'.\n• סיום סגור: מחילה מוחלטת והערכה ליצירתיות.",
+                choices: [{ text: "הקרן מחדש", next: 0 }]
+            }
+        ];
+
+        // Typewriter/Reveal component for inner HTML
+        const CinematicText = ({ htmlString, trigger }) => {
+            return (
+                <div 
+                    key={trigger} 
+                    className="subtitle-text text-center reveal-text mb-8 md:mb-12 max-w-4xl px-4"
+                    style={{ animationDelay: '0.6s' }}
+                    dangerouslySetInnerHTML={{ __html: htmlString.replace(/\n/g, '<br/>') }}
+                />
+            );
+        };
+
+        const App = () => {
+            const [currentScene, setCurrentScene] = useState(0);
+            const [animationKey, setAnimationKey] = useState(0);
+
+            const scene = scenes[currentScene];
+
+            const handleNext = (nextIndex) => {
+                setAnimationKey(prev => prev + 1);
+                setCurrentScene(nextIndex);
+            };
+
+            return (
+                <>
+                    {/* אפקטים גלובליים */}
+                    <div className="film-grain"></div>
+                    <div className="letterbox letterbox-top">
+                        {scene.id > 0 && scene.id < 8 && (
+                            <div className="text-gray-500 font-cinema tracking-[0.2em] text-sm opacity-50">
+                                סצנה {scene.id} מתוך 7
+                            </div>
+                        )}
+                    </div>
+                    <div className="letterbox letterbox-bottom">
+                        {/* כפתורי הבחירה בתוך הפס השחור התחתון */}
+                        <div key={`btn-${animationKey}`} className="flex gap-4 px-4 w-full justify-center max-w-3xl reveal-text" style={{ animationDelay: '1.2s' }}>
+                            {scene.choices.map((choice, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => handleNext(choice.next)}
+                                    className="glass-btn px-6 md:px-10 py-3 rounded-md font-cinema text-lg md:text-xl tracking-wide flex-1 md:flex-none uppercase"
+                                >
+                                    {choice.text}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* האזור המרכזי (מסך הקולנוע) */}
+                    <main className="flex-grow relative flex flex-col items-center justify-center overflow-hidden z-10 pt-[12vh] pb-[12vh]">
+                        {/* רקע דינמי מתחלף */}
+                        <div 
+                            key={`bg-${currentScene}`}
+                            className="scene-bg"
+                            style={{ background: scene.bgGradient }}
+                        ></div>
+                        <div className="vignette"></div>
+
+                        {/* תוכן הסצנה */}
+                        <div className="z-20 flex flex-col items-center w-full px-4 md:px-12">
+                            
+                            {/* אייקון דרמטי */}
+                            <div 
+                                key={`icon-${animationKey}`}
+                                className="text-6xl md:text-8xl mb-6 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] reveal-text"
+                                style={{ animationDelay: '0.1s' }}
+                            >
+                                {scene.icon}
+                            </div>
+
+                            {/* תת כותרת קטנה */}
+                            <div 
+                                key={`sub-${animationKey}`}
+                                className="text-yellow-500 font-cinema tracking-widest uppercase text-sm md:text-lg mb-2 reveal-text"
+                                style={{ animationDelay: '0.2s' }}
+                            >
+                                {scene.subtitle}
+                            </div>
+
+                            {/* כותרת הסצנה */}
+                            <h1 
+                                key={`title-${animationKey}`}
+                                className="text-4xl md:text-6xl lg:text-7xl font-cinema font-bold text-center mb-10 text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)] reveal-text leading-tight"
+                                style={{ animationDelay: '0.4s' }}
+                            >
+                                {scene.title}
+                            </h1>
+
+                            {/* הטקסט הראשי - כתוביות */}
+                            <CinematicText htmlString={scene.text} trigger={animationKey} />
+
+                            {/* שורת דיאלוג צהובה (אם קיימת) */}
+                            {scene.dialogue && (
+                                <div 
+                                    key={`dialogue-${animationKey}`}
+                                    className="mt-2 text-xl md:text-3xl text-yellow-400 italic font-light text-center reveal-text drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] max-w-4xl px-4 border-l-4 border-r-4 border-yellow-500/30 py-2 bg-black/30"
+                                    style={{ animationDelay: '0.9s' }}
+                                >
+                                    {scene.dialogue}
+                                </div>
+                            )}
+
+                        </div>
+                    </main>
+                </>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
