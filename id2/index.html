@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>מערכת שו"ב — ניהול מערכה</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <style>
+        :root { --dome:#fcd34d; --arrow:#38bdf8; --threat:#ef4444; --safe:#10b981; --emp:#a855f7; }
+        *{box-sizing:border-box;}
+        body,html{margin:0;padding:0;width:100%;height:100%;background:#050d1a;overflow:hidden;font-family:'Rajdhani',system-ui,sans-serif;touch-action:none;user-select:none;}
+        #map{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;filter:brightness(0.82) saturate(1.15) contrast(1.05);}
+        .tactical-overlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;background:rgba(0,15,35,0.28);pointer-events:none;}
+        .scanlines{position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,20,60,0.04) 2px,rgba(0,20,60,0.04) 4px);}
+        #gameCanvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:5;pointer-events:auto;cursor:crosshair;}
+        #ui-layer{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;}
+        .interactive{pointer-events:auto;}
+        .glass{background:linear-gradient(180deg,rgba(5,12,28,0.97) 0%,rgba(5,12,28,0.78) 100%);backdrop-filter:blur(14px);border-bottom:1px solid rgba(56,189,248,0.22);box-shadow:0 4px 28px rgba(0,0,0,0.7);}
+        .glass-bottom{background:linear-gradient(0deg,rgba(5,12,28,0.97) 0%,rgba(5,12,28,0.78) 100%);backdrop-filter:blur(14px);border-top:1px solid rgba(56,189,248,0.22);box-shadow:0 -4px 28px rgba(0,0,0,0.7);}
+
+        /* WEAPON BUTTONS */
+        .weapon-btn{flex:1;padding:10px 6px;border-radius:10px;background:rgba(10,18,38,0.85);border:2px solid rgba(56,189,248,0.12);transition:all 0.2s;opacity:0.5;cursor:pointer;font-family:'Rajdhani',sans-serif;}
+        .weapon-btn.active{opacity:1;transform:scale(1.04);}
+        .weapon-btn.active.iron-dome{border-color:var(--dome);background:rgba(245,158,11,0.16);box-shadow:0 0 18px rgba(252,211,77,0.22) inset,0 0 10px rgba(252,211,77,0.12);}
+        .weapon-btn.active.arrow{border-color:var(--arrow);background:rgba(56,189,248,0.16);box-shadow:0 0 18px rgba(56,189,248,0.22) inset,0 0 10px rgba(56,189,248,0.12);}
+
+        /* BATTERY */
+        .battery-container{display:flex;gap:2px;height:9px;width:100%;background:rgba(0,0,0,0.8);border-radius:3px;padding:1px;border:1px solid rgba(255,255,255,0.06);}
+        .battery-cell{flex:1;border-radius:1px;transition:background-color 0.3s;}
+        .cell-ready{background:var(--safe);box-shadow:0 0 4px var(--safe);}
+        .cell-empty{background:#111c32;}
+        @keyframes pulse-cell{0%,100%{opacity:0.4}50%{opacity:0.9}}
+        .cell-reloading{background:rgba(16,185,129,0.5);animation:pulse-cell 0.8s infinite;}
+
+        /* HP BARS */
+        .hp-bar-wrap{width:100%;height:6px;background:rgba(0,0,0,0.85);border-radius:3px;overflow:hidden;margin-top:2px;border:1px solid rgba(255,255,255,0.06);}
+        .hp-bar-fill{height:100%;transition:width 0.4s,background-color 0.4s;}
+
+        /* ALERTS */
+        #alert-container{position:absolute;top:72px;left:50%;transform:translateX(-50%);z-index:50;display:flex;flex-direction:column;gap:6px;pointer-events:none;width:92%;max-width:380px;}
+        .alert-pill{padding:7px 14px;border-radius:8px;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:bold;text-align:center;animation:alertIn 0.25s ease-out;border:1px solid rgba(255,255,255,0.15);}
+        .alert-pill.threat{background:rgba(220,38,38,0.92);color:#fff;box-shadow:0 0 18px rgba(220,38,38,0.5);}
+        .alert-pill.intercept{background:rgba(16,185,129,0.92);color:#fff;box-shadow:0 0 18px rgba(16,185,129,0.5);}
+        .alert-pill.warning{background:rgba(245,158,11,0.92);color:#fff;box-shadow:0 0 18px rgba(245,158,11,0.5);}
+        @keyframes alertIn{from{opacity:0;transform:translateY(-12px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+        /* KILL FEED */
+        #kill-feed{position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:30;display:flex;flex-direction:column;gap:3px;pointer-events:none;max-width:180px;}
+        .kill-item{font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 8px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);border-radius:4px;color:#6ee7b7;animation:killFade 3s forwards;white-space:nowrap;}
+        @keyframes killFade{0%{opacity:1;transform:translateX(0)}70%{opacity:1}100%{opacity:0;transform:translateX(-18px)}}
+
+        /* WAVE BANNER */
+        #wave-banner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.7);z-index:50;pointer-events:none;opacity:0;transition:all 0.35s cubic-bezier(0.175,0.885,0.32,1.275);}
+        #wave-banner.show{transform:translate(-50%,-50%) scale(1);opacity:1;}
+
+        /* COMBO */
+        #combo-display{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);z-index:45;pointer-events:none;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:2.6em;color:#fbbf24;text-shadow:0 0 30px rgba(251,191,36,0.9),0 0 60px rgba(251,191,36,0.4);display:none;white-space:nowrap;letter-spacing:0.05em;}
+        @keyframes comboAnim{0%{opacity:0;transform:translate(-50%,-50%) scale(0.4)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.25)}40%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%)}}
+
+        /* UPGRADE MODAL */
+        #upgrade-modal{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.9);opacity:0;pointer-events:none;transition:all 0.35s cubic-bezier(0.175,0.885,0.32,1.275);z-index:60;width:94%;max-width:520px;}
+        #upgrade-modal.open{transform:translate(-50%,-50%) scale(1);opacity:1;pointer-events:auto;}
+        .modal-backdrop{position:absolute;inset:0;background:rgba(0,8,22,0.78);backdrop-filter:blur(7px);z-index:55;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+        .modal-backdrop.open{opacity:1;pointer-events:auto;}
+        .btn-upgrade{background:rgba(8,16,35,0.96);border:1px solid rgba(56,189,248,0.25);transition:all 0.15s;border-radius:12px;}
+        .btn-upgrade:hover:not(:disabled){border-color:rgba(56,189,248,0.7);background:rgba(56,189,248,0.1);transform:translateY(-1px);}
+        .btn-upgrade:active:not(:disabled){transform:scale(0.96);}
+        .btn-upgrade:disabled{opacity:0.3;filter:grayscale(1);cursor:not-allowed;}
+
+        /* EMP BUTTON */
+        #emp-btn{position:absolute;right:10px;bottom:175px;z-index:30;}
+
+        /* SCREENS */
+        .overlay{position:absolute;inset:0;z-index:100;background:radial-gradient(circle at 50% 40%,rgba(8,18,45,0.96) 0%,rgba(2,5,18,1) 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+
+        /* STAT CHIP */
+        .stat-chip{background:rgba(10,20,45,0.9);border:1px solid rgba(56,189,248,0.18);border-radius:7px;padding:5px 10px;}
+
+        /* MONEY ANIMATE */
+        #moneyEl{transition:color 0.3s,transform 0.3s;display:inline-block;}
+        .money-flash{color:var(--safe)!important;transform:scale(1.3)!important;}
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="tactical-overlay"></div>
+    <div class="scanlines"></div>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="alert-container"></div>
+    <div id="kill-feed"></div>
+    <div id="combo-display"></div>
+
+    <!-- Wave Banner -->
+    <div id="wave-banner">
+        <div class="text-center px-8 py-5 rounded-2xl" style="background:rgba(5,12,28,0.85);border:1px solid rgba(56,189,248,0.3);backdrop-filter:blur(12px);">
+            <div class="text-[10px] text-sky-400 uppercase tracking-[0.4em] font-mono mb-1">פרוטוקול ביטחוני פעיל</div>
+            <div id="wave-banner-text" class="text-5xl font-black text-white" style="font-family:'Rajdhani'">גל 2</div>
+            <div class="text-xs text-red-400 mt-2 tracking-wide">⚠ כוחות עוינים בתנועה</div>
+        </div>
+    </div>
+
+    <!-- EMP Button -->
+    <div id="emp-btn" class="interactive hidden">
+        <button onclick="activateEMP()" id="emp-actual-btn" class="flex flex-col items-center justify-center w-14 h-14 rounded-full border-2 border-purple-500 bg-purple-950/80 backdrop-blur-sm text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] active:scale-90 transition">
+            <span class="text-xl leading-none">⚡</span>
+            <span id="emp-count" class="text-[9px] font-mono mt-0.5">1/1</span>
+        </button>
+    </div>
+
+    <div id="ui-layer">
+        <!-- TOP HUD -->
+        <div class="glass p-2.5 flex justify-between items-start w-full gap-2 interactive">
+            <div class="flex gap-3 md:gap-5 flex-1 min-w-0">
+                <div class="flex flex-col shrink-0">
+                    <span class="text-[9px] text-sky-400 font-bold tracking-widest uppercase" style="font-family:'Share Tech Mono'">חיפה</span>
+                    <div class="hp-bar-wrap w-16 md:w-24"><div id="hp-north" class="hp-bar-fill" style="width:100%;background:var(--safe)"></div></div>
+                    <span id="hp-north-txt" class="text-[9px] text-slate-500 font-mono">100%</span>
+                </div>
+                <div class="flex flex-col shrink-0">
+                    <span class="text-[9px] text-sky-400 font-bold tracking-widest uppercase" style="font-family:'Share Tech Mono'">ת"א</span>
+                    <div class="hp-bar-wrap w-16 md:w-24"><div id="hp-center" class="hp-bar-fill" style="width:100%;background:var(--safe)"></div></div>
+                    <span id="hp-center-txt" class="text-[9px] text-slate-500 font-mono">100%</span>
+                </div>
+                <div class="flex flex-col shrink-0">
+                    <span class="text-[9px] text-sky-400 font-bold tracking-widest uppercase" style="font-family:'Share Tech Mono'">דימונה</span>
+                    <div class="hp-bar-wrap w-16 md:w-24"><div id="hp-south" class="hp-bar-fill" style="width:100%;background:var(--safe)"></div></div>
+                    <span id="hp-south-txt" class="text-[9px] text-slate-500 font-mono">100%</span>
+                </div>
+            </div>
+            <div class="flex flex-col items-end gap-1.5 shrink-0">
+                <div class="flex items-baseline gap-2">
+                    <span class="text-[10px] text-slate-400 font-mono">גל <span id="waveUi" class="text-white font-bold text-sm">1</span>/10</span>
+                    <div class="text-xl md:text-2xl font-black text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]" style="font-family:'Share Tech Mono'">$<span id="moneyEl">1200</span></div>
+                </div>
+                <div class="flex gap-1.5">
+                    <span class="stat-chip text-[9px] font-mono text-emerald-400">↓ <span id="kills-ui">0</span></span>
+                    <span class="stat-chip text-[9px] font-mono text-red-400">✕ <span id="hits-ui">0</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM HUD -->
+        <div class="glass-bottom p-3 w-full flex flex-col mt-auto shadow-2xl interactive">
+            <div class="flex gap-2 mb-3">
+                <button onclick="setWeapon('IRON_DOME')" id="btn-dome" class="weapon-btn active iron-dome flex flex-col items-center justify-center py-2.5">
+                    <span class="text-sm font-bold text-amber-400">🛡 כיפת ברזל</span>
+                    <span class="text-[10px] text-slate-400 mt-0.5">מהיר · קרוב</span>
+                </button>
+                <button onclick="setWeapon('ARROW')" id="btn-arrow" class="weapon-btn arrow flex flex-col items-center justify-center py-2.5">
+                    <span class="text-sm font-bold text-sky-400">🚀 חץ 3</span>
+                    <span class="text-[10px] text-slate-400 mt-0.5">רחוק · עצמתי</span>
+                </button>
+            </div>
+            <div class="flex gap-4 w-full">
+                <div class="flex flex-col flex-1 gap-1">
+                    <div class="flex justify-between text-[10px]" style="font-family:'Share Tech Mono'"><span class="text-amber-400">ברזל</span><span id="txt-dome-count" class="text-white">10/10</span></div>
+                    <div id="bat-dome" class="battery-container"></div>
+                </div>
+                <div class="flex flex-col flex-1 gap-1">
+                    <div class="flex justify-between text-[10px]" style="font-family:'Share Tech Mono'"><span class="text-sky-400">חץ 3</span><span id="txt-arrow-count" class="text-white">4/4</span></div>
+                    <div id="bat-arrow" class="battery-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BACKDROP -->
+    <div id="modal-bg" class="modal-backdrop"></div>
+
+    <!-- UPGRADE MODAL -->
+    <div id="upgrade-modal" class="interactive rounded-2xl shadow-[0_0_70px_rgba(0,0,0,0.95)]" style="background:rgba(4,10,24,0.98);border:1px solid rgba(56,189,248,0.35);">
+        <div class="p-5 border-b border-slate-800">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <div class="text-[9px] text-sky-400 uppercase tracking-[0.35em] font-mono mb-1">דו"ח מערכה</div>
+                    <h2 class="text-3xl font-black text-white" style="font-family:'Rajdhani'">סוף גל <span id="modal-wave-num">1</span></h2>
+                </div>
+                <div class="text-right">
+                    <div class="text-[9px] text-slate-500 font-mono">תקציב</div>
+                    <div class="text-2xl font-black text-amber-400" style="font-family:'Share Tech Mono'">$<span id="modal-money">0</span></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <div class="stat-chip text-center"><div class="text-emerald-400 text-xl font-black font-mono" id="wave-kills">0</div><div class="text-[9px] text-slate-400">יירוטים</div></div>
+                <div class="stat-chip text-center"><div class="text-red-400 text-xl font-black font-mono" id="wave-hits">0</div><div class="text-[9px] text-slate-400">פגיעות</div></div>
+                <div class="stat-chip text-center"><div class="text-amber-400 text-xl font-black font-mono" id="wave-accuracy">-</div><div class="text-[9px] text-slate-400">דיוק</div></div>
+            </div>
+        </div>
+
+        <div class="p-4 grid grid-cols-2 gap-2 border-b border-slate-800">
+            <button onclick="buy('DOME_CAP')" id="upg-dome-cap" class="btn-upgrade p-3 flex flex-col items-center gap-1">
+                <span class="text-xl">🛡</span>
+                <span class="text-[11px] text-amber-300 font-bold text-center leading-tight">+2 ברזל למלאי</span>
+                <span class="text-xs font-mono text-white mt-0.5 bg-amber-900/30 px-2 py-0.5 rounded-full">$<span id="cost-dome-cap">300</span></span>
+            </button>
+            <button onclick="buy('ARROW_CAP')" id="upg-arrow-cap" class="btn-upgrade p-3 flex flex-col items-center gap-1">
+                <span class="text-xl">🚀</span>
+                <span class="text-[11px] text-sky-300 font-bold text-center leading-tight">+1 חץ 3 למלאי</span>
+                <span class="text-xs font-mono text-white mt-0.5 bg-sky-900/30 px-2 py-0.5 rounded-full">$<span id="cost-arrow-cap">500</span></span>
+            </button>
+            <button onclick="buy('RELOAD')" id="upg-reload" class="btn-upgrade p-3 flex flex-col items-center gap-1">
+                <span class="text-xl">⚡</span>
+                <span class="text-[11px] text-emerald-300 font-bold text-center leading-tight">טעינה מהירה 20%</span>
+                <span class="text-xs font-mono text-white mt-0.5 bg-emerald-900/30 px-2 py-0.5 rounded-full">$<span id="cost-reload">400</span></span>
+            </button>
+            <button onclick="buy('HEAL')" id="upg-heal" class="btn-upgrade p-3 flex flex-col items-center gap-1">
+                <span class="text-xl">🏥</span>
+                <span class="text-[11px] text-white font-bold text-center leading-tight">שיקום עורף +30%</span>
+                <span class="text-xs font-mono text-white mt-0.5 bg-slate-700/50 px-2 py-0.5 rounded-full">$<span id="cost-heal">800</span></span>
+            </button>
+            <button onclick="buy('EMP')" id="upg-emp" class="btn-upgrade p-3 flex flex-col items-center gap-1">
+                <span class="text-xl">🌩</span>
+                <span class="text-[11px] text-purple-300 font-bold text-center leading-tight">EMP ×1 לגל</span>
+                <span class="text-xs font-mono text-white mt-0.5 bg-purple-900/30 px-2 py-0.5 rounded-full">$<span id="cost-emp">600</span></span>
+            </button>
+            <button onclick="buy('SPEED')" id="upg-speed" class="btn-upgrade p-3 flex flex-col items-center gap-1">
+                <span class="text-xl">💨</span>
+                <span class="text-[11px] text-orange-300 font-bold text-center leading-tight">מהירות מיירט 20%+</span>
+                <span class="text-xs font-mono text-white mt-0.5 bg-orange-900/30 px-2 py-0.5 rounded-full">$<span id="cost-speed">450</span></span>
+            </button>
+        </div>
+
+        <div class="p-4">
+            <button onclick="nextWave()" class="w-full py-4 font-black text-xl rounded-xl transition active:scale-95" style="background:linear-gradient(135deg,#065f46,#059669);color:white;font-family:'Rajdhani';box-shadow:0 0 22px rgba(16,185,129,0.35);">
+                ▶ התחל גל <span id="next-wave-num">2</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- START SCREEN -->
+    <div id="startScreen" class="overlay interactive">
+        <div class="text-center mb-7">
+            <div class="text-[10px] text-sky-400 tracking-[0.45em] uppercase font-mono mb-3">מערכת הגנה אווירית — IRON SKY</div>
+            <h1 class="text-5xl md:text-6xl font-black text-white mb-1" style="font-family:'Rajdhani';text-shadow:0 0 35px rgba(56,189,248,0.4)">ניהול מערכה</h1>
+            <div class="text-[11px] text-sky-500 font-mono tracking-widest">STRATEGIC COMMAND SYSTEM v2.1</div>
+        </div>
+        <div class="max-w-sm w-full text-right text-sm mb-7 rounded-2xl p-5" style="background:rgba(5,12,28,0.88);border:1px solid rgba(56,189,248,0.2);">
+            <h3 class="font-bold text-sky-400 mb-3 border-b border-slate-800 pb-2 uppercase tracking-wider" style="font-family:'Rajdhani'">תורת ההפעלה</h3>
+            <ul class="space-y-2 text-[13px] text-slate-300">
+                <li><span class="text-amber-400 font-bold">לחץ</span> על המסלול המקווקו מול הטיל הנכנס.</li>
+                <li><span class="text-amber-400">כיפת ברזל</span> — מהיר, לטילים קצרי טווח.</li>
+                <li><span class="text-sky-400">חץ 3</span> — עצמתי, לבליסטיים ארוכי טווח.</li>
+                <li><span class="text-purple-400">⚡ EMP</span> — קנה בחנות, מקפיא הכל ל-3 שניות.</li>
+                <li><span class="text-orange-400">🔥 קומבו</span> — 3 יירוטים ברצף = בונוס כסף!</li>
+            </ul>
+        </div>
+        <button onclick="startGame()" class="px-12 py-4 text-white font-black rounded-full text-xl active:scale-95 transition" style="font-family:'Rajdhani';background:linear-gradient(135deg,#0369a1,#0284c7);box-shadow:0 0 28px rgba(14,165,233,0.5)">
+            התחל משמרת
+        </button>
+    </div>
+
+    <div id="gameOverScreen" class="overlay interactive hidden">
+        <div class="text-[10px] text-red-400 tracking-[0.4em] uppercase font-mono mb-4">מצב חירום לאומי</div>
+        <h1 class="text-5xl font-black text-red-500 mb-2" style="font-family:'Rajdhani'">המערך הובקע</h1>
+        <p class="text-slate-300 mb-1 text-lg">נכשלת בגל <span id="finalWaveNum" class="text-white font-bold"></span>/10</p>
+        <p class="text-slate-600 text-sm font-mono mb-8">כל הערים הושמדו</p>
+        <button onclick="location.reload()" class="px-10 py-3 text-white rounded-full text-lg transition hover:opacity-80" style="background:rgba(30,10,10,0.9);border:1px solid rgba(239,68,68,0.5)">התחל מחדש</button>
+    </div>
+
+    <div id="victoryScreen" class="overlay interactive hidden">
+        <div class="text-[10px] text-emerald-400 tracking-[0.4em] uppercase font-mono mb-4">ניצחון מוחלט</div>
+        <h1 class="text-5xl font-black text-emerald-400 mb-2" style="font-family:'Rajdhani'">המשימה הושלמה</h1>
+        <p class="text-emerald-200 mb-8 text-lg">הדפת בהצלחה את כל 10 הגלים!</p>
+        <button onclick="location.reload()" class="px-10 py-3 text-white rounded-full text-lg transition" style="background:#065f46;border:1px solid #059669">שחק שוב</button>
+    </div>
+
+<script>
+// ═══════════════════════════════════════
+// MAP SETUP
+// ═══════════════════════════════════════
+const map = L.map('map', { zoomControl:false, dragging:false, touchZoom:false, scrollWheelZoom:false, doubleClickZoom:false });
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom:10 }).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', { maxZoom:10, opacity:0.75 }).addTo(map);
+
+function setMapBounds() {
+    const m = window.innerWidth < 768;
+    map.setView(m ? [29.0, 43.0] : [30.0, 45.0], m ? 4.2 : 5.0);
+}
+setMapBounds();
+
+// ═══════════════════════════════════════
+// AUDIO (Web Audio API — no files needed)
+// ═══════════════════════════════════════
+let audioCtx = null;
+function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+function playLaunch(type) {
+    try {
+        const c = getAudioCtx();
+        const o = c.createOscillator(), g = c.createGain();
+        o.connect(g); g.connect(c.destination);
+        if (type === 'IRON_DOME') {
+            o.type = 'sawtooth';
+            o.frequency.setValueAtTime(900, c.currentTime);
+            o.frequency.exponentialRampToValueAtTime(180, c.currentTime + 0.28);
+            g.gain.setValueAtTime(0.12, c.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.28);
+            o.start(); o.stop(c.currentTime + 0.28);
+        } else {
+            o.type = 'square';
+            o.frequency.setValueAtTime(450, c.currentTime);
+            o.frequency.exponentialRampToValueAtTime(90, c.currentTime + 0.5);
+            g.gain.setValueAtTime(0.18, c.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.5);
+            o.start(); o.stop(c.currentTime + 0.5);
+        }
+    } catch(e) {}
+}
+function playExplosion(big) {
+    try {
+        const c = getAudioCtx();
+        const len = c.sampleRate * (big ? 0.7 : 0.35);
+        const buf = c.createBuffer(1, len, c.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 1.5);
+        const s = c.createBufferSource(); s.buffer = buf;
+        const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = big ? 280 : 550;
+        const g = c.createGain(); g.gain.setValueAtTime(big?0.45:0.28, c.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + (big?0.7:0.35));
+        s.connect(f); f.connect(g); g.connect(c.destination); s.start();
+    } catch(e) {}
+}
+function playAlert() {
+    try {
+        const c = getAudioCtx();
+        [0,0.14,0.28].forEach((t,i) => {
+            const o = c.createOscillator(), g = c.createGain();
+            o.connect(g); g.connect(c.destination);
+            o.type = 'square'; o.frequency.value = i%2===0 ? 860 : 640;
+            g.gain.setValueAtTime(0.07, c.currentTime+t);
+            g.gain.setValueAtTime(0.001, c.currentTime+t+0.09);
+            o.start(c.currentTime+t); o.stop(c.currentTime+t+0.09);
+        });
+    } catch(e) {}
+}
+function playDamage() {
+    try {
+        const c = getAudioCtx();
+        const o = c.createOscillator(), g = c.createGain();
+        o.connect(g); g.connect(c.destination);
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(160, c.currentTime);
+        o.frequency.exponentialRampToValueAtTime(45, c.currentTime + 0.55);
+        g.gain.setValueAtTime(0.38, c.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.55);
+        o.start(); o.stop(c.currentTime + 0.55);
+    } catch(e) {}
+}
+function playEMP() {
+    try {
+        const c = getAudioCtx();
+        [0,0.1,0.2,0.4,0.7].forEach((t,i) => {
+            const o = c.createOscillator(), g = c.createGain();
+            o.connect(g); g.connect(c.destination);
+            o.type = i<3 ? 'square' : 'sine';
+            o.frequency.setValueAtTime(1200 - i*200, c.currentTime+t);
+            o.frequency.exponentialRampToValueAtTime(100, c.currentTime+t+0.15);
+            g.gain.setValueAtTime(0.15, c.currentTime+t);
+            g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+t+0.15);
+            o.start(c.currentTime+t); o.stop(c.currentTime+t+0.15);
+        });
+    } catch(e) {}
+}
+
+// ═══════════════════════════════════════
+// WORLD DATA
+// ═══════════════════════════════════════
+const TARGETS = {
+    north:  { coords:[32.8,35.0], hp:100 },
+    center: { coords:[32.0,34.7], hp:100 },
+    south:  { coords:[31.0,35.0], hp:100 }
+};
+const TARGET_NAMES = { north:'חיפה', center:'תל אביב', south:'דימונה' };
+const SITES = [
+    { id:'lebanon',    name:'לבנון',         coords:[33.9,35.5], color:'#ef4444', types:['UAV'] },
+    { id:'iran_tab',   name:'איראן (טבריז)', coords:[38.0,46.3], color:'#f59e0b', types:['ICBM','MIRV'] },
+    { id:'iran_shi',   name:'איראן (שיראז)', coords:[29.6,52.5], color:'#f59e0b', types:['ICBM','MIRV'] },
+    { id:'yemen',      name:'תימן',          coords:[15.3,44.2], color:'#fb923c', types:['MRBM'] },
+    { id:'iraq',       name:'עיראק',         coords:[33.3,43.5], color:'#ef4444', types:['UAV','MRBM'] }
+];
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let cachedXY = { targets:{}, sites:[] };
+let radarAngle = 0;
+
+function updateCacheXY() {
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight; map.invalidateSize();
+    let cx=0, cy=0, n=0;
+    for (let k in TARGETS) {
+        cachedXY.targets[k] = map.latLngToContainerPoint(TARGETS[k].coords);
+        cx += cachedXY.targets[k].x; cy += cachedXY.targets[k].y; n++;
+    }
+    cx/=n; cy/=n;
+    cachedXY.sites = SITES.map(s => {
+        const pt = map.latLngToContainerPoint(s.coords);
+        return { ...s, pt, angle: Math.atan2(cy-pt.y, cx-pt.x) };
+    });
+}
+window.addEventListener('resize', () => { setMapBounds(); updateCacheXY(); });
+
+function get3D(sXY, eXY, t, maxH) {
+    const x = sXY.x + (eXY.x-sXY.x)*t;
+    const y = sXY.y + (eXY.y-sXY.y)*t;
+    const alt = Math.sin(t*Math.PI) * maxH;
+    return { air:{x, y:y-alt}, alt };
+}
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let S = {
+    active:false, wave:1, money:1200, weapon:'IRON_DOME',
+    toSpawn:4, spawned:0, spawnDelay:2500, lastSpawn:0,
+    upgradePhase:false,
+    kills:0, hits:0, waveKills:0, waveHits:0,
+    empCharges:0, empActive:false, empEnd:0,
+    combo:0, lastKill:0,
+    batteries: {
+        IRON_DOME:{ max:10, cur:10, reloadRate:1500, lastRel:0, speed:0.04, radius:45, color:'#fcd34d' },
+        ARROW:    { max:4,  cur:4,  reloadRate:3500, lastRel:0, speed:0.016, radius:150, color:'#38bdf8' }
+    },
+    costs:{ domeCap:300, arrowCap:500, reload:400, heal:800, emp:600, speed:450, reloadMod:1.0 }
+};
+let E = { enemies:[], interceptors:[], explosions:[], particles:[], flashes:[] };
+
+// ═══════════════════════════════════════
+// ALERTS & UI FEEDBACK
+// ═══════════════════════════════════════
+function showAlert(txt, type='threat', ms=2600) {
+    const c = document.getElementById('alert-container');
+    const el = document.createElement('div');
+    el.className = `alert-pill ${type}`;
+    el.textContent = txt;
+    c.appendChild(el);
+    setTimeout(() => { el.style.transition='opacity 0.4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }, ms);
+}
+function addKill(txt) {
+    const f = document.getElementById('kill-feed');
+    const el = document.createElement('div');
+    el.className='kill-item'; el.textContent=txt;
+    f.insertBefore(el, f.firstChild);
+    setTimeout(()=>el.remove(), 3100);
+    if (f.children.length>6) f.lastChild.remove();
+}
+function showCombo(n, bonus) {
+    const el = document.getElementById('combo-display');
+    el.textContent = `🔥 ${n}× קומבו! +$${bonus}`;
+    el.style.display='block'; el.style.animation='none';
+    void el.offsetWidth;
+    el.style.animation='comboAnim 1.6s forwards';
+    setTimeout(()=>el.style.display='none', 1600);
+}
+function flashMoney() {
+    const el = document.getElementById('moneyEl');
+    el.classList.add('money-flash');
+    setTimeout(()=>el.classList.remove('money-flash'), 280);
+}
+
+// ═══════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════
+class Particle {
+    constructor(x,y,color,size,decay,vx,vy) {
+        this.x=x;this.y=y;this.color=color;this.size=size;this.life=1;this.decay=decay;
+        if(vx!==undefined){this.vx=vx;this.vy=vy;}
+        else{const a=Math.random()*Math.PI*2,sp=Math.random()*2.5+0.3;this.vx=Math.cos(a)*sp;this.vy=Math.sin(a)*sp;}
+        this.active=true;
+    }
+    update(){this.x+=this.vx;this.y+=this.vy;this.vy+=0.06;this.size*=0.96;this.life-=this.decay;if(this.life<=0)this.active=false;}
+    draw(c){c.globalAlpha=Math.max(0,this.life);c.fillStyle=this.color;c.beginPath();c.arc(this.x,this.y,Math.max(0.1,this.size),0,Math.PI*2);c.fill();c.globalAlpha=1;}
+}
+class TargetMarker {
+    constructor(x,y,color){this.x=x;this.y=y;this.color=color;this.life=1;this.r=22;this.active=true;}
+    update(){this.life-=0.024;this.r-=0.28;if(this.life<=0)this.active=false;}
+    draw(c){
+        c.globalAlpha=this.life;c.strokeStyle=this.color;c.lineWidth=1.5;
+        c.beginPath();c.moveTo(this.x-this.r*0.55,this.y);c.lineTo(this.x+this.r*0.55,this.y);
+        c.moveTo(this.x,this.y-this.r*0.55);c.lineTo(this.x,this.y+this.r*0.55);c.stroke();
+        c.beginPath();c.arc(this.x,this.y,this.r,0,Math.PI*2);c.stroke();
+        c.beginPath();c.arc(this.x,this.y,this.r*0.35,0,Math.PI*2);c.stroke();
+        c.globalAlpha=1;
+    }
+}
+class MuzzleFlash {
+    constructor(x,y){this.x=x;this.y=y;this.life=1;this.active=true;}
+    update(){this.life-=0.065;if(this.life<=0)this.active=false;}
+    draw(c){
+        const r=22*this.life+4;
+        const g=c.createRadialGradient(this.x,this.y,0,this.x,this.y,r);
+        g.addColorStop(0,`rgba(255,255,255,${this.life})`);
+        g.addColorStop(0.35,`rgba(239,68,68,${this.life*0.85})`);
+        g.addColorStop(1,'rgba(0,0,0,0)');
+        c.fillStyle=g;c.beginPath();c.arc(this.x,this.y,r,0,Math.PI*2);c.fill();
+    }
+}
+
+// ═══════════════════════════════════════
+// ENEMY
+// ═══════════════════════════════════════
+class Enemy {
+    constructor(site, targetKey) {
+        this.site=site; this.tKey=targetKey;
+        this.sXY=site.pt; this.eXY=cachedXY.targets[targetKey];
+        const avail=site.types.filter(t=>t!=='MIRV'||S.wave>=4);
+        this.type=avail[Math.floor(Math.random()*avail.length)];
+        this.t=0; this.active=true; this.trail=[]; this.flash=0; this.stunned=false;
+        if(this.type==='UAV'){this.spd=0.0015*(1+S.wave*0.05);this.maxH=0;this.sz=3;this.zz=Math.random()*Math.PI*2;}
+        else if(this.type==='MRBM'){this.spd=0.002*(1+S.wave*0.05);this.maxH=130;this.sz=3.5;}
+        else{this.spd=0.001*(1+S.wave*0.05);this.maxH=230;this.sz=4;this.split=false;}
+        E.flashes.push(new MuzzleFlash(this.sXY.x,this.sXY.y));
+        // Alert
+        const lbl=this.type==='UAV'?'כטב"מ':this.type==='MRBM'?'טיל MRBM':this.type==='MIRV'?'MIRV':'טיל ICBM';
+        showAlert(`⚠ ${lbl} מ${site.name} → ${TARGET_NAMES[targetKey]}`, 'threat', 3000);
+        playAlert();
+    }
+    update() {
+        if(S.empActive && Date.now()<S.empEnd){this.stunned=true;return;}
+        this.stunned=false;
+        this.t += this.maxH>0&&this.t>0.5 ? this.spd*1.5 : this.spd;
+        // MIRV split
+        if(this.type==='MIRV'&&this.t>0.6&&!this.split){
+            this.active=false; this.split=true;
+            const p=get3D(this.sXY,this.eXY,this.t,this.maxH).air;
+            E.explosions.push(new Explosion(p.x,p.y,32,'#ffffff',false));
+            for(let i=0;i<3;i++){
+                const tk=Object.keys(TARGETS)[Math.floor(Math.random()*3)];
+                const w=new Enemy({pt:p,color:'#facc15',types:['WARHEAD'],name:'MIRV'},tk);
+                w.type='WARHEAD';w.maxH=45;w.spd=0.005;w.sz=2.5;
+                E.enemies.push(w);
+            }
+            return;
+        }
+        if(this.t>=1){
+            this.active=false;
+            const dmg=this.type==='UAV'?10:25;
+            applyDamage(this.tKey,dmg);
+            E.explosions.push(new Explosion(this.eXY.x,this.eXY.y,this.sz*15,'#ef4444',true));
+            S.waveHits++;S.hits++;document.getElementById('hits-ui').textContent=S.hits;
+        }
+        if(this.active&&this.maxH>0&&Math.random()>0.45)
+            E.particles.push(new Particle(this.airPos().x,this.airPos().y,this.site.color||'#f59e0b',this.sz*0.7,0.12));
+    }
+    draw(c) {
+        if(this.stunned){
+            const p=this.airPos();
+            c.globalAlpha=0.55+0.45*Math.sin(Date.now()*0.012);
+            c.strokeStyle='#a855f7';c.lineWidth=2.5;
+            c.beginPath();c.arc(p.x,p.y,14,0,Math.PI*2);c.stroke();
+            // EMP sparks
+            c.globalAlpha=0.8;
+            for(let i=0;i<3;i++){
+                const a=Date.now()*0.008+i*2.1;
+                const sr=16+Math.sin(Date.now()*0.02+i)*3;
+                c.strokeStyle='#c084fc';c.lineWidth=1;
+                c.beginPath();c.moveTo(p.x+Math.cos(a)*sr*0.6,p.y+Math.sin(a)*sr*0.6);
+                c.lineTo(p.x+Math.cos(a)*sr,p.y+Math.sin(a)*sr);c.stroke();
+            }
+            c.globalAlpha=1;
+        }
+        // Trajectory prediction
+        if(this.maxH>0){
+            c.beginPath();c.setLineDash([3,5]);
+            for(let i=0;i<=20;i++){const p=get3D(this.sXY,this.eXY,i/20,this.maxH).air;i===0?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y);}
+            c.strokeStyle=`rgba(239,68,68,${0.07+S.wave*0.013})`;c.lineWidth=1;c.stroke();c.setLineDash([]);
+        } else {
+            c.beginPath();c.moveTo(this.sXY.x,this.sXY.y);c.lineTo(this.eXY.x,this.eXY.y);
+            c.strokeStyle='rgba(239,68,68,0.13)';c.lineWidth=1;c.setLineDash([4,5]);c.stroke();c.setLineDash([]);
+        }
+        const pos=get3D(this.sXY,this.eXY,this.t,this.maxH);
+        if(this.type==='UAV'){
+            this.zz+=0.1;
+            const px=pos.air.x+Math.sin(this.zz)*6, py=pos.air.y+Math.cos(this.zz)*6;
+            this.flash+=0.2;
+            c.fillStyle=Math.sin(this.flash)>0?'#ff2222':'#334155';
+            c.beginPath();c.arc(px,py,this.sz*1.6,0,Math.PI*2);c.fill();
+            c.strokeStyle='rgba(255,80,80,0.7)';c.lineWidth=1.5;
+            c.beginPath();c.moveTo(px-7,py);c.lineTo(px+7,py);c.moveTo(px,py-4);c.lineTo(px,py+4);c.stroke();
+        } else {
+            this.trail.push({x:pos.air.x,y:pos.air.y});if(this.trail.length>25)this.trail.shift();
+            if(this.trail.length>1){
+                const g=c.createLinearGradient(this.trail[0].x,this.trail[0].y,pos.air.x,pos.air.y);
+                g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(0.55,this.site.color||'#f59e0b');g.addColorStop(1,'#ffffff');
+                c.beginPath();c.moveTo(this.trail[0].x,this.trail[0].y);
+                for(let i=1;i<this.trail.length;i++)c.lineTo(this.trail[i].x,this.trail[i].y);
+                c.strokeStyle=g;c.lineWidth=this.sz*1.4;c.lineCap='round';c.stroke();
+            }
+            const sc=1+(pos.alt/160);
+            c.shadowBlur=10;c.shadowColor='#fff';
+            c.fillStyle='#fff';c.beginPath();c.arc(pos.air.x,pos.air.y,this.sz*sc,0,Math.PI*2);c.fill();
+            c.shadowBlur=0;
+        }
+    }
+    airPos(){
+        const p=get3D(this.sXY,this.eXY,this.t,this.maxH).air;
+        if(this.type==='UAV')return{x:p.x+Math.sin(this.zz)*6,y:p.y+Math.cos(this.zz)*6};
+        return p;
+    }
+}
+
+// ═══════════════════════════════════════
+// INTERCEPTOR
+// ═══════════════════════════════════════
+class Interceptor {
+    constructor(type, tx, ty) {
+        this.wpn=S.batteries[type];this.type=type;
+        let best=null,bd=Infinity;
+        for(let k in cachedXY.targets){const d=Math.hypot(cachedXY.targets[k].x-tx,cachedXY.targets[k].y-ty);if(d<bd){bd=d;best=cachedXY.targets[k];}}
+        this.sXY=best;this.eXY={x:tx,y:ty};this.t=0;this.active=true;this.trail=[];
+        E.flashes.push(new MuzzleFlash(best.x,best.y));
+        playLaunch(type);
+    }
+    update(){this.t+=this.wpn.speed;if(this.t>=1){this.active=false;E.explosions.push(new Explosion(this.eXY.x,this.eXY.y,this.wpn.radius,this.wpn.color,false));}}
+    draw(c){
+        const pos=get3D(this.sXY,this.eXY,this.t,18);
+        this.trail.push({x:pos.air.x,y:pos.air.y});if(this.trail.length>12)this.trail.shift();
+        if(this.trail.length>1){
+            c.beginPath();c.moveTo(this.trail[0].x,this.trail[0].y);
+            for(let i=1;i<this.trail.length;i++)c.lineTo(this.trail[i].x,this.trail[i].y);
+            c.strokeStyle=this.wpn.color;c.lineWidth=2;c.lineCap='round';c.stroke();
+        }
+        c.shadowBlur=12;c.shadowColor=this.wpn.color;
+        c.fillStyle='#fff';c.beginPath();c.arc(pos.air.x,pos.air.y,3,0,Math.PI*2);c.fill();
+        c.shadowBlur=0;
+    }
+}
+
+// ═══════════════════════════════════════
+// EXPLOSION
+// ═══════════════════════════════════════
+class Explosion {
+    constructor(x,y,maxR,color,isGround,isEMP=false){
+        this.x=x;this.y=y;this.maxR=maxR;this.r=0;this.color=color;this.isG=isGround;this.isEMP=isEMP;this.life=1;this.active=true;
+        this.shocks=[{r:0,l:1}];
+        const n=isGround?28:13;
+        for(let i=0;i<n;i++){
+            const a=Math.random()*Math.PI*2,sp=(Math.random()*3+0.8)*(isGround?1.8:1);
+            E.particles.push(new Particle(x,y,color,Math.random()*4+1.5,0.035,Math.cos(a)*sp,Math.sin(a)*sp-(isGround?1.5:0)));
+        }
+        if(!isEMP) playExplosion(isGround||maxR>100);
+        else playEMP();
+    }
+    update(){
+        this.r+=(this.maxR-this.r)*0.2;this.life-=0.028;
+        if(this.life<=0){this.active=false;return;}
+        this.shocks=this.shocks.map(s=>({r:s.r+this.maxR*0.09,l:s.l-0.045})).filter(s=>s.l>0);
+        if(this.life>0.65)this.shocks.push({r:0,l:1});
+        if(!this.isG&&!this.isEMP&&this.life>0.25){
+            for(const m of E.enemies){
+                if(!m.active)continue;
+                const p=m.airPos();
+                if(Math.hypot(p.x-this.x,p.y-this.y)<this.r){
+                    m.active=false;
+                    const bonus=m.type==='UAV'?60:150;
+                    addMoneyFn(bonus);
+                    S.kills++;S.waveKills++;
+                    document.getElementById('kills-ui').textContent=S.kills;
+                    // Combo
+                    const now=Date.now();
+                    if(now-S.lastKill<3000)S.combo++;else S.combo=1;
+                    S.lastKill=now;
+                    if(S.combo>=3){const cb=S.combo*55;addMoneyFn(cb);showCombo(S.combo,cb);}
+                    addKill(`✓ ${m.type} +$${bonus}`);
+                    E.explosions.push(new Explosion(p.x,p.y,28,'#fff',false));
+                }
+            }
+        }
+        // EMP kills stunned enemies (reduced dmg)
+        if(this.isEMP){
+            for(const m of E.enemies){
+                if(!m.active||!m.stunned)continue;
+                const p=m.airPos();
+                if(Math.hypot(p.x-this.x,p.y-this.y)<this.r*0.4){
+                    m.active=false;
+                    const bonus=Math.floor((m.type==='UAV'?60:150)*0.5);
+                    addMoneyFn(bonus);
+                    S.kills++;S.waveKills++;
+                    document.getElementById('kills-ui').textContent=S.kills;
+                    addKill(`⚡ EMP ${m.type} +$${bonus}`);
+                }
+            }
+        }
+    }
+    draw(c){
+        c.globalAlpha=Math.max(0,this.life);
+        // Core fill
+        const cg=c.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*0.7);
+        const col=this.isEMP?'#c084fc':this.color;
+        cg.addColorStop(0,'rgba(255,255,255,'+this.life*0.9+')');
+        cg.addColorStop(0.4,col.replace('#','rgba(').replace(/([0-9a-fA-F]{2})/g,h=>parseInt(h,16)+',').slice(0,-1)+this.life*0.7+')');
+        cg.addColorStop(1,'rgba(0,0,0,0)');
+        c.fillStyle=cg;c.beginPath();c.arc(this.x,this.y,this.r*0.7,0,Math.PI*2);c.fill();
+        // Outer ring
+        c.strokeStyle=this.isEMP?'#a855f7':(this.isG?'#ef4444':'#fff');
+        c.lineWidth=3*this.life;c.beginPath();c.arc(this.x,this.y,this.r,0,Math.PI*2);c.stroke();
+        // Shockwaves
+        for(const sw of this.shocks){
+            c.globalAlpha=Math.max(0,sw.l*0.35*this.life);
+            c.strokeStyle=col;c.lineWidth=1.5;
+            c.beginPath();c.arc(this.x,this.y,sw.r,0,Math.PI*2);c.stroke();
+        }
+        // Ground glow
+        if(this.isG){
+            c.globalAlpha=Math.max(0,this.life*0.5);
+            const gg=c.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*3.5);
+            gg.addColorStop(0,`rgba(239,68,68,${this.life*0.32})`);
+            gg.addColorStop(0.5,`rgba(245,158,11,${this.life*0.1})`);
+            gg.addColorStop(1,'rgba(0,0,0,0)');
+            c.fillStyle=gg;c.beginPath();c.arc(this.x,this.y,this.r*3.5,0,Math.PI*2);c.fill();
+        }
+        c.globalAlpha=1;
+    }
+}
+
+// ═══════════════════════════════════════
+// DRAW HELPERS
+// ═══════════════════════════════════════
+function drawRadarSweep(c) {
+    radarAngle += 0.006;
+    const cx=canvas.width*0.5, cy=canvas.height*0.5;
+    const len=Math.max(canvas.width,canvas.height)*1.2;
+    c.save();c.translate(cx,cy);c.rotate(radarAngle);
+    const g=c.createLinearGradient(0,0,len,0);
+    g.addColorStop(0,'rgba(56,189,248,0.1)');
+    g.addColorStop(0.25,'rgba(56,189,248,0.04)');
+    g.addColorStop(1,'rgba(56,189,248,0)');
+    c.beginPath();c.moveTo(0,0);c.arc(0,0,len,-0.28,0);c.closePath();
+    c.fillStyle=g;c.fill();c.restore();
+}
+
+function drawEnvironment(c) {
+    const t=Date.now();
+    // Site markers
+    cachedXY.sites.forEach(site=>{
+        c.save();c.translate(site.pt.x,site.pt.y);c.rotate(site.angle);
+        c.fillStyle='#0f172a';c.fillRect(-5,-2,10,4);
+        c.fillStyle=site.color;c.fillRect(-6,-1,7,2);c.restore();
+        c.fillStyle=site.color+'aa';c.font='bold 9px "Share Tech Mono",monospace';
+        c.textAlign='center';c.fillText(site.name,site.pt.x,site.pt.y-11);
+    });
+    // City markers with pulse
+    for(let k in cachedXY.targets){
+        if(TARGETS[k].hp<=0)continue;
+        const pt=cachedXY.targets[k], hp=TARGETS[k].hp;
+        const col=hp>50?'#10b981':hp>25?'#f59e0b':'#ef4444';
+        const pulse=(Math.sin(t*0.003+Object.keys(TARGETS).indexOf(k))+1)/2;
+        c.globalAlpha=0.25+pulse*0.3;
+        c.strokeStyle=col;c.lineWidth=1;
+        c.beginPath();c.arc(pt.x,pt.y,9+pulse*5,0,Math.PI*2);c.stroke();
+        c.globalAlpha=1;
+        c.fillStyle=col+'55';c.beginPath();c.arc(pt.x,pt.y,6,0,Math.PI*2);c.fill();
+        c.strokeStyle=col;c.lineWidth=1.5;c.beginPath();c.arc(pt.x,pt.y,6,0,Math.PI*2);c.stroke();
+    }
+}
+
+// ═══════════════════════════════════════
+// BATTERY UI
+// ═══════════════════════════════════════
+function renderBatteries(){
+    for(const type of ['IRON_DOME','ARROW']){
+        const bat=S.batteries[type], id=type==='IRON_DOME'?'dome':'arrow';
+        document.getElementById(`txt-${id}-count`).textContent=`${Math.floor(bat.cur)}/${bat.max}`;
+        let h='';
+        for(let i=0;i<bat.max;i++){
+            if(i<Math.floor(bat.cur))h+=`<div class="battery-cell cell-ready"></div>`;
+            else if(i===Math.floor(bat.cur)&&bat.cur<bat.max)h+=`<div class="battery-cell cell-reloading"></div>`;
+            else h+=`<div class="battery-cell cell-empty"></div>`;
+        }
+        document.getElementById(`bat-${id}`).innerHTML=h;
+    }
+}
+function rechargeBatteries(now){
+    let upd=false;
+    for(const type in S.batteries){
+        const bat=S.batteries[type];
+        if(bat.cur<bat.max){
+            if(now-bat.lastRel>bat.reloadRate*S.costs.reloadMod){bat.cur++;bat.lastRel=now;upd=true;}
+        } else bat.lastRel=now;
+    }
+    if(upd)renderBatteries();
+}
+
+// ═══════════════════════════════════════
+// HUD + UPGRADE MODAL UPDATE
+// ═══════════════════════════════════════
+function updateHud(){
+    for(const k in TARGETS){
+        const hp=TARGETS[k].hp;
+        const bar=document.getElementById(`hp-${k}`);
+        const txt=document.getElementById(`hp-${k}-txt`);
+        bar.style.width=hp+'%';
+        bar.style.backgroundColor=hp>50?'#10b981':hp>25?'#f59e0b':'#ef4444';
+        if(txt)txt.textContent=Math.round(hp)+'%';
+    }
+    document.getElementById('moneyEl').textContent=S.money;
+    document.getElementById('waveUi').textContent=S.wave;
+    document.getElementById('modal-money').textContent=S.money;
+    // Upgrade buttons
+    const upgs=[['dome-cap',S.costs.domeCap],['arrow-cap',S.costs.arrowCap],['reload',S.costs.reload],['heal',S.costs.heal],['emp',S.costs.emp],['speed',S.costs.speed]];
+    upgs.forEach(([id,cost])=>{
+        const btn=document.getElementById(`upg-${id}`), costEl=document.getElementById(`cost-${id}`);
+        if(btn)btn.disabled=S.money<cost;
+        if(costEl)costEl.textContent=cost;
+    });
+}
+
+function applyDamage(key, amt){
+    TARGETS[key].hp=Math.max(0,TARGETS[key].hp-amt);
+    updateHud(); playDamage();
+    showAlert(`💥 ${TARGET_NAMES[key]} נפגעה! −${amt}%`,'threat',2200);
+    canvas.style.transform=`translate(${(Math.random()-.5)*18}px,${(Math.random()-.5)*18}px)`;
+    setTimeout(()=>canvas.style.transform='',65);
+    let all=true;for(const k in TARGETS)if(TARGETS[k].hp>0)all=false;
+    if(all){S.active=false;document.getElementById('finalWaveNum').textContent=S.wave;document.getElementById('gameOverScreen').classList.remove('hidden');}
+}
+function addMoneyFn(amt){S.money+=amt;updateHud();flashMoney();}
+
+// ═══════════════════════════════════════
+// WEAPON SELECT
+// ═══════════════════════════════════════
+function setWeapon(type){
+    S.weapon=type;
+    document.getElementById('btn-dome').className=`weapon-btn flex flex-col items-center justify-center py-2.5${type==='IRON_DOME'?' active iron-dome':''}`;
+    document.getElementById('btn-arrow').className=`weapon-btn flex flex-col items-center justify-center py-2.5${type==='ARROW'?' active arrow':''}`;
+}
+
+// ═══════════════════════════════════════
+// EMP
+// ═══════════════════════════════════════
+function activateEMP(){
+    if(S.empCharges<=0||S.empActive||S.upgradePhase)return;
+    S.empCharges--;S.empActive=true;S.empEnd=Date.now()+3500;
+    showAlert('⚡ EMP פורס — כל המטרות מושבתות ל-3.5 שניות','warning',4000);
+    E.explosions.push(new Explosion(canvas.width/2,canvas.height/2,Math.max(canvas.width,canvas.height)*0.6,'#a855f7',false,true));
+    document.getElementById('emp-count').textContent=`${S.empCharges}/1`;
+    if(S.empCharges<=0)document.getElementById('emp-actual-btn').disabled=true;
+}
+
+// ═══════════════════════════════════════
+// WAVE PHASE
+// ═══════════════════════════════════════
+function startUpgradePhase(){
+    S.upgradePhase=true;
+    const bonus=120+S.wave*55; addMoneyFn(bonus);
+    showAlert(`✓ גל ${S.wave} הסתיים! +$${bonus} תגמול`,'intercept',3500);
+    document.getElementById('modal-wave-num').textContent=S.wave;
+    document.getElementById('next-wave-num').textContent=S.wave+1>10?'—':S.wave+1;
+    document.getElementById('wave-kills').textContent=S.waveKills;
+    document.getElementById('wave-hits').textContent=S.waveHits;
+    const tot=S.waveKills+S.waveHits;
+    document.getElementById('wave-accuracy').textContent=tot>0?Math.round(S.waveKills/tot*100)+'%':'—';
+    updateHud();
+    document.getElementById('modal-bg').classList.add('open');
+    document.getElementById('upgrade-modal').classList.add('open');
+}
+
+function nextWave(){
+    if(S.wave>=10){
+        S.active=false;
+        document.getElementById('upgrade-modal').classList.remove('open');
+        document.getElementById('modal-bg').classList.remove('open');
+        document.getElementById('victoryScreen').classList.remove('hidden');
+        return;
+    }
+    S.wave++;S.toSpawn+=3;S.spawnDelay=Math.max(800,S.spawnDelay-150);
+    S.spawned=0;S.waveKills=0;S.waveHits=0;S.empActive=false;
+    if(S.empCharges>0){
+        document.getElementById('emp-btn').classList.remove('hidden');
+        document.getElementById('emp-actual-btn').disabled=false;
+        document.getElementById('emp-count').textContent=`${S.empCharges}/1`;
+    }
+    S.upgradePhase=false;
+    S.lastSpawn=Date.now()+1600;
+    document.getElementById('upgrade-modal').classList.remove('open');
+    document.getElementById('modal-bg').classList.remove('open');
+    // Wave banner
+    document.getElementById('wave-banner-text').textContent=`גל ${S.wave}`;
+    const wb=document.getElementById('wave-banner');
+    wb.classList.add('show');setTimeout(()=>wb.classList.remove('show'),2200);
+    updateHud();
+}
+
+function buy(type){
+    const map2={DOME_CAP:S.costs.domeCap,ARROW_CAP:S.costs.arrowCap,RELOAD:S.costs.reload,HEAL:S.costs.heal,EMP:S.costs.emp,SPEED:S.costs.speed};
+    const cost=map2[type];
+    if(!cost||S.money<cost)return;
+    S.money-=cost;
+    switch(type){
+        case'DOME_CAP':S.batteries.IRON_DOME.max+=2;S.batteries.IRON_DOME.cur+=2;S.costs.domeCap=Math.floor(cost*1.5);break;
+        case'ARROW_CAP':S.batteries.ARROW.max++;S.batteries.ARROW.cur++;S.costs.arrowCap=Math.floor(cost*1.5);break;
+        case'RELOAD':S.costs.reloadMod*=0.8;S.costs.reload=Math.floor(cost*1.5);break;
+        case'HEAL':for(const k in TARGETS)TARGETS[k].hp=Math.min(100,TARGETS[k].hp+30);S.costs.heal=Math.floor(cost*1.3);break;
+        case'EMP':S.empCharges=1;document.getElementById('emp-btn').classList.remove('hidden');document.getElementById('emp-actual-btn').disabled=false;document.getElementById('emp-count').textContent='1/1';S.costs.emp=Math.floor(cost*1.5);break;
+        case'SPEED':S.batteries.IRON_DOME.speed*=1.2;S.batteries.ARROW.speed*=1.15;S.costs.speed=Math.floor(cost*1.5);break;
+    }
+    updateHud();renderBatteries();
+}
+
+// ═══════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════
+canvas.addEventListener('pointerdown',e=>{
+    if(!S.active||S.upgradePhase)return;
+    const wpn=S.batteries[S.weapon];
+    if(wpn.cur>=1){
+        wpn.cur--;
+        E.interceptors.push(new Interceptor(S.weapon,e.clientX,e.clientY));
+        E.particles.push(new TargetMarker(e.clientX,e.clientY,wpn.color));
+        renderBatteries();
+    } else {
+        // No ammo feedback
+        ctx.save();ctx.strokeStyle='#ef4444';ctx.lineWidth=2.5;ctx.setLineDash([5,5]);
+        ctx.beginPath();ctx.arc(e.clientX,e.clientY,22,0,Math.PI*2);ctx.stroke();
+        ctx.restore();
+        showAlert('⚠ מחסנית ריקה — ממתין לטעינה...','warning',1800);
+    }
+});
+
+// ═══════════════════════════════════════
+// GAME LOOP
+// ═══════════════════════════════════════
+function startGame(){
+    document.getElementById('startScreen').classList.add('hidden');
+    updateCacheXY();renderBatteries();updateHud();
+    S.active=true;S.lastSpawn=Date.now()+1000;
+    requestAnimationFrame(gameLoop);
+}
+
+function gameLoop(){
+    if(!S.active)return;
+    const now=Date.now();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    rechargeBatteries(now);
+
+    // EMP timeout
+    if(S.empActive&&now>S.empEnd)S.empActive=false;
+
+    if(!S.upgradePhase){
+        if(now-S.lastSpawn>S.spawnDelay&&S.spawned<S.toSpawn){
+            const alive=Object.keys(TARGETS).filter(k=>TARGETS[k].hp>0);
+            if(alive.length){
+                const site=cachedXY.sites[Math.floor(Math.random()*cachedXY.sites.length)];
+                E.enemies.push(new Enemy(site,alive[Math.floor(Math.random()*alive.length)]));
+                S.spawned++;
+            }
+            S.lastSpawn=now+(Math.random()*500);
+        }
+        if(S.spawned>=S.toSpawn&&E.enemies.length===0&&E.explosions.length===0)
+            startUpgradePhase();
+    }
+
+    drawRadarSweep(ctx);
+    drawEnvironment(ctx);
+
+    for(const grp of['flashes','particles','enemies','interceptors','explosions']){
+        E[grp]=E[grp].filter(e=>{if(e.update)e.update();return e.active!==false;});
+        E[grp].forEach(e=>e.draw(ctx));
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+</script>
+</body>
+</html>
