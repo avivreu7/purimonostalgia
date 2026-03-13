@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>מערכת שו"ב - ניהול מערכה אסטרטגי</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #0f172a; overflow: hidden; font-family: system-ui, sans-serif; touch-action: none; user-select: none; }
+        
+        /* מפת לוויין בהירה יותר */
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; filter: brightness(0.95) saturate(1.1); }
+        
+        /* שכבת הצללה עדינה מאוד רק כדי שהממשק יבלוט */
+        .tactical-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; background: rgba(0, 0, 0, 0.2); pointer-events: none; }
+
+        #gameCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: auto; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        .interactive { pointer-events: auto; }
+        .glass { background: linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.7) 100%); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(56,189,248,0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .glass-bottom { background: linear-gradient(0deg, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.7) 100%); backdrop-filter: blur(10px); border-top: 1px solid rgba(56,189,248,0.3); }
+        
+        /* בחירת נשק */
+        .weapon-selector { display: flex; gap: 10px; margin-bottom: 10px; }
+        .weapon-btn { flex: 1; padding: 10px; border-radius: 8px; background: rgba(30,41,59,0.8); border: 2px solid transparent; transition: all 0.2s; opacity: 0.6; cursor: pointer; }
+        .weapon-btn.active { opacity: 1; transform: scale(1.05); }
+        .weapon-btn.active.iron-dome { border-color: #fcd34d; background: rgba(245,158,11,0.25); box-shadow: 0 0 15px rgba(245,158,11,0.3) inset; }
+        .weapon-btn.active.arrow { border-color: #38bdf8; background: rgba(56,189,248,0.25); box-shadow: 0 0 15px rgba(56,189,248,0.3) inset; }
+
+        /* סוללות */
+        .battery-container { display: flex; gap: 3px; height: 12px; width: 100%; background: rgba(0,0,0,0.6); border-radius: 3px; padding: 2px; }
+        .battery-cell { flex: 1; border-radius: 2px; transition: background-color 0.2s; }
+        .cell-ready { background-color: #10b981; box-shadow: 0 0 5px #10b981; }
+        .cell-empty { background-color: #1e293b; }
+        
+        /* חלון שדרוגים מרוכז (Center Modal) */
+        #upgrade-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 60; width: 90%; max-width: 500px; }
+        #upgrade-modal.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+        .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 55; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+
+        .btn-upgrade { background: rgba(30,41,59,0.9); border: 1px solid #38bdf8; transition: all 0.15s; }
+        .btn-upgrade:active { transform: scale(0.95); background: #0284c7; }
+        .btn-upgrade:disabled { opacity: 0.4; border-color: #475569; filter: grayscale(1); cursor: not-allowed; }
+
+        .overlay { position: absolute; inset: 0; z-index: 100; background: radial-gradient(circle, rgba(15,23,42,0.9) 0%, rgba(2,6,23,1) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        .hp-bar-wrap { width: 100%; height: 8px; background: rgba(0,0,0,0.8); border-radius: 4px; overflow: hidden; margin-top: 4px; border: 1px solid rgba(255,255,255,0.1); }
+        .hp-bar-fill { height: 100%; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+    <div class="tactical-overlay"></div>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        <!-- HUD עליון -->
+        <div class="glass p-3 flex justify-between items-start w-full gap-2">
+            <div class="flex gap-4 md:gap-8 w-2/3 md:w-1/2">
+                <div class="flex flex-col flex-1 min-w-[60px]">
+                    <span class="text-[10px] md:text-xs text-sky-400 font-bold tracking-wider">חיפה</span>
+                    <div class="hp-bar-wrap"><div id="hp-north" class="hp-bar-fill bg-emerald-500" style="width: 100%;"></div></div>
+                </div>
+                <div class="flex flex-col flex-1 min-w-[60px]">
+                    <span class="text-[10px] md:text-xs text-sky-400 font-bold tracking-wider">ת"א</span>
+                    <div class="hp-bar-wrap"><div id="hp-center" class="hp-bar-fill bg-emerald-500" style="width: 100%;"></div></div>
+                </div>
+                <div class="flex flex-col flex-1 min-w-[60px]">
+                    <span class="text-[10px] md:text-xs text-sky-400 font-bold tracking-wider">דימונה</span>
+                    <div class="hp-bar-wrap"><div id="hp-south" class="hp-bar-fill bg-emerald-500" style="width: 100%;"></div></div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-end shrink-0 pl-1 md:pl-4">
+                <div class="text-xs text-slate-300 font-bold tracking-widest uppercase">גל <span id="waveUi" class="text-white text-base ml-1">1</span>/10</div>
+                <div class="text-xl md:text-2xl font-mono font-black text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">$<span id="moneyUi">1000</span></div>
+            </div>
+        </div>
+
+        <!-- HUD תחתון - נשק וסוללות -->
+        <div class="glass-bottom p-3 w-full flex flex-col mt-auto shadow-2xl interactive">
+            <div class="weapon-selector">
+                <button onclick="setWeapon('IRON_DOME')" id="btn-dome" class="weapon-btn active iron-dome flex flex-col items-center justify-center">
+                    <span class="text-sm font-bold text-amber-400 mb-1">כיפת ברזל</span>
+                    <span class="text-[10px] text-slate-300">מהיר / פיצוץ קטן</span>
+                </button>
+                <button onclick="setWeapon('ARROW')" id="btn-arrow" class="weapon-btn arrow flex flex-col items-center justify-center">
+                    <span class="text-sm font-bold text-sky-400 mb-1">חץ 3</span>
+                    <span class="text-[10px] text-slate-300">איטי / הדף עצום</span>
+                </button>
+            </div>
+
+            <div class="flex justify-between items-center px-1 mb-1 mt-1">
+                <span class="text-[10px] text-sky-400 font-bold uppercase tracking-wider">מלאי מיירטים אוטומטי</span>
+            </div>
+            
+            <div class="flex gap-4 w-full">
+                <div class="flex flex-col flex-1 gap-1">
+                    <div class="flex justify-between text-[10px]"><span class="text-amber-400">סוללות ברזל</span><span id="txt-dome-count" class="text-white font-mono">10/10</span></div>
+                    <div id="bat-dome" class="battery-container"></div>
+                </div>
+                <div class="flex flex-col flex-1 gap-1">
+                    <div class="flex justify-between text-[10px]"><span class="text-sky-400">סוללות חץ</span><span id="txt-arrow-count" class="text-white font-mono">4/4</span></div>
+                    <div id="bat-arrow" class="battery-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- רקע חלון שדרוגים -->
+    <div id="modal-bg" class="modal-backdrop"></div>
+
+    <!-- חלון שדרוגים מרוכז (Pause Phase) -->
+    <div id="upgrade-modal" class="interactive bg-slate-900/95 backdrop-blur-xl border border-sky-500/50 rounded-2xl p-5 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+        <div class="text-center mb-6 border-b border-slate-700 pb-4">
+            <h2 class="text-2xl font-black text-white mb-1">סוף גל <span id="modal-wave-num"></span></h2>
+            <p class="text-sky-400 text-sm">המרחב האווירי נקי. שדרג את המערכות שלך.</p>
+            <div class="text-xl font-mono font-bold text-amber-400 mt-2 bg-slate-800 inline-block px-4 py-1 rounded-full">תקציב: $<span id="modal-money"></span></div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <button onclick="buy('DOME_CAP')" id="upg-dome-cap" class="btn-upgrade p-3 rounded-xl flex flex-col items-center">
+                <span class="text-[11px] text-amber-300 font-bold">+2 כיפת ברזל למלאי</span>
+                <span class="text-sm font-mono text-white mt-1">$<span id="cost-dome-cap">300</span></span>
+            </button>
+            <button onclick="buy('ARROW_CAP')" id="upg-arrow-cap" class="btn-upgrade p-3 rounded-xl flex flex-col items-center">
+                <span class="text-[11px] text-sky-300 font-bold">+1 חץ 3 למלאי</span>
+                <span class="text-sm font-mono text-white mt-1">$<span id="cost-arrow-cap">500</span></span>
+            </button>
+            <button onclick="buy('RELOAD')" id="upg-reload" class="btn-upgrade p-3 rounded-xl flex flex-col items-center">
+                <span class="text-[11px] text-emerald-300 font-bold">טעינה מהירה (20%+)</span>
+                <span class="text-sm font-mono text-white mt-1">$<span id="cost-reload">400</span></span>
+            </button>
+            <button onclick="buy('HEAL')" id="upg-heal" class="btn-upgrade p-3 rounded-xl flex flex-col items-center">
+                <span class="text-[11px] text-white font-bold">שיקום ערי העורף</span>
+                <span class="text-sm font-mono text-white mt-1">$<span id="cost-heal">800</span></span>
+            </button>
+        </div>
+
+        <button onclick="nextWave()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-lg rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.5)] transition active:scale-95">
+            התחל גל הבא
+        </button>
+    </div>
+
+    <!-- מסכי פתיחה וסיום -->
+    <div id="startScreen" class="overlay interactive">
+        <h1 class="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-sky-300 to-blue-700 mb-6 drop-shadow-[0_0_20px_rgba(56,189,248,0.5)]">ניהול מערכה</h1>
+        <div class="max-w-md w-full text-right text-slate-200 text-sm mb-10 bg-slate-900/80 p-6 rounded-2xl border border-sky-900/50 shadow-2xl">
+            <h3 class="font-bold text-sky-400 mb-4 border-b border-slate-700 pb-2 text-lg">תורת ההפעלה (Lead Target)</h3>
+            <ul class="space-y-3">
+                <li><strong class="text-white">יירוט חזוי:</strong> לחץ על <span class="text-red-400">נקודה עתידית במסלול המקווקו</span>. המיירט יטוס לשם ויתפוצץ.</li>
+                <li><strong class="text-amber-400">כיפת ברזל (צהוב):</strong> מיועד למטרות קרובות ומהירות כמו כטב"מים מלבנון.</li>
+                <li><strong class="text-sky-400">חץ 3 (תכלת):</strong> מיועד לטילים בליסטיים רחוקים מאיראן ותימן.</li>
+                <li class="mt-4 pt-2 border-t border-slate-700 text-emerald-400 font-bold">המשחק יעצור אוטומטית בין גלים לשדרוגים!</li>
+            </ul>
+        </div>
+        <button onclick="startGame()" class="px-10 py-4 bg-blue-600 text-white font-black rounded-full text-xl shadow-[0_0_20px_rgba(37,99,235,0.6)] active:scale-95 transition">התחל משמרת</button>
+    </div>
+
+    <div id="gameOverScreen" class="overlay interactive hidden">
+        <h1 class="text-6xl font-black text-red-500 mb-4">המערך הובקע</h1>
+        <p class="text-xl text-slate-300 mb-8">נכשלת בגל <span id="finalWaveNum" class="text-white font-bold"></span>/10.</p>
+        <button onclick="location.reload()" class="px-8 py-3 bg-slate-800 border border-red-500/50 text-white rounded-full text-lg">התחל מחדש</button>
+    </div>
+    
+    <div id="victoryScreen" class="overlay interactive hidden">
+        <h1 class="text-6xl font-black text-emerald-400 mb-4">ניצחון אסטרטגי</h1>
+        <p class="text-xl text-emerald-100 mb-8">הדפת בהצלחה את כל 10 הגלים.</p>
+        <button onclick="location.reload()" class="px-8 py-3 bg-emerald-700 text-white rounded-full text-lg">שחק שוב</button>
+    </div>
+
+    <script>
+        // === מפה עם תצלומי לוויין + שכבת גבולות בהירה ===
+        const map = L.map('map', { zoomControl: false, dragging: false, touchZoom: false, scrollWheelZoom: false, doubleClickZoom: false });
+        
+        // 1. תמונת לוויין בסיסית
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 10 }).addTo(map);
+        
+        // 2. שכבת גבולות ושמות (CartoDB Dark Only Labels - מתלבש מעולה על לוויין כהה)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', { maxZoom: 10, opacity: 0.8 }).addTo(map);
+
+        function setMapBounds() {
+            const isMobile = window.innerWidth < 768;
+            map.setView(isMobile ? [29.0, 43.0] : [30.0, 45.0], isMobile ? 4.2 : 5.0);
+        }
+        setMapBounds();
+
+        // === מיקומים ===
+        const TARGETS = {
+            north: { coords: [32.8, 35.0], hp: 100 },
+            center: { coords: [32.0, 34.7], hp: 100 },
+            south: { coords: [31.0, 35.0], hp: 100 }
+        };
+
+        const SITES = [
+            { id: 'lebanon', coords: [33.9, 35.5], color: "#ef4444", types: ['UAV'] },
+            { id: 'iran_tabriz', coords: [38.0, 46.3], color: "#f59e0b", types: ['ICBM', 'MIRV'] },
+            { id: 'iran_shiraz', coords: [29.6, 52.5], color: "#f59e0b", types: ['ICBM', 'MIRV'] },
+            { id: 'yemen', coords: [15.3, 44.2], color: "#fb923c", types: ['MRBM'] },
+            { id: 'iraq', coords: [33.3, 43.5], color: "#ef4444", types: ['UAV', 'MRBM'] }
+        ];
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let cachedXY = { targets: {}, sites: [] };
+
+        function updateCacheXY() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight; map.invalidateSize();
+            let iCenter = {x:0, y:0}, c=0;
+            for(let key in TARGETS) {
+                cachedXY.targets[key] = map.latLngToContainerPoint(TARGETS[key].coords);
+                iCenter.x += cachedXY.targets[key].x; iCenter.y += cachedXY.targets[key].y; c++;
+            }
+            iCenter = {x: iCenter.x/c, y: iCenter.y/c};
+            cachedXY.sites = SITES.map(s => {
+                const pt = map.latLngToContainerPoint(s.coords);
+                return { ...s, pt: pt, angle: Math.atan2(iCenter.y - pt.y, iCenter.x - pt.x) };
+            });
+        }
+        window.addEventListener('resize', () => { setMapBounds(); updateCacheXY(); });
+
+        function get3DPosition(startXY, endXY, t, maxHeight) {
+            const gx = startXY.x + (endXY.x - startXY.x) * t;
+            const gy = startXY.y + (endXY.y - startXY.y) * t;
+            const alt = Math.sin(t * Math.PI) * maxHeight;
+            return { ground: { x: gx, y: gy }, air: { x: gx, y: gy - alt }, alt: alt };
+        }
+
+        // === ניהול State ===
+        let state = {
+            active: false, wave: 1, money: 1200, currentWeapon: 'IRON_DOME',
+            enemiesToSpawn: 4, enemiesSpawned: 0, spawnDelay: 2500, lastSpawnTime: 0,
+            
+            isUpgradePhase: false, // מונע הופעת אויבים ומאפשר שדרוג
+            
+            batteries: {
+                IRON_DOME: { max: 10, current: 10, reloadRate: 1500, lastReload: 0, speed: 0.04, radius: 45, color: '#fcd34d' },
+                ARROW: { max: 4, current: 4, reloadRate: 3500, lastReload: 0, speed: 0.015, radius: 150, color: '#38bdf8' }
+            },
+            upgrades: { domeCap: 300, arrowCap: 500, reload: 400, heal: 800, reloadMod: 1.0 }
+        };
+
+        let entities = { enemies: [], interceptors: [], explosions: [], particles: [], groundFlashes: [] };
+
+        function setWeapon(type) {
+            state.currentWeapon = type;
+            document.getElementById('btn-dome').className = `weapon-btn flex flex-col items-center justify-center ${type === 'IRON_DOME' ? 'active iron-dome' : ''}`;
+            document.getElementById('btn-arrow').className = `weapon-btn flex flex-col items-center justify-center ${type === 'ARROW' ? 'active arrow' : ''}`;
+        }
+
+        // === אפקטים ===
+        class Particle {
+            constructor(x, y, color, size, lifeDecay) {
+                this.x=x; this.y=y; this.color=color; this.size=size; this.life=1.0; this.decay=lifeDecay;
+                const a = Math.random()*Math.PI*2; const s = Math.random()*1.5;
+                this.vx = Math.cos(a)*s; this.vy = Math.sin(a)*s;
+            }
+            update() { this.x+=this.vx; this.y+=this.vy; this.size+=0.1; this.life-=this.decay; return this.life>0; }
+            draw(ctx) { ctx.globalAlpha=Math.max(0,this.life); ctx.fillStyle=this.color; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); ctx.globalAlpha=1; }
+        }
+        
+        class TargetMarker {
+            constructor(x, y, color) { this.x=x; this.y=y; this.color=color; this.life=1.0; this.size=20; }
+            update() { this.life-=0.02; this.size-=0.2; return this.life>0; }
+            draw(ctx) {
+                ctx.globalAlpha = this.life; ctx.strokeStyle = this.color; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(this.x-10, this.y); ctx.lineTo(this.x+10, this.y); ctx.moveTo(this.x, this.y-10); ctx.lineTo(this.x, this.y+10); ctx.stroke();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        class MuzzleFlash {
+            constructor(x, y) { this.x=x; this.y=y; this.life=1.0; }
+            update() { this.life-=0.05; return this.life>0; }
+            draw(ctx) {
+                const grad = ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,20*this.life+5);
+                grad.addColorStop(0, `rgba(255,255,255,${this.life})`); grad.addColorStop(0.3, `rgba(239,68,68,${this.life})`); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(this.x,this.y,20*this.life+5,0,Math.PI*2); ctx.fill();
+            }
+        }
+
+        // === אויבים ===
+        class Enemy {
+            constructor(site, targetKey) {
+                this.site = site; this.targetKey = targetKey; 
+                this.startXY = site.pt; this.targetXY = cachedXY.targets[targetKey];
+                
+                const availTypes = site.types.filter(t => (t !== 'MIRV' || state.wave >= 4));
+                this.type = availTypes[Math.floor(Math.random() * availTypes.length)];
+                this.t = 0; this.active = true; this.trail = []; this.flashPhase = 0;
+                
+                if (this.type === 'UAV') { this.speed = 0.0015 * (1 + state.wave*0.05); this.maxH = 0; this.size = 2; this.zigZag = Math.random()*Math.PI*2; } 
+                else if (this.type === 'MRBM') { this.speed = 0.002 * (1 + state.wave*0.05); this.maxH = 100; this.size = 3; }
+                else { this.speed = 0.001 * (1 + state.wave*0.05); this.maxH = 200; this.size = 3.5; this.hasSplit = false; }
+
+                entities.groundFlashes.push(new MuzzleFlash(this.startXY.x, this.startXY.y));
+            }
+
+            update() {
+                this.t += this.maxH > 0 && this.t > 0.5 ? this.speed * 1.5 : this.speed;
+
+                if (this.type === 'MIRV' && this.t > 0.6 && !this.hasSplit) {
+                    this.active = false; this.hasSplit = true;
+                    const pos = get3DPosition(this.startXY, this.targetXY, this.t, this.maxH).air;
+                    entities.explosions.push(new Explosion(pos.x, pos.y, 30, '#ffffff', false));
+                    for(let i=0; i<3; i++) {
+                        let tKey = Object.keys(TARGETS)[Math.floor(Math.random()*3)];
+                        let w = new Enemy({pt: pos, color: '#facc15', types:['WARHEAD']}, tKey);
+                        w.type = 'WARHEAD'; w.maxH = 40; w.speed = 0.004; w.size = 2.5;
+                        entities.enemies.push(w);
+                    }
+                    return;
+                }
+                
+                if (this.t >= 1) {
+                    this.active = false;
+                    applyDamage(this.targetKey, this.type==='UAV'? 10 : 25);
+                    entities.explosions.push(new Explosion(this.targetXY.x, this.targetXY.y, this.size*15, '#ef4444', true));
+                }
+
+                if (this.active && this.maxH > 0 && Math.random() > 0.3) {
+                    const pos = this.getAirPos();
+                    entities.particles.push(new Particle(pos.x, pos.y, this.site.color, this.size, 0.1));
+                }
+            }
+
+            draw(ctx) {
+                // קו מסלול חזוי (עוזר לשחקן)
+                ctx.beginPath(); ctx.moveTo(this.startXY.x, this.startXY.y); ctx.lineTo(this.targetXY.x, this.targetXY.y);
+                ctx.strokeStyle = `rgba(239, 68, 68, ${0.1 + (state.wave * 0.02)})`; ctx.lineWidth = 1; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+
+                let pos = get3DPosition(this.startXY, this.targetXY, this.t, this.maxH);
+                
+                if (this.type === 'UAV') {
+                    this.zigZag += 0.1; pos.air.x += Math.sin(this.zigZag)*6; pos.air.y += Math.cos(this.zigZag)*6;
+                    this.flashPhase += 0.2;
+                    ctx.fillStyle = Math.sin(this.flashPhase) > 0 ? '#ff0000' : '#475569';
+                    ctx.beginPath(); ctx.arc(pos.air.x, pos.air.y, this.size * 1.5, 0, Math.PI*2); ctx.fill();
+                } else {
+                    this.trail.push({x: pos.air.x, y: pos.air.y}); if(this.trail.length > 20) this.trail.shift();
+                    if (this.trail.length > 1) {
+                        const grad = ctx.createLinearGradient(this.trail[0].x, this.trail[0].y, pos.air.x, pos.air.y);
+                        grad.addColorStop(0, 'rgba(0,0,0,0)'); grad.addColorStop(0.5, this.site.color); grad.addColorStop(1, '#ffffff');
+                        ctx.beginPath(); ctx.moveTo(this.trail[0].x, this.trail[0].y);
+                        for(let i=1; i<this.trail.length; i++) ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                        ctx.strokeStyle = grad; ctx.lineWidth = this.size * 1.5; ctx.lineCap = 'round'; ctx.stroke();
+                    }
+                    const scale = 1 + (pos.alt / 150);
+                    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(pos.air.x, pos.air.y, this.size * scale, 0, Math.PI*2); ctx.fill();
+                }
+            }
+
+            getAirPos() { 
+                let p = get3DPosition(this.startXY, this.targetXY, this.t, this.maxH).air;
+                if(this.type === 'UAV') { p.x+=Math.sin(this.zigZag)*6; p.y+=Math.cos(this.zigZag)*6; }
+                return p;
+            }
+        }
+
+        // === מיירטים ===
+        class SkillInterceptor {
+            constructor(weaponType, targetX, targetY) {
+                this.weapon = state.batteries[weaponType];
+                this.type = weaponType;
+                
+                let closest = null, minDist = Infinity;
+                for(let key in cachedXY.targets) {
+                    let d = Math.hypot(cachedXY.targets[key].x - targetX, cachedXY.targets[key].y - targetY);
+                    if(d < minDist) { minDist = d; closest = cachedXY.targets[key]; }
+                }
+                
+                this.startXY = closest;
+                this.targetXY = { x: targetX, y: targetY };
+                this.t = 0; this.active = true; this.trail = [];
+                entities.groundFlashes.push(new MuzzleFlash(this.startXY.x, this.startXY.y));
+            }
+
+            update() {
+                this.t += this.weapon.speed;
+                if (this.t >= 1) {
+                    this.active = false;
+                    entities.explosions.push(new Explosion(this.targetXY.x, this.targetXY.y, this.weapon.radius, this.weapon.color, false));
+                }
+            }
+
+            draw(ctx) {
+                const pos = get3DPosition(this.startXY, this.targetXY, this.t, 10);
+                this.trail.push({x: pos.air.x, y: pos.air.y}); if(this.trail.length > 10) this.trail.shift();
+                
+                if (this.trail.length > 1) {
+                    ctx.beginPath(); ctx.moveTo(this.trail[0].x, this.trail[0].y);
+                    for(let i=1; i<this.trail.length; i++) ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                    ctx.strokeStyle = this.weapon.color; ctx.lineWidth = 2; ctx.stroke();
+                }
+                ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(pos.air.x, pos.air.y, 2, 0, Math.PI*2); ctx.fill();
+            }
+        }
+
+        class Explosion {
+            constructor(x, y, maxR, color, isGround) {
+                this.x = x; this.y = y; this.maxR = maxR; this.r = 0; this.color = color; this.isG = isGround; this.life = 1; this.active = true;
+                for(let i=0; i<(isGround?20:10); i++) entities.particles.push(new Particle(x, y, color, Math.random()*3+2, 0.05));
+            }
+            update() {
+                this.r += (this.maxR - this.r) * 0.2; this.life -= 0.03;
+                if (this.life <= 0) this.active = false;
+
+                if (!this.isG && this.life > 0.3) {
+                    for (let m of entities.enemies) {
+                        if (!m.active) continue;
+                        let mPos = m.getAirPos();
+                        if (Math.hypot(mPos.x - this.x, mPos.y - this.y) < this.r) {
+                            m.active = false;
+                            addMoney(m.type === 'UAV' ? 60 : 150);
+                            entities.explosions.push(new Explosion(mPos.x, mPos.y, 25, '#ffffff', false));
+                        }
+                    }
+                }
+            }
+            draw(ctx) {
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.r * 0.7, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = this.isG ? '#ef4444' : '#ffffff'; ctx.lineWidth = 3 * this.life; ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI*2); ctx.stroke();
+                if(this.isG) {
+                    const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 3);
+                    grad.addColorStop(0, `rgba(239, 68, 68, ${this.life * 0.4})`); grad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(this.x, this.y, this.r * 3, 0, Math.PI*2); ctx.fill();
+                }
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        function drawStrategicEnvironment(ctx) {
+            cachedXY.sites.forEach(site => {
+                ctx.save(); ctx.translate(site.pt.x, site.pt.y); ctx.rotate(site.angle);
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(-4, -2, 8, 4);
+                ctx.fillStyle = site.color; ctx.fillRect(-5, -0.5, 6, 1);
+                ctx.restore();
+            });
+
+            for(let key in cachedXY.targets) {
+                if (TARGETS[key].hp > 0) {
+                    let pt = cachedXY.targets[key];
+                    ctx.beginPath(); ctx.arc(pt.x, pt.y, 5, 0, Math.PI*2);
+                    ctx.fillStyle = 'rgba(16, 185, 129, 0.4)'; ctx.fill();
+                    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 1; ctx.stroke();
+                }
+            }
+        }
+
+        // === ממשק, שדרוגים והפסקות ===
+        function renderBatteries() {
+            for (let type of ['IRON_DOME', 'ARROW']) {
+                const bat = state.batteries[type];
+                const container = document.getElementById(type === 'IRON_DOME' ? 'bat-dome' : 'bat-arrow');
+                document.getElementById(type === 'IRON_DOME' ? 'txt-dome-count' : 'txt-arrow-count').innerText = `${Math.floor(bat.current)}/${bat.max}`;
+                
+                let html = '';
+                for (let i = 0; i < bat.max; i++) {
+                    if (i < Math.floor(bat.current)) html += `<div class="battery-cell cell-ready"></div>`;
+                    else if (i === Math.floor(bat.current) && bat.current < bat.max) html += `<div class="battery-cell cell-reloading"></div>`;
+                    else html += `<div class="battery-cell cell-empty"></div>`;
+                }
+                container.innerHTML = html;
+            }
+        }
+
+        function rechargeBatteries(now) {
+            let updated = false;
+            for (let type in state.batteries) {
+                let bat = state.batteries[type];
+                if (bat.current < bat.max) {
+                    if (now - bat.lastReload > (bat.reloadRate * state.upgrades.reloadMod)) { bat.current++; bat.lastReload = now; updated = true; }
+                } else bat.lastReload = now;
+            }
+            if(updated) renderBatteries();
+        }
+
+        function updateUi() {
+            for(let key in TARGETS) {
+                let bar = document.getElementById(`hp-${key}`); let hp = TARGETS[key].hp;
+                bar.style.width = hp + '%'; bar.style.backgroundColor = hp > 50 ? '#10b981' : (hp > 25 ? '#f59e0b' : '#ef4444');
+            }
+            document.getElementById('moneyUi').innerText = state.money; 
+            document.getElementById('waveUi').innerText = state.wave;
+            
+            // עדכון המודל (חנות)
+            document.getElementById('modal-money').innerText = state.money;
+            document.getElementById('cost-dome-cap').innerText = state.upgrades.domeCap; document.getElementById('upg-dome-cap').disabled = state.money < state.upgrades.domeCap;
+            document.getElementById('cost-arrow-cap').innerText = state.upgrades.arrowCap; document.getElementById('upg-arrow-cap').disabled = state.money < state.upgrades.arrowCap;
+            document.getElementById('cost-reload').innerText = state.upgrades.reload; document.getElementById('upg-reload').disabled = state.money < state.upgrades.reload;
+            document.getElementById('cost-heal').innerText = state.upgrades.heal; document.getElementById('upg-heal').disabled = state.money < state.upgrades.heal;
+        }
+
+        function applyDamage(targetKey, amount) {
+            TARGETS[targetKey].hp -= amount; if (TARGETS[targetKey].hp < 0) TARGETS[targetKey].hp = 0;
+            updateUi();
+            let allDead = true; for(let k in TARGETS) if(TARGETS[k].hp > 0) allDead = false;
+            if (allDead) { state.active = false; document.getElementById('finalWaveNum').innerText = state.wave; document.getElementById('gameOverScreen').classList.remove('hidden'); }
+            
+            canvas.style.transform = `translate(${Math.random()*10-5}px, ${Math.random()*10-5}px)`; setTimeout(() => canvas.style.transform = 'translate(0,0)', 50);
+        }
+        function addMoney(amount) { state.money += amount; updateUi(); }
+
+        // חלון שדרוגים מרוכז בניהול בין שלבים
+        function startUpgradePhase() {
+            state.isUpgradePhase = true;
+            document.getElementById('modal-wave-num').innerText = state.wave;
+            updateUi(); // רענון מחירים
+            document.getElementById('modal-bg').classList.add('open');
+            document.getElementById('upgrade-modal').classList.add('open');
+        }
+
+        function nextWave() {
+            if (state.wave >= 10) { 
+                state.active = false; 
+                document.getElementById('upgrade-modal').classList.remove('open');
+                document.getElementById('modal-bg').classList.remove('open');
+                document.getElementById('victoryScreen').classList.remove('hidden'); 
+                return; 
+            }
+            
+            state.wave++;
+            state.enemiesToSpawn += 3;
+            state.spawnDelay = Math.max(800, state.spawnDelay - 150);
+            state.enemiesSpawned = 0;
+            
+            state.isUpgradePhase = false;
+            state.lastSpawnTime = Date.now() + 1000; // תן שנייה לנשום
+            
+            document.getElementById('upgrade-modal').classList.remove('open');
+            document.getElementById('modal-bg').classList.remove('open');
+            updateUi();
+        }
+
+        function buy(type) {
+            let cost = type === 'DOME_CAP'? state.upgrades.domeCap : type === 'ARROW_CAP'? state.upgrades.arrowCap : type === 'RELOAD'? state.upgrades.reload : state.upgrades.heal;
+            if (state.money >= cost) {
+                state.money -= cost;
+                if (type === 'DOME_CAP') { state.batteries.IRON_DOME.max+=2; state.batteries.IRON_DOME.current+=2; state.upgrades.domeCap = Math.floor(cost*1.5); }
+                if (type === 'ARROW_CAP') { state.batteries.ARROW.max++; state.batteries.ARROW.current++; state.upgrades.arrowCap = Math.floor(cost*1.5); }
+                if (type === 'RELOAD') { state.upgrades.reloadMod *= 0.8; state.upgrades.reload = Math.floor(cost*1.5); }
+                if (type === 'HEAL') { for(let k in TARGETS) TARGETS[k].hp = Math.min(100, TARGETS[k].hp + 30); state.upgrades.heal = Math.floor(cost*1.3); }
+                updateUi(); renderBatteries();
+            }
+        }
+
+        // *** שיגור רק אם לא בזמן הפסקה ***
+        canvas.addEventListener('pointerdown', (e) => {
+            if (!state.active || state.isUpgradePhase) return;
+            
+            const weapon = state.batteries[state.currentWeapon];
+            if (weapon.current >= 1) {
+                weapon.current--;
+                entities.interceptors.push(new SkillInterceptor(state.currentWeapon, e.clientX, e.clientY));
+                entities.particles.push(new TargetMarker(e.clientX, e.clientY, weapon.color));
+                renderBatteries();
+            } else {
+                ctx.beginPath(); ctx.arc(e.clientX, e.clientY, 15, 0, Math.PI*2);
+                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+            }
+        });
+
+        // === Loop ===
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            updateCacheXY(); renderBatteries(); updateUi();
+            state.active = true; state.lastSpawnTime = Date.now();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop() {
+            if (!state.active) return;
+            const now = Date.now();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // טעינה עובדת גם בזמן הפסקה!
+            rechargeBatteries(now);
+
+            // יצירת אויבים - רק אם אנחנו לא בהפסקת שדרוגים!
+            if (!state.isUpgradePhase) {
+                if (now - state.lastSpawnTime > state.spawnDelay && state.enemiesSpawned < state.enemiesToSpawn) {
+                    let aliveTargets = Object.keys(TARGETS).filter(k => TARGETS[k].hp > 0);
+                    if (aliveTargets.length > 0) {
+                        let site = cachedXY.sites[Math.floor(Math.random() * cachedXY.sites.length)];
+                        entities.enemies.push(new Enemy(site, aliveTargets[Math.floor(Math.random() * aliveTargets.length)]));
+                        state.enemiesSpawned++;
+                    }
+                    state.lastSpawnTime = now + (Math.random() * 500);
+                }
+                
+                // בדיקה אם הגל נגמר לגמרי (כל האויבים שוגרו, ואין אויבים/פיצוצים במסך)
+                if (state.enemiesSpawned >= state.enemiesToSpawn && entities.enemies.length === 0 && entities.explosions.length === 0) {
+                    startUpgradePhase();
+                }
+            } else {
+                // אנחנו בפאזת שדרוג - אפשר לצייר טקסט על הקנבס ברקע
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.font = 'bold 24px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('מרחב אווירי נקי. מנהל שדרוגים פעיל.', canvas.width/2, canvas.height/4);
+            }
+
+            drawStrategicEnvironment(ctx);
+
+            ['groundFlashes', 'particles', 'enemies', 'interceptors', 'explosions'].forEach(group => {
+                entities[group] = entities[group].filter(e => e.active !== false && (e.update ? e.update() !== false : true));
+                entities[group].forEach(e => e.draw(ctx));
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
+
