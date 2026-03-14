@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>קורין אלאל - הפלייליסט הסודי</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+        
+        /* הסתרת פס הגלילה למראה של אפליקציה אמיתית */
+        ::-webkit-scrollbar { display: none; }
+        
+        /* מעבר בין מסכים - הוסף !important למניעת התנגשויות */
+        .view {
+            display: none !important;
+        }
+        .view.active {
+            display: block !important;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .spotify-gradient {
+            background: linear-gradient(180deg, #4b5563 0%, #121212 100%);
+        }
+
+        .track-disabled {
+            opacity: 0.5;
+        }
+
+        /* עיצוב שדות טקסט */
+        input[type="text"], textarea {
+            background-color: #242424;
+            color: white;
+            border: 1px solid #333;
+            pointer-events: auto;
+        }
+        input[type="text"]:focus, textarea:focus {
+            border-color: #1DB954;
+            outline: none;
+        }
+
+        /* מנגנון הודעות קופצות (Toast) מלמטה */
+        #toast {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1DB954;
+            color: #000;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 99999; /* תמיד למעלה */
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        #toast.show {
+            bottom: 80px;
+        }
+
+        /* אנימציית החלקה למעלה למסך הנגן */
+        .slide-up {
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* ביטול דיליי בלחיצה במובייל */
+        button, a, input, label, textarea, .cursor-pointer {
+            touch-action: manipulation;
+            cursor: pointer;
+        }
+        
+        #view-now-playing {
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative pb-20 selection:bg-[#1DB954] selection:text-black">
+
+    <!-- VIEW 1: Playlist (מסך ראשי) -->
+    <div id="view-playlist" class="view active min-h-screen relative z-10">
+        <div class="spotify-gradient pt-12 pb-6 px-4">
+            <div class="flex flex-col items-center justify-center">
+                <div class="w-48 h-48 shadow-[0_8px_24px_rgba(0,0,0,0.5)] bg-zinc-800 flex items-center justify-center mb-4 overflow-hidden">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/Corinne_Allal.jpg" alt="קורין אלאל" class="w-full h-full object-cover object-top">
+                </div>
+                <h1 class="text-3xl font-bold tracking-tight text-center">קורין אלאל</h1>
+                <p class="text-sm text-[#b3b3b3] mt-2 text-center">חדר בריחה • 3 שירים • הכספת מחכה</p>
+                <div class="flex items-center gap-1 mt-2 text-xs text-[#b3b3b3]">
+                    <i class="fab fa-spotify"></i>
+                    <span>Spotify Escape Room</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button id="btn-start-play" class="w-14 h-14 bg-[#1DB954] rounded-full flex items-center justify-center text-black hover:scale-105 transition transform shadow-lg">
+                    <i class="fas fa-play text-xl ml-1"></i>
+                </button>
+                <button class="text-[#b3b3b3] hover:text-white transition">
+                    <i class="far fa-heart text-2xl"></i>
+                </button>
+                <button class="text-[#b3b3b3] hover:text-white transition">
+                    <i class="fas fa-ellipsis-h text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="px-4 mt-2 pb-8">
+            <!-- Track 1 -->
+            <div id="btn-track-1" class="flex items-center justify-between py-3 cursor-pointer hover:bg-white/5 rounded-md px-2 transition group">
+                <div class="flex items-center gap-4">
+                    <span class="text-[#1DB954] font-medium w-4 text-center">1</span>
+                    <div>
+                        <h3 class="text-white text-base font-medium">זן נדיר</h3>
+                        <p class="text-[#b3b3b3] text-sm">האדם והקול הייחודי</p>
+                    </div>
+                </div>
+                <i class="fas fa-ellipsis-v text-[#b3b3b3] opacity-0 group-hover:opacity-100 transition"></i>
+            </div>
+
+            <!-- Track 2 -->
+            <div id="btn-track-2" class="flex items-center justify-between py-3 cursor-pointer hover:bg-white/5 rounded-md px-2 transition track-disabled group">
+                <div class="flex items-center gap-4">
+                    <span class="text-[#b3b3b3] font-medium w-4 text-center">2</span>
+                    <div>
+                        <h3 class="text-white text-base font-medium">אין לי ארץ אחרת</h3>
+                        <p class="text-[#b3b3b3] text-sm">היוצרת והלחן הלאומי</p>
+                    </div>
+                </div>
+                <i id="lock-2" class="fas fa-lock text-[#b3b3b3] text-sm"></i>
+            </div>
+
+            <!-- Track 3 -->
+            <div id="btn-track-3" class="flex items-center justify-between py-3 cursor-pointer hover:bg-white/5 rounded-md px-2 transition track-disabled group">
+                <div class="flex items-center gap-4">
+                    <span class="text-[#b3b3b3] font-medium w-4 text-center">3</span>
+                    <div>
+                        <h3 class="text-white text-base font-medium">שיר לשירה</h3>
+                        <p class="text-[#b3b3b3] text-sm">המורשת והאהבה</p>
+                    </div>
+                </div>
+                <i id="lock-3" class="fas fa-lock text-[#b3b3b3] text-sm"></i>
+            </div>
+
+            <!-- Track 4 (Vault) -->
+            <div id="btn-track-4" class="flex items-center justify-between py-3 mt-4 border-t border-zinc-800 pt-4 cursor-pointer hover:bg-white/5 rounded-md px-2 transition track-disabled group">
+                <div class="flex items-center gap-4">
+                    <span class="text-yellow-500 font-medium w-4 text-center"><i class="fas fa-key"></i></span>
+                    <div>
+                        <h3 class="text-yellow-500 text-base font-bold">הכספת: פיצוח הקוד</h3>
+                        <p class="text-[#b3b3b3] text-sm">הזינו את מילות הסתרים</p>
+                    </div>
+                </div>
+                <i id="lock-4" class="fas fa-lock text-[#b3b3b3] text-sm"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 2: Now Playing (מסך המשימה והשיר) -->
+    <div id="view-now-playing" class="view slide-up fixed inset-0 bg-[#121212] z-40 overflow-y-auto pb-8">
+        <div class="flex items-center justify-between px-4 py-4 sticky top-0 bg-[#121212]/95 backdrop-blur-md z-50">
+            <button id="btn-close-np" class="text-white hover:text-[#1DB954] transition p-2">
+                <i class="fas fa-chevron-down text-xl"></i>
+            </button>
+            <div class="text-center text-xs font-bold tracking-widest text-[#b3b3b3] uppercase">
+                מתנגן כעת מתוך הפלייליסט
+            </div>
+            <button class="text-white p-2">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+        </div>
+
+        <div class="px-6 pt-2 relative z-40">
+            <div id="video-wrapper" class="aspect-video w-full rounded-md shadow-2xl overflow-hidden bg-black mb-6 relative">
+                <iframe id="yt-player" class="w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 id="np-title" class="text-2xl font-bold text-white mb-1">כותרת שיר</h2>
+                    <p id="np-artist" class="text-[#b3b3b3] text-base">קורין אלאל</p>
+                </div>
+                <i class="far fa-heart text-[#b3b3b3] text-2xl mb-1"></i>
+            </div>
+
+            <div class="bg-[#1e1e1e] rounded-xl p-5 shadow-lg border border-zinc-800 mb-8">
+                <h3 class="text-sm font-bold text-[#1DB954] mb-2 uppercase tracking-wide">המשימה שלך</h3>
+                <p id="np-context" class="text-sm text-zinc-300 mb-4 leading-relaxed"></p>
+                <div id="np-question-container" class="mb-4">
+                    <!-- תוכן המשימה מוזרק לפה -->
+                </div>
+                <button id="np-submit-btn" class="w-full bg-white text-black font-bold py-3 rounded-full hover:scale-105 transition transform text-center">
+                    בדוק תשובה
+                </button>
+            </div>
+            
+            <div class="mt-2 mb-10 text-center pb-10">
+                <a id="np-fallback" href="#" target="_blank" class="text-[#b3b3b3] text-xs underline decoration-[#b3b3b3]/50">הסרטון לא עובד? לחצו כאן לפתיחה ביוטיוב</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW 3: Success Screen (הצלחה) - תוקן המבנה הפנימי למניעת דריסת CSS -->
+    <div id="view-success" class="view fixed inset-0 bg-gradient-to-b from-[#1DB954] to-[#121212] z-50">
+        <div class="flex flex-col items-center justify-center min-h-screen p-6 text-center">
+            <div class="w-24 h-24 bg-black rounded-full flex items-center justify-center mb-6 shadow-2xl">
+                <i class="fas fa-check text-5xl text-[#1DB954]"></i>
+            </div>
+            <h1 class="text-4xl font-black text-black mb-2">הצלחתם!</h1>
+            <h2 class="text-2xl font-bold text-white mb-6">זן נדיר ומיוחד</h2>
+            
+            <div class="bg-black/40 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-xl max-w-sm">
+                <p class="text-white text-base leading-relaxed font-medium">
+                    קורין אלאל לא פחדה להיות שונה - בקול שלה, במראה שלה ובדרך שבה חייתה. היא הפכה את השונות הזו ליצירות מופת שילוו אותנו עוד שנים רבות, והוכיחה שלחיות באמת שלך, זה הדבר הכי "זן נדיר" שיש.
+                </p>
+            </div>
+            <button id="btn-restart" class="mt-8 px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition shadow-lg">
+                חזרה להתחלה
+            </button>
+        </div>
+    </div>
+
+    <!-- תפריט תחתון קבוע -->
+    <div class="fixed bottom-0 w-full bg-[#121212] border-t border-zinc-900 flex justify-around items-center py-3 z-50 bg-opacity-95 backdrop-blur-md">
+        <div class="flex flex-col items-center text-white cursor-pointer hover:text-[#1DB954] transition">
+            <i class="fas fa-home text-xl mb-1"></i>
+            <span class="text-[10px]">בית</span>
+        </div>
+        <div class="flex flex-col items-center text-[#b3b3b3] cursor-pointer hover:text-white transition">
+            <i class="fas fa-search text-xl mb-1"></i>
+            <span class="text-[10px]">חיפוש</span>
+        </div>
+        <div class="flex flex-col items-center text-[#b3b3b3] cursor-pointer hover:text-white transition">
+            <i class="fas fa-book text-xl mb-1"></i>
+            <span class="text-[10px]">הספרייה שלך</span>
+        </div>
+    </div>
+
+    <!-- הודעה קופצת -->
+    <div id="toast">הודעה</div>
+
+    <!-- קוד הלוגיקה והאירועים -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // מאגר הנתונים של התחנות
+            const stations = {
+                1: {
+                    title: "זן נדיר",
+                    videoId: "V_dFJwzaK7k",
+                    context: "קורין נולדה בתוניסיה ועלתה לישראל כילדה. היא הייתה ילדה שקטה שהתקשתה עם השפה העברית, ובחרה במוזיקה כדי לבטא את עצמה. עם קול עמוק, שיער קצר וגיטרה חשמלית ביד - בתקופה שבה עולם הרוק היה שייך כמעט רק לגברים - היא פרצה לתודעה. היא לא ניסתה להיות כמו כולם, אלא הביאה סאונד רוק מחוספס, עוצמתי ואמיתי.",
+                    questionHtml: `
+                        <p class="text-sm text-white mb-3">לפי הסיפור והשיר, איך קורין בחרה לבטא את עצמה ולהפוך את השונות שלה לכוח?</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border border-zinc-700 rounded-md cursor-pointer hover:bg-zinc-800 transition">
+                                <input type="radio" name="ans-1" value="wrong1" class="accent-[#1DB954] w-4 h-4 ml-3"> הפסיקה לדבר ורק ציירה בבית.
+                            </label>
+                            <label class="flex items-center p-3 border border-zinc-700 rounded-md cursor-pointer hover:bg-zinc-800 transition">
+                                <input type="radio" name="ans-1" value="correct" class="accent-[#1DB954] w-4 h-4 ml-3"> ניגנה בגיטרה חשמלית והביאה רוק נשי ועוצמתי.
+                            </label>
+                            <label class="flex items-center p-3 border border-zinc-700 rounded-md cursor-pointer hover:bg-zinc-800 transition">
+                                <input type="radio" name="ans-1" value="wrong2" class="accent-[#1DB954] w-4 h-4 ml-3"> שרה רק באנגלית כדי לא להתמודד עם העברית.
+                            </label>
+                        </div>
+                    `,
+                    secretWord: "זן",
+                    validate: () => {
+                        const selected = document.querySelector('input[name="ans-1"]:checked');
+                        return selected && selected.value === 'correct';
+                    },
+                    errorMsg: "תשובה שגויה. קראו שוב את המידע על הגיטרה החשמלית ונסו שנית."
+                },
+                2: {
+                    title: "אין לי ארץ אחרת",
+                    videoId: "5rlHA21a05c",
+                    context: "קורין לא הייתה רק זמרת, אלא מלחינה גאונה. ב-1986 קיבלה טקסט שכתב אהוד מנור מתוך כאב על המצב במדינה ('אדמתי בוערת'). קורין לקחה את המילים הקשות וחיברה להן לחן רך ועוטף. הקסם הזה - מילים כואבות על מנגינה מנחמת - הפך את השיר מיד להמנון שמאחד את הישראלים ברגעי קושי.",
+                    questionHtml: `
+                        <p class="text-sm text-white mb-3">האזינו היטב לפזמון המפורסם. השלימו את המילה החסרה מהשיר:</p>
+                        <div class="flex items-center justify-center gap-2 bg-zinc-800 p-3 rounded-md border border-zinc-700" dir="rtl">
+                            <span class="font-bold">"רק מילה ב</span>
+                            <input type="text" id="ans-2" class="w-24 text-center font-bold px-2 py-1 rounded border-b-2 border-[#1DB954] bg-zinc-900" autocomplete="off">
+                            <span class="font-bold">חודרת..."</span>
+                        </div>
+                    `,
+                    secretWord: "נדיר",
+                    validate: () => {
+                        const el = document.getElementById('ans-2');
+                        return el && el.value.trim() === 'עברית';
+                    },
+                    errorMsg: "המילה שגויה. האזינו לשיר (סביבות השנייה 0:40) ובדקו איזו שפה חודרת לעורקיו."
+                },
+                3: {
+                    title: "שיר לשירה",
+                    videoId: "jX8xajTUIdU",
+                    context: "קורין חיה את חייה באומץ חסר פשרות. היא הייתה מהאמניות הראשונות בארץ שדיברו בפתיחות על חייהן האישיים ויצאו מהארון, והיוותה השראה לחיות באותנטיות. על תרומתה האדירה זכתה בפרס אקו\"ם למפעל חיים. גם בשנותיה האחרונות, כשנלחמה בסרטן, המשיכה ליצור באהבה עד פטירתה בדצמבר 2024. 'שיר לשירה' הוא הבטחה לעתיד טוב יותר עבור הדור הבא.",
+                    questionHtml: `
+                        <p class="text-sm text-white mb-3">מהי ההבטחה לעתיד שקורין שרה (במילים של יהונתן גפן) בפזמון? השלימו את המילה:</p>
+                        <div class="flex items-center justify-center gap-2 bg-zinc-800 p-3 rounded-md border border-zinc-700" dir="rtl">
+                            <input type="text" id="ans-3" class="w-20 text-center font-bold px-2 py-1 rounded border-b-2 border-[#1DB954] bg-zinc-900" autocomplete="off">
+                            <span class="font-bold">חדש וטוב אני אתן לך"</span>
+                        </div>
+                    `,
+                    secretWord: "ומיוחד",
+                    validate: () => {
+                        const el = document.getElementById('ans-3');
+                        return el && el.value.trim().includes('עולם'); 
+                    },
+                    errorMsg: "לא מדויק. האזינו לתחילת הפזמון ונסו לזהות את המילה שחסרה לפני 'חדש וטוב'."
+                },
+                4: {
+                    title: "הכספת: פיצוח הקוד",
+                    videoId: "", // בלי וידאו למסך הכספת
+                    context: "הגעתם לסוף המסע. הזינו את 3 המילים שאספתם במהלך הפלייליסט כדי לגלות מה קורין הייתה באמת.",
+                    questionHtml: `
+                        <input type="text" id="ans-4" placeholder="הקלידו את מילות הקוד" class="w-full text-center p-4 rounded-md text-xl font-bold text-[#1DB954] placeholder-zinc-600 mb-2" dir="rtl" autocomplete="off">
+                    `,
+                    secretWord: "",
+                    validate: () => {
+                        const el = document.getElementById('ans-4');
+                        const val = el ? el.value.trim() : "";
+                        return val.includes('זן') && val.includes('נדיר') && val.includes('ומיוחד');
+                    },
+                    errorMsg: "קוד שגוי. ודאו שהזנתם את המילים מכל התחנות לפי הסדר: 'זן' 'נדיר' 'ומיוחד'."
+                }
+            };
+
+            // הפעלת הודעת קופצת
+            function showToast(message, isSuccess = false) {
+                const toast = document.getElementById('toast');
+                toast.innerText = message;
+                toast.style.backgroundColor = isSuccess ? '#1DB954' : '#E91429';
+                toast.style.color = isSuccess ? '#000' : '#FFF';
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 4000);
+            }
+
+            // פתיחת התחנה הבאה
+            function unlockNextTrack(currentTrackNum) {
+                const nextTrackNum = currentTrackNum + 1;
+                const nextTrackEl = document.getElementById(`btn-track-${nextTrackNum}`);
+                
+                if (nextTrackEl) {
+                    nextTrackEl.classList.remove('track-disabled');
+                    const numSpan = nextTrackEl.querySelector('span');
+                    const lockIcon = document.getElementById(`lock-${nextTrackNum}`);
+                    
+                    if (nextTrackNum === 4) {
+                        numSpan.classList.replace('text-[#b3b3b3]', 'text-yellow-500');
+                    } else {
+                        numSpan.classList.replace('text-[#b3b3b3]', 'text-[#1DB954]');
+                    }
+                    
+                    if (lockIcon) {
+                        lockIcon.classList.replace('fa-lock', 'fa-ellipsis-v');
+                        lockIcon.classList.add('opacity-0', 'group-hover:opacity-100');
+                    }
+                }
+            }
+
+            // פתיחת חלון של שיר ספציפי
+            function openTrack(trackNum) {
+                try {
+                    const trackEl = document.getElementById(`btn-track-${trackNum}`);
+                    
+                    if (trackEl && trackEl.classList.contains('track-disabled')) {
+                        showToast("🔒 עליך לסיים את המשימה הקודמת כדי לפתוח שיר זה", false);
+                        return;
+                    }
+
+                    const data = stations[trackNum];
+                    
+                    // עדכון טקסטים
+                    document.getElementById('np-title').innerText = data.title;
+                    document.getElementById('np-context').innerText = data.context;
+                    document.getElementById('np-question-container').innerHTML = data.questionHtml;
+                    
+                    // עדכון סרטון
+                    const iframe = document.getElementById('yt-player');
+                    const fallbackLink = document.getElementById('np-fallback');
+                    const videoContainer = document.getElementById('video-wrapper');
+                    
+                    if (data.videoId) {
+                        videoContainer.style.display = 'block';
+                        iframe.src = `https://www.youtube-nocookie.com/embed/${data.videoId}?rel=0`;
+                        fallbackLink.href = `https://www.youtube.com/watch?v=${data.videoId}`;
+                        fallbackLink.style.display = 'inline-block';
+                    } else {
+                        videoContainer.style.display = 'none';
+                        iframe.src = "";
+                        fallbackLink.style.display = 'none';
+                    }
+
+                    // הגדרת כפתור השליחה
+                    const oldBtn = document.getElementById('np-submit-btn');
+                    const newBtn = oldBtn.cloneNode(true);
+                    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+                    if (trackNum === 4) {
+                        newBtn.innerText = "פתח כספת";
+                        newBtn.classList.replace('bg-white', 'bg-yellow-500');
+                    } else {
+                        newBtn.innerText = "בדוק תשובה";
+                        newBtn.classList.replace('bg-yellow-500', 'bg-white');
+                    }
+
+                    newBtn.addEventListener('click', () => {
+                        if (data.validate()) {
+                            if (trackNum === 4) {
+                                iframe.src = ""; // עצירת מוזיקה
+                                document.getElementById('view-now-playing').classList.remove('active');
+                                document.getElementById('view-success').classList.add('active');
+                            } else {
+                                showToast(`תשובה נכונה! מילת הקוד: ${data.secretWord}`, true);
+                                unlockNextTrack(trackNum);
+                                setTimeout(() => {
+                                    closeNowPlaying();
+                                }, 2500); 
+                            }
+                        } else {
+                            showToast(data.errorMsg, false);
+                        }
+                    });
+
+                    // החלפת תצוגות
+                    document.getElementById('view-playlist').classList.remove('active');
+                    document.getElementById('view-now-playing').classList.add('active');
+                    window.scrollTo(0, 0);
+
+                } catch (err) {
+                    console.error("Error opening track", err);
+                }
+            }
+
+            function closeNowPlaying() {
+                document.getElementById('yt-player').src = "";
+                document.getElementById('view-now-playing').classList.remove('active');
+                document.getElementById('view-playlist').classList.add('active');
+            }
+
+            // חיבור כל אירועי הלחיצה 
+            document.getElementById('btn-start-play').addEventListener('click', () => openTrack(1));
+            document.getElementById('btn-track-1').addEventListener('click', () => openTrack(1));
+            document.getElementById('btn-track-2').addEventListener('click', () => openTrack(2));
+            document.getElementById('btn-track-3').addEventListener('click', () => openTrack(3));
+            document.getElementById('btn-track-4').addEventListener('click', () => openTrack(4));
+            
+            document.getElementById('btn-close-np').addEventListener('click', closeNowPlaying);
+            document.getElementById('btn-restart').addEventListener('click', () => location.reload());
+
+        });
+    </script>
+</body>
+</html>
+
+
+
