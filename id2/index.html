@@ -965,63 +965,143 @@ class Enemy{
 // ════════════════════════════════════════════
 // INTERCEPTOR
 // ════════════════════════════════════════════
-// Arc heights reflect real-world intercept altitudes:
-// Iron Dome (Tamir): 4-70km altitude → ~20px arc (low flat)
-// David's Sling: 15-70km → ~80px arc
-// Arrow-2: 50-90km endo-atmospheric → ~200px arc (steep)
-// Arrow-3: 100km+ exo-atmospheric → launches near-vertical
-function wpnArcH(type){return{IRON_DOME:20,SLING:80,ARROW2:200,ARROW3:380}[type]||20;}
+// ════════════════════════════════════════════
+// INTERCEPTOR — ballistic/rocket flight per weapon
+// Each weapon has realistic arc profile:
+//   Iron Dome  (Tamir)  : fast, low-flat arc
+//   David Sling(Stunner): medium arc, intercepts SRBM/MRBM
+//   Arrow-2             : high steep arc, endo-atmospheric
+//   Arrow-3             : near-vertical launch, exo-atmospheric
+// ════════════════════════════════════════════
+const INTCPT_CFG={
+    IRON_DOME:{arcFrac:0.22, minFrames:28, plume:9,  lw:2,   speed:0.036},
+    SLING:    {arcFrac:0.55, minFrames:40, plume:14, lw:2.5, speed:0.022},
+    ARROW2:   {arcFrac:1.1,  minFrames:55, plume:22, lw:3,   speed:0.017},
+    ARROW3:   {arcFrac:2.2,  minFrames:70, plume:30, lw:3.5, speed:0.014}
+};
 
 class Interceptor{
     constructor(type,tx,ty,hitMod){
-        this.wpn=S.batteries[type];this.type=type;this.hitMod=hitMod||1;
-        let best=null,bd=Infinity;
-        for(const k in CXY.targets){const d=Math.hypot(CXY.targets[k].x-tx,CXY.targets[k].y-ty);if(d<bd){bd=d;best=CXY.targets[k];}}
-        this.sXY=best;this.eXY={x:tx,y:ty};
-        this.arcH=wpnArcH(type);
-        this.t=0;this.active=true;this.trail=[];
-        E.flashes.push(new MFlash(best.x,best.y));sndLaunch(type);haptic(30);
-    }
-    getPos(){
-        // Arrow-3: exo-atmospheric — rises steeply first, then arcs to target
-        if(this.type==='ARROW3'&&this.t<0.45){
-            const t2=this.t/0.45;
-            const x=this.sXY.x+(this.eXY.x-this.sXY.x)*t2*0.12;
-            const y=this.sXY.y-Math.sin(t2*Math.PI*0.5)*this.arcH;
-            return{air:{x,y},alt:this.sXY.y-y};
+        const bat=S.batteries[type];
+        const cfg=INTCPT_CFG[type]||INTCPT_CFG.IRON_DOME;
+        this.type=type;
+        this.hitMod=hitMod||1;
+        this.color=bat.color;
+        this.radius=bat.radius;
+        // Clamp speed so missile is ALWAYS visible for minFrames frames minimum
+        this.spd=Math.min(cfg.speed*(bat.speed/INTCPT_CFG[type].speed), 1/cfg.minFrames);
+        this.plume=cfg.plume;
+        this.lw=cfg.lw;
+
+        // Launch from nearest city — plain {x,y} copy, never Leaflet object
+        let best=null, bd=Infinity;
+        for(const k in CXY.targets){
+            const c=CXY.targets[k];
+            const d=Math.hypot(c.x-tx,c.y-ty);
+            if(d<bd){bd=d; best={x:c.x,y:c.y};}
         }
+        this.sXY = best || {x:canvas.width/2, y:canvas.height*0.85};
+        this.eXY = {x:tx, y:ty};
+
+        // Arc height = fraction of pixel-distance between launcher and target
+        const dist=Math.hypot(tx-this.sXY.x, ty-this.sXY.y);
+        this.arcH = Math.max(50, dist*cfg.arcFrac);
+
+        this.t=0; this.active=true; this.trail=[];
+        E.flashes.push(new MFlash(this.sXY.x, this.sXY.y));
+        sndLaunch(type); haptic(30);
+    }
+
+    // Position along parabolic arc (Arrow-3 uses two-phase profile)
+    pos(t){
+        const tt=Math.max(0,Math.min(1,t));
         if(this.type==='ARROW3'){
-            const t2=(this.t-0.45)/0.55;
-            const midX=this.sXY.x+(this.eXY.x-this.sXY.x)*0.12;
-            const midY=this.sXY.y-this.arcH;
-            return{air:{x:midX+(this.eXY.x-midX)*t2,y:midY+(this.eXY.y-midY)*t2},alt:midY};
+            if(tt<0.4){
+                // Phase 1: near-vertical ascent
+                const p=tt/0.4;
+                return {
+                    x: this.sXY.x+(this.eXY.x-this.sXY.x)*p*0.06,
+                    y: this.sXY.y - Math.sin(p*Math.PI*0.5)*this.arcH
+                };
+            }
+            // Phase 2: arc down toward target
+            const p=(tt-0.4)/0.6;
+            const apexX=this.sXY.x+(this.eXY.x-this.sXY.x)*0.06;
+            const apexY=this.sXY.y-this.arcH;
+            return {x:apexX+(this.eXY.x-apexX)*p, y:apexY+(this.eXY.y-apexY)*p};
         }
-        return g3d(this.sXY,this.eXY,this.t,this.arcH);
+        // Standard parabolic arc for all other weapons
+        return {
+            x: this.sXY.x+(this.eXY.x-this.sXY.x)*tt,
+            y: this.sXY.y+(this.eXY.y-this.sXY.y)*tt - Math.sin(tt*Math.PI)*this.arcH
+        };
     }
+
     update(){
-        this.t+=this.wpn.speed;
-        if(this.t>=1){this.active=false;const effR=this.wpn.radius*this.hitMod;E.explosions.push(new Explosion(this.eXY.x,this.eXY.y,effR,this.wpn.color,false,false,this.hitMod));}
-    }
-    draw(c){
-        const pos=this.getPos();
-        this.trail.push({x:pos.air.x,y:pos.air.y});if(this.trail.length>14)this.trail.shift();
-        c.save();
-        if(this.trail.length>1){
-            c.beginPath();c.moveTo(this.trail[0].x,this.trail[0].y);
-            for(let i=1;i<this.trail.length;i++)c.lineTo(this.trail[i].x,this.trail[i].y);
-            c.strokeStyle=this.wpn.color;c.lineWidth=2;c.lineCap='round';c.stroke();
+        if(!this.active) return;
+        this.t=Math.min(1, this.t+this.spd);
+        if(this.t>=1){
+            this.active=false;
+            E.explosions.push(new Explosion(
+                this.eXY.x, this.eXY.y,
+                this.radius*this.hitMod,
+                this.color, false, false, this.hitMod
+            ));
         }
-        // Exhaust plume length reflects weapon power
-        const plumeLen={IRON_DOME:8,SLING:13,ARROW2:20,ARROW3:28}[this.type]||8;
-        const ang=this.trail.length>1?Math.atan2(pos.air.y-this.trail[Math.max(0,this.trail.length-3)].y,pos.air.x-this.trail[Math.max(0,this.trail.length-3)].x):0;
-        c.translate(pos.air.x,pos.air.y);c.rotate(ang);
-        const pg=c.createLinearGradient(0,0,-plumeLen,0);
-        pg.addColorStop(0,this.wpn.color);pg.addColorStop(1,'rgba(0,0,0,0)');
-        c.strokeStyle=pg;c.lineWidth=this.type==='ARROW3'?3:2;
-        c.beginPath();c.moveTo(-2,0);c.lineTo(-plumeLen,0);c.stroke();
-        c.shadowBlur=10;c.shadowColor=this.wpn.color;
-        c.fillStyle='#fff';c.beginPath();c.arc(0,0,3,0,Math.PI*2);c.fill();
-        c.shadowBlur=0;c.restore();
+    }
+
+    draw(c){
+        // Compute position for this frame's t
+        const p=this.pos(this.t);
+        this.trail.push({x:p.x,y:p.y});
+        if(this.trail.length>22) this.trail.shift();
+
+        c.save();
+
+        // ── Fading trail ──
+        if(this.trail.length>1){
+            c.lineCap='round';
+            c.lineJoin='round';
+            for(let i=1;i<this.trail.length;i++){
+                const a=(i/this.trail.length)*0.9;
+                c.beginPath();
+                c.moveTo(this.trail[i-1].x, this.trail[i-1].y);
+                c.lineTo(this.trail[i].x,   this.trail[i].y);
+                c.strokeStyle=this.color;
+                c.lineWidth=this.lw*(i/this.trail.length);
+                c.globalAlpha=a;
+                c.stroke();
+            }
+        }
+        c.globalAlpha=1;
+
+        // ── Exhaust plume behind missile ──
+        if(this.trail.length>2){
+            const prev=this.trail[this.trail.length-3];
+            const ang=Math.atan2(p.y-prev.y, p.x-prev.x);
+            const px2=p.x-Math.cos(ang)*this.plume;
+            const py2=p.y-Math.sin(ang)*this.plume;
+            const pg=c.createLinearGradient(p.x,p.y,px2,py2);
+            pg.addColorStop(0,'rgba(255,240,200,0.9)');
+            pg.addColorStop(0.3,this.color);
+            pg.addColorStop(1,'rgba(0,0,0,0)');
+            c.beginPath();c.moveTo(p.x,p.y);c.lineTo(px2,py2);
+            c.strokeStyle=pg;
+            c.lineWidth=this.lw+1;
+            c.globalAlpha=0.8;
+            c.stroke();
+            c.globalAlpha=1;
+        }
+
+        // ── Missile head: bright dot + glow ──
+        c.shadowBlur=16; c.shadowColor=this.color;
+        c.fillStyle='#ffffff';
+        c.beginPath(); c.arc(p.x,p.y,3.5,0,Math.PI*2); c.fill();
+        c.shadowBlur=0;
+        c.fillStyle=this.color;
+        c.beginPath(); c.arc(p.x,p.y,2,0,Math.PI*2); c.fill();
+
+        c.restore();
     }
 }
 
@@ -1616,8 +1696,27 @@ function startGame(){
     showOpIntro(OPS[0],()=>{launchWave(1);requestAnimationFrame(loop);});
 }
 
-function cull(grp){for(let i=E[grp].length-1;i>=0;i--){const e=E[grp][i];try{if(e.update)e.update();}catch(err){e.active=false;}if(e.active===false)E[grp].splice(i,1);}}
+function cull(grp){
+    for(let i=E[grp].length-1;i>=0;i--){
+        const e=E[grp][i];
+        try{if(e.update)e.update();}catch(err){e.active=false;}
+        if(e.active===false)E[grp].splice(i,1);
+    }
+}
 function drawGrp(grp){for(const e of E[grp])try{e.draw(ctx);}catch(err){}}
+
+// For interceptors: draw first (shows current position), then update (advances t)
+// This ensures the missile is visible every single frame including the last
+function cullDrawInterceptors(){
+    // Draw current positions FIRST
+    for(const e of E.interceptors){try{e.draw(ctx);}catch(err){}}
+    // Then update and remove finished ones
+    for(let i=E.interceptors.length-1;i>=0;i--){
+        const e=E.interceptors[i];
+        try{if(e.update)e.update();}catch(err){e.active=false;}
+        if(e.active===false)E.interceptors.splice(i,1);
+    }
+}
 // LOD helper
 function shouldDrawFull(sz){return E.enemies.filter(e=>e.active).length<22||sz>2.5;}
 
@@ -1662,7 +1761,8 @@ function loop(){
         for(let i=E.floats.length-1;i>=0;i--){const fn=E.floats[i];fn.y+=fn.vy;fn.vy*=0.91;fn.life-=0.025;if(fn.life<=0){fn.active=false;E.floats.splice(i,1);}}
 
         drawRadar(ctx);drawEnv(ctx);drawContrails(ctx);
-        for(const g of['flashes','particles','enemies','interceptors','explosions']){cull(g);drawGrp(g);}
+        for(const g of['flashes','particles','enemies','explosions']){cull(g);drawGrp(g);}
+        cullDrawInterceptors();
         drawFloats(ctx);updateThreat();
     }catch(err){console.error('loop:',err);}
 }
