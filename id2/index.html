@@ -1079,18 +1079,18 @@ class Interceptor{
         this.type  =wpnType;
         this.color =bat.color;
         this.radius=bat.radius;
-        this.prox  =cfg.prox*(bat.radius/cfg.prox);
+        // prox = kill radius. Arrow-3 has largest kill bubble.
+        this.prox  = bat.radius;
         this.active=true;
         this.trail =[];
         this.plume =cfg.plume;
         this.lw    =cfg.lw;
 
-        // Snapshot speed — upgrades don't change in-flight missiles
-        // Clamp so missile always visible for at least minF frames
+        // Snapshot speed — clamp so missile always visible for minF frames
         const spdScale=bat.speed/cfg.spd;
         this.spd=Math.min(cfg.spd*spdScale, 1/cfg.minF);
 
-        // Launch from nearest city to click
+        // Launch from nearest city to click — no range restriction
         let best=null,bd=Infinity;
         for(const k in CXY.targets){
             const ct=CXY.targets[k];
@@ -1100,9 +1100,11 @@ class Interceptor{
         this.sXY=best||{x:canvas.width/2,y:canvas.height*0.85};
         this.eXY={x:tx,y:ty};
 
-        // Visual arc height (aesthetic only — interceptors are guided, not ballistic)
+        // Arc height proportional to distance — no cap, so long shots look great
+        // Iron Dome stays flat (0.12), Arrow-3 makes a high dramatic arc (0.55)
         const dist=Math.hypot(tx-this.sXY.x,ty-this.sXY.y);
-        this.arcH=Math.min(cfg.arc, dist*0.36);
+        const arcFrac={IRON_DOME:0.12,SLING:0.22,ARROW2:0.38,ARROW3:0.55}[wpnType]||0.15;
+        this.arcH=dist*arcFrac;
 
         this.t=0;
         E.flashes.push(new MFlash(this.sXY.x,this.sXY.y));
