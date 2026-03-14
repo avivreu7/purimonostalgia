@@ -973,138 +973,218 @@ class Enemy{
 //   Arrow-2             : high steep arc, endo-atmospheric
 //   Arrow-3             : near-vertical launch, exo-atmospheric
 // ════════════════════════════════════════════
-const INTCPT_CFG={
-    IRON_DOME:{arcFrac:0.22, minFrames:28, plume:9,  lw:2,   speed:0.036},
-    SLING:    {arcFrac:0.55, minFrames:40, plume:14, lw:2.5, speed:0.022},
-    ARROW2:   {arcFrac:1.1,  minFrames:55, plume:22, lw:3,   speed:0.017},
-    ARROW3:   {arcFrac:2.2,  minFrames:70, plume:30, lw:3.5, speed:0.014}
+// ════════════════════════════════════════════════════════════
+// WEAPON PHYSICS ENVELOPES
+// maxAlt: max effective intercept altitude in screen pixels
+//   Iron Dome  → 60px  (low, rockets/UAV/cruise only)
+//   Sling      → 175px (medium, SRBM/MRBM below apex)
+//   Arrow-2    → 340px (high, endo-atmospheric MRBM/ICBM)
+//   Arrow-3    → 520px (exo-atmospheric, hypersonic/ICBM)
+// ════════════════════════════════════════════════════════════
+const WPN_PHYS={
+    IRON_DOME:{maxAlt:60,  arcFrac:0.18, baseSpd:0.048, plume:9,  lw:2,   minF:28},
+    SLING:    {maxAlt:175, arcFrac:0.52, baseSpd:0.023, plume:15, lw:2.5, minF:40},
+    ARROW2:   {maxAlt:340, arcFrac:1.05, baseSpd:0.017, plume:22, lw:3,   minF:55},
+    ARROW3:   {maxAlt:520, arcFrac:2.1,  baseSpd:0.014, plume:32, lw:3.5, minF:70}
 };
 
+// ════════════════════════════════════════════════════════════
+// predictIntercept: find where/when an interceptor can meet enemy
+// Returns {x,y,alt,canReach,intArcH,launchPt} or null
+// ════════════════════════════════════════════════════════════
+function predictIntercept(enemy, wpnType){
+    const bat=S.batteries[wpnType], cfg=WPN_PHYS[wpnType];
+    if(!bat||!cfg||!enemy.active) return null;
+
+    // Find nearest city to the enemy's current position (launch point)
+    const ep=enemy.airPos();
+    let launchPt=null,bd=Infinity;
+    for(const k in CXY.targets){
+        const c=CXY.targets[k];
+        const d=Math.hypot(c.x-ep.x,c.y-ep.y);
+        if(d<bd){bd=d;launchPt={x:c.x,y:c.y};}
+    }
+    if(!launchPt) return null;
+
+    const spd=Math.min(cfg.baseSpd*(bat.speed/cfg.baseSpd),1/cfg.minF);
+
+    // Step through enemy's remaining trajectory
+    const STEPS=50;
+    for(let i=2;i<=STEPS;i++){
+        const tE=enemy.t+(1-enemy.t)*(i/STEPS);
+        if(tE>=1) break;
+
+        // Enemy position at tE
+        let ePos;
+        if(!enemy.maxH||enemy.maxH<5){
+            // Flat mover (UAV/cruise)
+            ePos={
+                x:enemy.sXY.x+(enemy.eXY.x-enemy.sXY.x)*tE,
+                y:enemy.sXY.y+(enemy.eXY.y-enemy.sXY.y)*tE
+            };
+        } else {
+            ePos=g3d(enemy.sXY,enemy.eXY,tE,enemy.maxH).air;
+        }
+
+        // How high is the enemy at this point? (px above launch baseline)
+        const eAlt=Math.max(0, launchPt.y-ePos.y);
+
+        // Interceptor arc to reach ePos
+        const dist=Math.hypot(ePos.x-launchPt.x, ePos.y-launchPt.y);
+        const intArcH=Math.max(40,dist*cfg.arcFrac);
+
+        // Time available (frames) before enemy reaches tE
+        const accel=(enemy.t>0.65&&enemy.termAccel>1)?enemy.termAccel:1;
+        const framesAvail=(tE-enemy.t)/(enemy.baseSpd*accel);
+
+        // Frames needed for interceptor to travel this arc
+        const framesNeeded=1/spd;
+        // Interceptor fraction to cover ~dist of its arc: roughly 0.5 = midpoint = highest
+        // Use simple check: interceptor needs ~0.85 of its flight to reach target
+        const frac=0.85;
+        const framesInt=framesNeeded*frac;
+
+        if(framesAvail<framesInt*0.7) continue; // not enough time
+
+        // Can interceptor physically reach this altitude?
+        const canReach=(intArcH>=eAlt) && (eAlt<=cfg.maxAlt);
+
+        return {x:ePos.x,y:ePos.y,alt:eAlt,canReach,intArcH,launchPt,spd};
+    }
+    return null;
+}
+
+// ════════════════════════════════════════════════════════════
+// INTERCEPTOR — physically correct interception
+// Flies to PREDICTED enemy position, not click point
+// Miss if weapon altitude envelope can't reach the target
+// ════════════════════════════════════════════════════════════
 class Interceptor{
-    constructor(type,tx,ty,hitMod){
-        const bat=S.batteries[type];
-        const cfg=INTCPT_CFG[type]||INTCPT_CFG.IRON_DOME;
-        this.type=type;
-        this.hitMod=hitMod||1;
+    constructor(wpnType, targetEnemy, clickX, clickY){
+        const bat=S.batteries[wpnType];
+        const cfg=WPN_PHYS[wpnType];
+        this.type=wpnType;
+        this.enemy=targetEnemy;
         this.color=bat.color;
         this.radius=bat.radius;
-        // Clamp speed so missile is ALWAYS visible for minFrames frames minimum
-        this.spd=Math.min(cfg.speed*(bat.speed/INTCPT_CFG[type].speed), 1/cfg.minFrames);
+        this.active=true;
+        this.trail=[];
         this.plume=cfg.plume;
         this.lw=cfg.lw;
+        this.miss=false;
 
-        // Launch from nearest city — plain {x,y} copy, never Leaflet object
-        let best=null, bd=Infinity;
+        this.spd=Math.min(cfg.baseSpd*(bat.speed/cfg.baseSpd),1/cfg.minF);
+
+        // Launch from nearest city to click
+        let launchPt=null,bd=Infinity;
         for(const k in CXY.targets){
             const c=CXY.targets[k];
-            const d=Math.hypot(c.x-tx,c.y-ty);
-            if(d<bd){bd=d; best={x:c.x,y:c.y};}
+            const d=Math.hypot(c.x-(clickX||0),c.y-(clickY||0));
+            if(d<bd){bd=d;launchPt={x:c.x,y:c.y};}
         }
-        this.sXY = best || {x:canvas.width/2, y:canvas.height*0.85};
-        this.eXY = {x:tx, y:ty};
+        this.sXY=launchPt||{x:canvas.width/2,y:canvas.height*0.85};
 
-        // Arc height = fraction of pixel-distance between launcher and target
-        const dist=Math.hypot(tx-this.sXY.x, ty-this.sXY.y);
-        this.arcH = Math.max(50, dist*cfg.arcFrac);
+        if(targetEnemy&&targetEnemy.active){
+            const pred=predictIntercept(targetEnemy,wpnType);
+            if(pred){
+                this.eXY={x:pred.x,y:pred.y};
+                this.arcH=pred.intArcH;
+                this.miss=!pred.canReach;
+            } else {
+                const cp=targetEnemy.airPos();
+                this.eXY={x:cp.x,y:cp.y};
+                this.arcH=Math.max(40,Math.hypot(cp.x-this.sXY.x,cp.y-this.sXY.y)*cfg.arcFrac);
+                this.miss=true;
+            }
+        } else {
+            // No enemy target — manual click fire (goes to click, misses)
+            this.eXY={x:clickX||canvas.width/2,y:clickY||canvas.height/2};
+            this.arcH=Math.max(40,Math.hypot(this.eXY.x-this.sXY.x,this.eXY.y-this.sXY.y)*cfg.arcFrac);
+            this.miss=true;
+        }
 
-        this.t=0; this.active=true; this.trail=[];
-        E.flashes.push(new MFlash(this.sXY.x, this.sXY.y));
-        sndLaunch(type); haptic(30);
+        this.t=0;
+        E.flashes.push(new MFlash(this.sXY.x,this.sXY.y));
+        sndLaunch(wpnType);
+        haptic(30);
     }
 
-    // Position along parabolic arc (Arrow-3 uses two-phase profile)
     pos(t){
         const tt=Math.max(0,Math.min(1,t));
         if(this.type==='ARROW3'){
-            if(tt<0.4){
-                // Phase 1: near-vertical ascent
-                const p=tt/0.4;
-                return {
-                    x: this.sXY.x+(this.eXY.x-this.sXY.x)*p*0.06,
-                    y: this.sXY.y - Math.sin(p*Math.PI*0.5)*this.arcH
-                };
+            if(tt<0.38){
+                const p=tt/0.38;
+                return{x:this.sXY.x+(this.eXY.x-this.sXY.x)*p*0.06,
+                       y:this.sXY.y-Math.sin(p*Math.PI*0.5)*this.arcH};
             }
-            // Phase 2: arc down toward target
-            const p=(tt-0.4)/0.6;
-            const apexX=this.sXY.x+(this.eXY.x-this.sXY.x)*0.06;
-            const apexY=this.sXY.y-this.arcH;
-            return {x:apexX+(this.eXY.x-apexX)*p, y:apexY+(this.eXY.y-apexY)*p};
+            const p=(tt-0.38)/0.62;
+            const mx=this.sXY.x+(this.eXY.x-this.sXY.x)*0.06;
+            const my=this.sXY.y-this.arcH;
+            return{x:mx+(this.eXY.x-mx)*p, y:my+(this.eXY.y-my)*p};
         }
-        // Standard parabolic arc for all other weapons
-        return {
-            x: this.sXY.x+(this.eXY.x-this.sXY.x)*tt,
-            y: this.sXY.y+(this.eXY.y-this.sXY.y)*tt - Math.sin(tt*Math.PI)*this.arcH
+        return{
+            x:this.sXY.x+(this.eXY.x-this.sXY.x)*tt,
+            y:this.sXY.y+(this.eXY.y-this.sXY.y)*tt-Math.sin(tt*Math.PI)*this.arcH
         };
     }
 
     update(){
         if(!this.active) return;
-        this.t=Math.min(1, this.t+this.spd);
+        this.t=Math.min(1,this.t+this.spd);
         if(this.t>=1){
             this.active=false;
-            E.explosions.push(new Explosion(
-                this.eXY.x, this.eXY.y,
-                this.radius*this.hitMod,
-                this.color, false, false, this.hitMod
-            ));
+            if(this.miss){
+                // Wrong weapon: small burst, no kill
+                E.explosions.push(new Explosion(this.eXY.x,this.eXY.y,8,this.color,false,false,0.04));
+                floatNum(this.eXY.x,this.eXY.y-22,'החטאה','#ef4444');
+            } else {
+                const effR=this.radius*(this.enemy?getEffectiveHitMod(this.type,this.enemy.type):1);
+                E.explosions.push(new Explosion(this.eXY.x,this.eXY.y,effR,this.color,false,false,1));
+            }
         }
     }
 
     draw(c){
-        // Compute position for this frame's t
         const p=this.pos(this.t);
         this.trail.push({x:p.x,y:p.y});
         if(this.trail.length>22) this.trail.shift();
-
         c.save();
-
-        // ── Fading trail ──
+        // Fading trail
         if(this.trail.length>1){
-            c.lineCap='round';
-            c.lineJoin='round';
+            c.lineCap='round';c.lineJoin='round';
             for(let i=1;i<this.trail.length;i++){
-                const a=(i/this.trail.length)*0.9;
                 c.beginPath();
-                c.moveTo(this.trail[i-1].x, this.trail[i-1].y);
-                c.lineTo(this.trail[i].x,   this.trail[i].y);
-                c.strokeStyle=this.color;
-                c.lineWidth=this.lw*(i/this.trail.length);
-                c.globalAlpha=a;
+                c.moveTo(this.trail[i-1].x,this.trail[i-1].y);
+                c.lineTo(this.trail[i].x,this.trail[i].y);
+                c.strokeStyle=this.miss?'#ef444488':this.color;
+                c.lineWidth=this.lw*(0.2+0.8*i/this.trail.length);
+                c.globalAlpha=(i/this.trail.length)*0.88;
                 c.stroke();
             }
+            c.globalAlpha=1;
         }
-        c.globalAlpha=1;
-
-        // ── Exhaust plume behind missile ──
-        if(this.trail.length>2){
-            const prev=this.trail[this.trail.length-3];
-            const ang=Math.atan2(p.y-prev.y, p.x-prev.x);
+        // Exhaust plume
+        if(this.trail.length>3){
+            const prev=this.trail[this.trail.length-4];
+            const ang=Math.atan2(p.y-prev.y,p.x-prev.x);
             const px2=p.x-Math.cos(ang)*this.plume;
             const py2=p.y-Math.sin(ang)*this.plume;
             const pg=c.createLinearGradient(p.x,p.y,px2,py2);
-            pg.addColorStop(0,'rgba(255,240,200,0.9)');
-            pg.addColorStop(0.3,this.color);
+            pg.addColorStop(0,'rgba(255,245,210,0.95)');
+            pg.addColorStop(0.25,this.color);
             pg.addColorStop(1,'rgba(0,0,0,0)');
             c.beginPath();c.moveTo(p.x,p.y);c.lineTo(px2,py2);
-            c.strokeStyle=pg;
-            c.lineWidth=this.lw+1;
-            c.globalAlpha=0.8;
-            c.stroke();
-            c.globalAlpha=1;
+            c.strokeStyle=pg;c.lineWidth=this.lw+1.5;c.globalAlpha=0.82;c.stroke();c.globalAlpha=1;
         }
-
-        // ── Missile head: bright dot + glow ──
-        c.shadowBlur=16; c.shadowColor=this.color;
-        c.fillStyle='#ffffff';
-        c.beginPath(); c.arc(p.x,p.y,3.5,0,Math.PI*2); c.fill();
+        // Head
+        c.shadowBlur=16;c.shadowColor=this.miss?'#ef4444':this.color;
+        c.fillStyle='#ffffff';c.beginPath();c.arc(p.x,p.y,3.5,0,Math.PI*2);c.fill();
         c.shadowBlur=0;
-        c.fillStyle=this.color;
-        c.beginPath(); c.arc(p.x,p.y,2,0,Math.PI*2); c.fill();
-
+        c.fillStyle=this.miss?'#ef4444':this.color;
+        c.beginPath();c.arc(p.x,p.y,2,0,Math.PI*2);c.fill();
         c.restore();
     }
 }
-
 // ════════════════════════════════════════════
 // EXPLOSION// ════════════════════════════════════════════
 // EXPLOSION
@@ -1555,22 +1635,65 @@ function getEffectiveHitMod(weapon,enemyType){
 // ════════════════════════════════════════════
 // INPUT (patched)
 // ════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+// INPUT — target acquisition & fire
+// Finds nearest active enemy to click, locks on it,
+// fires interceptor toward predicted intercept point.
+// ════════════════════════════════════════════════════════════
 canvas.addEventListener('pointerdown',e=>{
-    if(!S.active||S.upgradePhase||S.intelPhase||S.opIntroPhase)return;
+    if(!S.active||S.upgradePhase||S.intelPhase||S.opIntroPhase) return;
     const wpn=S.batteries[S.weapon];
-    if(wpn.cur>=1){
-        wpn.cur--;S.shots++;trackShot(S.weapon);
-        let hitMod=1,closestType=null,minDist=160;
-        for(const m of E.enemies){if(!m.active)continue;const mp=m.airPos();const d=Math.hypot(mp.x-e.clientX,mp.y-e.clientY);if(d<minDist){minDist=d;closestType=m.type;}}
-        if(closestType)hitMod=getEffectiveHitMod(S.weapon,closestType);
-        // Friendly fire warning: check if multiple enemies close to click
-        const nearCount=E.enemies.filter(m=>{if(!m.active)return false;const p=m.airPos();return Math.hypot(p.x-e.clientX,p.y-e.clientY)<wpn.radius;}).length;
-        if(nearCount>=3){floatNum(e.clientX,e.clientY-30,'🎯 מבזק!','#fbbf24');}
-        E.interceptors.push(new Interceptor(S.weapon,e.clientX,e.clientY,hitMod));
-        E.particles.push(new TargetMk(e.clientX,e.clientY,wpn.color));
-        renderBats();
-        if(hitMod<0.25)alert2(`⚠ ${S.weapon==='IRON_DOME'?'ברזל':S.weapon==='SLING'?'קלע':S.weapon==='ARROW2'?'חץ 2':'חץ 3'} — נמוך אפקטיביות!`,'w',1600);
-    }else{alert2(`⚠ ${S.weapon} ריק — ממתין לטעינה`,'w',1200);haptic(170);}
+    if(wpn.cur<1){
+        alert2('⚠ אין מיירטים — ממתין לטעינה','w',1200);
+        haptic(180);
+        return;
+    }
+
+    // Find nearest active enemy within lock-on radius
+    const LOCK_RADIUS=120; // px — must click reasonably close to a target
+    let target=null, minD=LOCK_RADIUS;
+    for(const m of E.enemies){
+        if(!m.active) continue;
+        const mp=m.airPos();
+        const d=Math.hypot(mp.x-e.clientX, mp.y-e.clientY);
+        if(d<minD){minD=d; target=m;}
+    }
+
+    // Warn if clicking nowhere near a threat
+    if(!target){
+        floatNum(e.clientX,e.clientY-18,'אין מטרה','#94a3b8');
+        return; // Don't waste missile
+    }
+
+    // Check altitude envelope — warn immediately if wrong weapon
+    const cfg=WPN_PHYS[S.weapon];
+    const ep=target.airPos();
+    const approxAlt=Math.max(0,(CXY.targets.north||CXY.targets.center||{y:canvas.height*0.5}).y - ep.y);
+    // More accurate: use enemy maxH * sin(pi*t) for current altitude
+    const eAlt=target.maxH>0?Math.max(0,target.maxH*Math.sin(target.t*Math.PI)):0;
+    const wrongWeapon=cfg&&eAlt>cfg.maxAlt*1.1;
+    if(wrongWeapon){
+        const wnames={IRON_DOME:'כיפת ברזל',SLING:'קלע דוד',ARROW2:'חץ 2',ARROW3:'חץ 3'};
+        const best=BEST_WEAPON[target.type]||'ARROW2';
+        alert2(`⚠ ${wnames[S.weapon]} לא מגיעה לגובה זה — השתמש ב-${wnames[best]}`,'w',2200);
+    }
+
+    // Fire
+    wpn.cur--;
+    S.shots++;
+    trackShot(S.weapon);
+
+    // Burst bonus when multiple enemies clustered
+    const near=E.enemies.filter(m=>{
+        if(!m.active) return false;
+        const mp=m.airPos();
+        return Math.hypot(mp.x-ep.x, mp.y-ep.y) < wpn.radius*1.4;
+    }).length;
+    if(near>=3) floatNum(ep.x,ep.y-28,'🎯 מבזק!','#fbbf24');
+
+    E.interceptors.push(new Interceptor(S.weapon, target, e.clientX, e.clientY));
+    E.particles.push(new TargetMk(ep.x, ep.y, wpn.color));
+    renderBats();
 });
 
 // ════════════════════════════════════════════
