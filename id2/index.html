@@ -38,6 +38,29 @@ body,html{margin:0;padding:0;width:100%;height:100%;background:#020810;overflow:
 .sc{background:rgba(4,10,28,0.96);border:1px solid rgba(56,189,248,0.12);border-radius:5px;padding:3px 7px;}
 #monyel{transition:color 0.2s,transform 0.2s;display:inline-block;}
 .mfl{color:#34d399!important;transform:scale(1.25)!important;}
+/* ─── WAVE CLEAR ─── */
+#wclear{position:absolute;inset:0;z-index:75;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 0.5s;}
+#wclear.sh{opacity:1;}
+#wclear-sweep{position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(16,185,129,0.06),transparent);animation:wcSweep 1.4s ease-out forwards;}
+@keyframes wcSweep{from{left:-100%}to{left:200%}}
+/* ─── SKILL TREE ─── */
+#skillov{position:absolute;inset:0;z-index:86;background:rgba(0,2,12,0.96);backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.5s;padding:20px;}
+#skillov.sh{opacity:1;pointer-events:auto;}
+.sk-card{background:rgba(3,8,22,0.97);border:2px solid rgba(56,189,248,0.18);border-radius:14px;padding:18px 14px;cursor:pointer;transition:all 0.22s;text-align:center;flex:1;min-width:0;}
+.sk-card:hover{border-color:rgba(56,189,248,0.7);background:rgba(56,189,248,0.06);transform:translateY(-3px);}
+.sk-card:active{transform:scale(0.96);}
+.sk-card.chosen{border-color:#10b981;background:rgba(16,185,129,0.08);}
+/* ─── EPILOGUE ─── */
+#epilov{position:absolute;inset:0;z-index:88;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.6s;padding:24px;}
+#epilov.sh{opacity:1;}
+/* ─── SIDE MISSION ─── */
+#smbx{position:absolute;top:68px;left:50%;transform:translateX(-50%);z-index:40;pointer-events:none;width:90%;max-width:340px;}
+.smpill{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.4);border-radius:8px;padding:5px 12px;font-family:'Share Tech Mono',monospace;font-size:10px;color:#fbbf24;text-align:center;display:none;}
+.smpill.sh{display:block;animation:smIn 0.3s ease-out;}
+@keyframes smIn{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
+/* ─── STATS BAR ─── */
+.stats-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+.stat-item{background:rgba(3,8,22,0.95);border:1px solid rgba(56,189,248,0.12);border-radius:5px;padding:2px 6px;font-family:'Share Tech Mono',monospace;font-size:8px;color:#94a3b8;white-space:nowrap;}
 /* ALERTS bottom-center */
 #abx{position:absolute;bottom:152px;left:50%;transform:translateX(-50%);z-index:50;display:flex;flex-direction:column-reverse;gap:3px;pointer-events:none;width:84%;max-width:350px;align-items:center;}
 .ap{padding:4px 10px;border-radius:6px;font-family:'Share Tech Mono',monospace;font-size:9.5px;font-weight:bold;text-align:center;animation:ain 0.18s ease-out;border:1px solid rgba(255,255,255,0.1);width:100%;}
@@ -117,6 +140,40 @@ body,html{margin:0;padding:0;width:100%;height:100%;background:#020810;overflow:
 <div id="jmov"></div>
 <canvas id="gc"></canvas>
 <div id="abx"></div><div id="kf"></div><div id="rad"></div><div id="cmb"></div><div id="cmd"></div>
+
+<!-- Wave Clear -->
+<div id="wclear">
+  <div id="wclear-sweep"></div>
+  <div class="text-center">
+    <div class="text-[11px] text-emerald-400 uppercase tracking-[0.5em] font-mono mb-2">✓ מרחב אווירי נקי</div>
+    <div id="wclear-stats" class="text-[9px] text-slate-500 font-mono"></div>
+  </div>
+</div>
+
+<!-- Side Mission banner -->
+<div id="smbx"><div id="smpill" class="smpill">🎯 <span id="smtxt"></span> — <span id="smtimer" class="text-amber-300">25s</span></div></div>
+
+<!-- Skill Tree -->
+<div id="skillov">
+  <div class="text-center mb-4">
+    <div id="sk-op" class="text-[8px] text-sky-700 uppercase tracking-[0.45em] font-mono mb-1"></div>
+    <h2 class="text-3xl font-black text-white mb-1" style="font-family:'Rajdhani'">בחר דוקטרינה</h2>
+    <p class="text-[11px] text-slate-500 font-mono">בחירה זו תשפיע על כל שאר המבצע</p>
+  </div>
+  <div id="sk-cards" class="flex gap-3 w-full max-w-lg mb-4"></div>
+  <p id="sk-cd" class="text-[8px] text-slate-700 font-mono mt-2"></p>
+</div>
+
+<!-- Epilogue -->
+<div id="epilov">
+  <div class="text-center max-w-md px-5">
+    <div id="ep-tag" class="text-[8px] text-slate-700 uppercase tracking-[0.45em] font-mono mb-3"></div>
+    <h2 id="ep-title" class="text-3xl font-black text-white mb-4" style="font-family:'Rajdhani'"></h2>
+    <div id="ep-body" class="text-[11px] text-slate-300 font-mono leading-relaxed text-right mb-4"></div>
+    <div id="ep-quote" class="text-[10px] text-sky-400 font-mono italic border-r-2 border-sky-700 pr-3 text-right mb-3"></div>
+    <div id="ep-cd" class="text-[8px] text-slate-700 font-mono mt-4"></div>
+  </div>
+</div>
 
 <!-- Wave Banner -->
 <div id="wb">
@@ -257,6 +314,8 @@ body,html{margin:0;padding:0;width:100%;height:100%;background:#020810;overflow:
       <div class="sc text-center"><div class="text-red-400 text-xl font-black font-mono" id="mwh">0</div><div class="text-[7px] text-slate-600">פגיעות</div></div>
       <div class="sc text-center"><div class="text-amber-400 text-xl font-black font-mono" id="mwacc">-</div><div class="text-[7px] text-slate-600">דיוק</div></div>
     </div>
+    <div class="stats-row mt-2" id="wpn-stats-row"></div>
+    <div id="sm-bonus-row" class="text-center mt-1 text-[8px] text-amber-400 font-mono hidden"></div>
   </div>
   <div class="p-2.5 grid grid-cols-2 gap-1.5 border-b border-slate-900">
     <button onclick="buy('DOME_CAP')" id="u-dome" class="ub p-2 flex flex-col items-center gap-0.5"><span>🛡</span><span class="text-[9px] text-amber-300 font-bold text-center leading-tight">+3 ברזל</span><span class="text-[9px] font-mono text-white bg-amber-950/40 px-2 rounded-full">$<span id="cu-dome">320</span></span></button>
@@ -743,7 +802,9 @@ class Enemy{
             const stl=this.stealth?' 👻':'';
             alert2(`▲ ${et.desc}${stl} מ${site.name} → ${TNAMES[targetKey]}`,'t',3000);
             sndAlert();haptic(60);
-            if(this.type==='SEJJIL'){alert2("⚠⚠ ס'ג'יל ICBM! חץ 3 בלבד!",'w',4000);}
+            if(this.type==='SEJJIL'){alert2("⚠⚠ ס'ג'יל ICBM! חץ 3 בלבד!",'w',4000);charReact('SEJJIL_SPAWN');}
+            if(this.type==='MIRV')charReact('MIRV_SPAWN');
+            if(this.stealth)charReact('STEALTH_DETECTED');
             if(Math.random()<0.36){const rr=['>> מסלול נכנס','>> INBOUND CONFIRMED','>> BALLISTIC TRACK','>> THREAT VECTOR'];addRadio(rr[Math.floor(Math.random()*rr.length)]);}
         }
     }
@@ -831,8 +892,12 @@ class Enemy{
                 c.shadowBlur=0;c.globalAlpha=stA;
             }
         }
-        // Draw the shape
-        try{
+        // Draw the shape — LOD: if >20 enemies and small, just draw dot
+        const useLOD=E.enemies.filter(e=>e.active).length>20&&this.sz<3.2;
+        if(useLOD){
+            const col=this.isFake?'#94a3b8':(this.et?.color||this.site.color||'#f59e0b');
+            c.fillStyle=col;c.beginPath();c.arc(p.x,p.y,this.sz*0.9,0,Math.PI*2);c.fill();
+        }else try{
             c.save();c.translate(p.x,p.y);c.rotate(angle);
             const col=this.isFake?'#94a3b8':(this.et.color||this.site.color||'#f59e0b');
             const sh=this.et.shape;
@@ -844,7 +909,7 @@ class Enemy{
             else if(sh==='decoy')drawDecoy(c,this.sz,col);
             else drawBallistic(c,this.sz,col,this.type);
             c.restore();
-        }catch(e){c.restore();}
+        }catch(err){c.restore();}
         c.restore();
     }
     airPos(){
@@ -904,7 +969,7 @@ class Explosion{
                     const now=Date.now();if(now-S.lastKill<3500)S.combo++;else S.combo=1;S.lastKill=now;
                     if(S.combo>=3){const cb=S.combo*62;addMoney(cb);showCombo(S.combo,cb);}
                     if(fake)kfeed(`⬙ DECOY +$${bonus}`,'d');
-                    else{kfeed(`✓ ${m.et?.desc?.split(' ')[0]||m.type} +$${bonus}`,'g');cmdKill(m.site?.id);}
+                    else{kfeed(`✓ ${m.et?.desc?.split(' ')[0]||m.type} +$${bonus}`,'g');cmdKill(m.site?.id);registerKill(m,null);checkSideKill(m.site?.id);}
                     E.explosions.push(new Explosion(p.x,p.y,20,'#fff',false,false,1));
                 }
             }
@@ -996,6 +1061,7 @@ function applyDamage(key,amt){
     floatNum(CXY.targets[key].x,CXY.targets[key].y-18,`-${amt}HP`,'#f87171');updateHud();sndDmg();haptic([85,38,215]);
     alert2(`💥 ${TNAMES[key]} נפגעה — ${Math.round(TARGETS[key].hp)}% נותר`,'t',1900);
     canvas.style.transform=`translate(${(Math.random()-.5)*16}px,${(Math.random()-.5)*16}px)`;setTimeout(()=>canvas.style.transform='',60);
+    charReact('CITY_HIT');
     let all=true;for(const k in TARGETS)if(TARGETS[k].hp>0)all=false;if(all)endGame();
 }
 
@@ -1026,27 +1092,6 @@ function triggerJammer(){
 }
 
 // ════════════════════════════════════════════
-// UPGRADE PHASE / OPERATION FLOW
-// ════════════════════════════════════════════
-function startUpgrade(){
-    S.upgradePhase=true;
-    const bonus=Math.floor(105+S.wave*62);addMoney(bonus);
-    alert2(`✓ גל ${S.wave} הסתיים! +$${bonus}`,'ok',3500);
-    document.getElementById('mwk').textContent=S.waveKills;document.getElementById('mwh').textContent=S.waveHits;
-    const tot=S.waveKills+S.waveHits,acc=tot>0?Math.round(S.waveKills/tot*100):0;
-    document.getElementById('mwacc').textContent=tot>0?acc+'%':'—';
-    const narr=acc>82?'ביצועים מצוינים — המערך מחזיק.':acc>60?'ביצועים סבירים — שדרג לפני הגל הבא.':acc>30?'⚠ ביצועים חלשים — שדרג עכשיו!':'⚠⚠ כישלון קרב כמעט — שפר מיד!';
-    document.getElementById('mnarr').textContent=narr;
-    updateHud();document.getElementById('mbk').classList.add('op');document.getElementById('um').classList.add('op');
-}
-function nextWave(){
-    document.getElementById('um').classList.remove('op');document.getElementById('mbk').classList.remove('op');
-    const nw=S.wave+1,curOp=getOp(S.wave),nxtOp=getOp(nw);
-    if(nxtOp.waveStart===nw&&nxtOp.id!==curOp.id)showOpIntro(nxtOp,()=>checkIntel(nw));
-    else checkIntel(nw);
-}
-function checkIntel(w){if(WAVE_INTEL[w])showIntel(WAVE_INTEL[w],()=>launchWave(w));else launchWave(w);}
-
 function showOpIntro(op,cb){
     S.opIntroPhase=true;
     document.getElementById('oiop').textContent=op.short+' — חסוי ביותר';
@@ -1074,25 +1119,6 @@ function showIntel(intel,cb){
     const iv=setInterval(()=>{cnt--;cnt>0?cd.textContent=`ממשיך ב-${cnt}...`:cd.textContent='מתחיל...';},1000);
     setTimeout(()=>{clearInterval(iv);document.getElementById('intel').classList.remove('sh');setTimeout(()=>{S.intelPhase=false;cb();},450);},5500);
 }
-function launchWave(w){
-    S.wave=w;
-    const opN=Math.floor((w-1)/10);
-    S.toSpawn=Math.floor(4+w*1.5+opN*3.5);
-    S.spawnDelay=Math.max(480,2800-w*100-opN*65);
-    S.spawned=0;S.waveKills=0;S.waveHits=0;S.empActive=false;S.jamActive=false;
-    document.getElementById('jmov').classList.remove('on');document.getElementById('thud').classList.remove('hj');
-    if(S.empCharges>0){document.getElementById('empb').style.display='block';document.getElementById('empab').disabled=false;document.getElementById('empc').textContent=`${S.empCharges}/1`;}
-    if(w>=5&&!S.radarUnlocked){S.radarUnlocked=true;document.getElementById('radb').style.display='block';alert2('📡 רדאר נפתח — Stealth מגל זה!','w',4500);}
-    S.upgradePhase=false;S.lastSpawn=Date.now()+1600;
-    const op=getOp(w);
-    document.getElementById('wbop').textContent=op.short;document.getElementById('wbtxt').textContent=`גל ${w}`;
-    const subs={5:'⚠ STEALTH UAV',7:'⚠ JAMMER',9:'⚠ MAX PRESSURE',15:'⚠ MIRV ראשון',22:'⚠ אמד MRBM',25:'⚠⚠ ס\'ג\'יל ICBM',32:'⚠ בורקאן תימן',38:'⚠⚠ SATURATION'};
-    document.getElementById('wbsub').textContent=subs[w]||'⚠ כוחות עוינים בתנועה';
-    const wb=document.getElementById('wb');wb.classList.add('sh');setTimeout(()=>wb.classList.remove('sh'),2600);
-    updateHud();buildCmd();
-    // Jammer waves
-    if([7,12,18,26,32,38,44].includes(w))setTimeout(()=>{if(S.active&&!S.jamActive)triggerJammer();},4000+Math.random()*6000);
-}
 function buy(type){
     const cmap={DOME_CAP:'dome',SLING_CAP:'sling',ARROW2_CAP:'a2',ARROW3_CAP:'a3',RELOAD:'reload',HEAL:'heal',EMP:'emp',RADIUS:'radius',SPEED:'speed',EMERG:'emerg'};
     const ck=cmap[type];if(!ck)return;const cost=S.costs[ck];if(!cost||S.money<cost)return;
@@ -1113,22 +1139,251 @@ function buy(type){
 }
 
 // ════════════════════════════════════════════
+// WEAPON STATS TRACKING
+// ════════════════════════════════════════════
+const WPNST={IRON_DOME:{shots:0,kills:0,label:'ברזל'},SLING:{shots:0,kills:0,label:'קלע'},ARROW2:{shots:0,kills:0,label:'חץ2'},ARROW3:{shots:0,kills:0,label:'חץ3'}};
+function trackShot(w){if(WPNST[w])WPNST[w].shots++;}
+function trackKill(w){if(WPNST[w])WPNST[w].kills++;}
+function renderWpnStats(){
+    const row=document.getElementById('wpn-stats-row');if(!row)return;
+    row.innerHTML=Object.entries(WPNST).map(([w,d])=>{
+        const acc=d.shots>0?Math.round(d.kills/d.shots*100):0;
+        return `<div class="stat-item">${d.label}: ${d.kills}✓ / ${d.shots}⬤ = ${acc}%</div>`;
+    }).join('');
+}
+
+// ════════════════════════════════════════════
+// MUSIC ENGINE
+// ════════════════════════════════════════════
+const MUS={ctx:null,nodes:{},running:false,level:0};
+function musStart(){
+    if(MUS.running)return;
+    try{
+        MUS.ctx=new(window.AudioContext||window.webkitAudioContext)();
+        const c=MUS.ctx;MUS.running=true;
+        // Bass drone
+        const bass=c.createOscillator(),bassGain=c.createGain();
+        bass.type='sine';bass.frequency.value=42;bassGain.gain.value=0.06;
+        bass.connect(bassGain);bassGain.connect(c.destination);bass.start();
+        // Tension oscillator
+        const tens=c.createOscillator(),tensGain=c.createGain();
+        tens.type='sawtooth';tens.frequency.value=88;tensGain.gain.value=0;
+        const tensF=c.createBiquadFilter();tensF.type='lowpass';tensF.frequency.value=200;
+        tens.connect(tensF);tensF.connect(tensGain);tensGain.connect(c.destination);tens.start();
+        // Pulse modulator
+        const lfo=c.createOscillator(),lfoGain=c.createGain();
+        lfo.type='sine';lfo.frequency.value=0.4;lfoGain.gain.value=0.018;
+        lfo.connect(lfoGain);lfoGain.connect(bassGain.gain);lfo.start();
+        // High drone for combat
+        const hi=c.createOscillator(),hiGain=c.createGain();
+        hi.type='triangle';hi.frequency.value=165;hiGain.gain.value=0;
+        hi.connect(hiGain);hiGain.connect(c.destination);hi.start();
+        MUS.nodes={bassGain,tensGain,hiGain,lfoGain};
+    }catch(e){}
+}
+function musSetLevel(lvl){
+    // lvl 0=calm, 1=tension, 2=combat, 3=critical
+    if(!MUS.running||!MUS.ctx)return;
+    MUS.level=lvl;
+    const n=MUS.nodes,t=MUS.ctx.currentTime,r=0.8;
+    try{
+        n.bassGain.gain.linearRampToValueAtTime(0.04+lvl*0.018,t+r);
+        n.tensGain.gain.linearRampToValueAtTime(lvl>=1?0.018+lvl*0.008:0,t+r);
+        n.hiGain.gain.linearRampToValueAtTime(lvl>=2?0.012+lvl*0.005:0,t+r);
+        n.lfoGain.gain.linearRampToValueAtTime(0.012+lvl*0.014,t+r);
+    }catch(e){}
+}
+function musPause(){if(!MUS.running)return;try{musSetLevel(0);}catch(e){}}
+
+// ════════════════════════════════════════════
+// CHARACTER REACTIONS (story-driven radio)
+// ════════════════════════════════════════════
+const CHAR_REACTIONS={
+    MIRV_SPAWN:["HaKod: >> MIRV זוהה. יירט לפני t=0.52","מירב: 'יותם — MIRV. חץ 3. עכשיו.'","ירקוני: 'בן-דוד! MIRV על המסך!'"],
+    SEJJIL_SPAWN:["HaKod: >> ס'ג'יל מזוהה. Mach 5.7 בטרמינל.","מירב: 'ס'ג'יל! רק חץ 3 יכול לעצור אותו!'","ירקוני: 'בן-דוד — ס'ג'יל. חץ 3 בלבד!'"],
+    CITY_HIT:["מירב: 'עיר נפגעה — מחזיקים?'","ירקוני: 'קרב על הישרדות. תחזיק!'","HaKod: >> נזק תשתיות זוהה. ממשיך לעקוב."],
+    COMBO5:["מירב: 'יותם — 5 ברצף! מדהים!'","ירקוני: 'זה מה שקרא להם שאגת הארי!'","HaKod: >> דיוק יוצא דופן. מעקב ממשיך."],
+    SEJJIL_KILLED:["מירב: 'ס'ג'יל הושמד! אי-אפשר לתאר...'","ירקוני: 'בן-דוד — ניצחון הכבוד הלאומי!'","HaKod: >> ICBM מופרע. מסלול נכחד. 👁"],
+    STEALTH_DETECTED:["מירב: 'שהאב סטלת' — הפעלת רדאר!'","HaKod: >> STEALTH SIGNATURE ACQUIRED","ירקוני: 'תגלה אותו לפני שיגיע!'"],
+    JAMMER_START:["מירב: 'Jammer! אני עיוורת ברדאר!'","HaKod: >> ECM DETECTED — LEAD LOST","ירקוני: 'בן-דוד — תסתכל על הזנב, לא על הראש!'"],
+    LOW_HP:["מירב: 'יותם — העיר בסכנה קריטית!'","ירקוני: 'אם עוד פגיעה אחת — נאבד הכל!'","HaKod: >> CRITICAL INFRASTRUCTURE. HOLD."],
+    WAVE_CLEAR:["מירב: 'מרחב נקי. נושמת.'","ירקוני: 'גל נוסף מאחורינו, בן-דוד.'","HaKod: >> AIRSPACE CLEAR. STANDBY."],
+    OP_COMPLETE:["מירב: 'יותם... הצלחנו. לפחות הגל הזה.'","ירקוני: 'ישראל חייבת לך, בן-דוד. ממשיכים?'","HaKod: >> PHASE COMPLETE. NEXT THREAT INCOMING."]
+};
+let lastReactTime=0;
+function charReact(evt,forceIdx){
+    const now=Date.now();if(now-lastReactTime<3500&&!forceIdx)return;
+    lastReactTime=now;
+    const pool=CHAR_REACTIONS[evt];if(!pool)return;
+    const msg=pool[forceIdx!==undefined?forceIdx:Math.floor(Math.random()*pool.length)];
+    addRadio(msg);
+}
+
+// ════════════════════════════════════════════
+// WAVE CLEAR ANIMATION
+// ════════════════════════════════════════════
+function showWaveClear(wk,wh,cb){
+    const el=document.getElementById('wclear');
+    const sweep=document.getElementById('wclear-sweep');
+    const acc=wk+wh>0?Math.round(wk/(wk+wh)*100):0;
+    document.getElementById('wclear-stats').textContent=`גל ${S.wave} · יירוטים: ${wk} | פגיעות: ${wh} | דיוק: ${acc}%`;
+    sweep.style.animation='none';void sweep.offsetWidth;sweep.style.animation='wcSweep 1.4s ease-out forwards';
+    el.classList.add('sh');
+    charReact('WAVE_CLEAR');
+    musSetLevel(0);
+    setTimeout(()=>{el.classList.remove('sh');setTimeout(cb,400);},2200);
+}
+
+// ════════════════════════════════════════════
+// EPILOGUE — after each operation completes
+// ════════════════════════════════════════════
+const EPILOGUES=[
+    {tag:'לאחר מבצע מגן ברזל — 10/10/2023',
+     title:'שאגת הארי — פרק א\'',
+     body:`48 שעות לאחר תחילת הקרב. כיפת הברזל יירטה 86% מהרקטות. אבל 3,000 רקטות הגיעו לאדמה.
+     
+רס"ן מירב כהן כתבה ביומן: "יותם לא ישן. בכל פעם שמסך כיבה, הוא חזר. בשלב מסוים שאלתי אותו — 'למה אתה לא נח?' הוא הסתכל עלי: 'כי הם לא נחים.'"
+
+גנרל ירקוני העניק לצוות אות הצטיינות. יותם סירב לקבל אותו. "לא סיימנו."`,
+     quote:'"לא סיימנו." — סרן יותם בן-דוד, 10 באוקטובר 2023'},
+    {tag:'לאחר סופת הצפון — 20/10/2023',
+     title:'שאגת הארי — פרק ב\'',
+     body:`הגליל שרד. חיפה שרדה. 
+
+אחיו של יותם — סא"ל ע"י — נחת באוורת הבסיס ב-23:00. "שמעתי שהיית על המסכים כל 18 שעות האחרונות." יותם: "כן." ע"י: "תמשיך ככה."
+
+HaKod שלח הודעה מוצפנת: "Phase 1 complete. Iran watching closely. Prepare for direct engagement."
+
+מירב קיבלה הודעה מבית החולים — אחיה יצא מניתוח. היא בכתה לראשונה.`,
+     quote:'"Phase 1 complete. Iran watching closely." — HaKod, 20 באוקטובר'},
+    {tag:'לאחר ליל הכוכבים — 14/4/2024',
+     title:'שאגת הארי — פרק ג\'',
+     body:`מבצע "הבטחת האביב" נכשל. 97% מהכלים יורטו — על ידי ישראל, ארה"ב, ירדן, בריטניה.
+
+סרן בן-דוד ישב לבד אחרי האחרון. מירב: "עשית זאת." יותם: "איראן שיגרה ישירות. הם חצו קו. הם יחזרו."
+
+HaKod: "הם לוקחים סיכום. הפעם הבאה — יהיה יותר. ס'ג'יל יהיה ראשון בתור."
+
+אחיו של יותם קנה שקית קפה והניח אותה על הקונסולה. "לגל הבא."`,
+     quote:'"לגל הבא." — סא"ל ע"י בן-דוד, 14 באפריל 2024'},
+    {tag:'לאחר ים האש — 20/10/2024',
+     title:'שאגת הארי — פרק ד\'',
+     body:`ים האש. בורקאן מתימן. ס'ג'יל מאיראן. הכל בו-זמנית.
+
+הצלחת. דימונה שרדה. ישראל שרדה.
+
+מירב: "אחי שוחרר מבית חולים אתמול. אמא שאלה אם סיימת כבר. אמרתי לה — הוא לא סוג שמסיים."
+
+ירקוני: "בן-דוד — מה שעשית הלילה... זה לא אמור להיות אפשרי."
+
+HaKod: "OMEGA INCOMING. No timetable. No limit. This is it."`,
+     quote:'"זה לא אמור להיות אפשרי." — תא"ל ירקוני, 20 באוקטובר 2024'}
+];
+function showEpilogue(opIdx,cb){
+    if(opIdx>=EPILOGUES.length){cb();return;}
+    const ep=EPILOGUES[opIdx];
+    document.getElementById('ep-tag').textContent=ep.tag;
+    document.getElementById('ep-title').textContent=ep.title;
+    document.getElementById('ep-body').textContent=ep.body;
+    document.getElementById('ep-quote').textContent=`"${ep.quote.replace(/^"(.+)"$/,'$1')}"`;
+    const ov=document.getElementById('epilov');ov.classList.add('sh');
+    sndIntel();charReact('OP_COMPLETE',opIdx%3);
+    let cnt=7;const cd=document.getElementById('ep-cd');cd.textContent=`ממשיך ב-${cnt}...`;
+    const iv=setInterval(()=>{cnt--;cnt>0?cd.textContent=`ממשיך ב-${cnt}...`:cd.textContent='פרק הבא...';},1000);
+    setTimeout(()=>{clearInterval(iv);ov.classList.remove('sh');setTimeout(cb,500);},8000);
+}
+
+// ════════════════════════════════════════════
+// SKILL TREE — between operations
+// ════════════════════════════════════════════
+const SKILL_TREES=[
+    // After op 1 → op 2
+    [{icon:'🛡',name:'דוקטרינת ברזל',desc:'מלאי כיפת ברזל ×1.5\nמהירות טעינה +25%',apply:()=>{S.batteries.IRON_DOME.max=Math.floor(S.batteries.IRON_DOME.max*1.5);S.batteries.IRON_DOME.cur=S.batteries.IRON_DOME.max;S.costs.reloadMod*=0.75;}},
+     {icon:'🗡',name:'דוקטרינת קלע',desc:'מלאי קלע דוד +4\nRDIUS כלל מיירטים +25%',apply:()=>{S.batteries.SLING.max+=4;S.batteries.SLING.cur+=4;for(const b of Object.values(S.batteries))b.radius*=1.25;}},
+     {icon:'↑',name:'דוקטרינת חץ',desc:'מלאי חץ 2 +2 · חץ 3 +1\nמהירות מיירט +20%',apply:()=>{S.batteries.ARROW2.max+=2;S.batteries.ARROW2.cur+=2;S.batteries.ARROW3.max+=1;S.batteries.ARROW3.cur+=1;for(const b of Object.values(S.batteries))b.speed*=1.2;}}],
+    // After op 2 → op 3
+    [{icon:'⚡',name:'דוקטרינת EMP',desc:'EMP מופעל אוטומטי × גל\nטעינה: 20s במקום 30s',apply:()=>{S.empCharges=1;S.empAutoRecharge=true;document.getElementById('empb').style.display='block';document.getElementById('empab').disabled=false;document.getElementById('empc').textContent='1/1';}},
+     {icon:'📡',name:'דוקטרינת רדאר',desc:'רדאר תמידי (ללא עלות)\nStealth UAV חשוף תמיד',apply:()=>{S.radarPermanent=true;S.radarActive=true;S.radarEnd=Infinity;}},
+     {icon:'💰',name:'דוקטרינת תקציב',desc:'+$2500 לאלתר\nכל יירוט מביא +50% בונוס',apply:()=>{S.money+=2500;S.moneyBonus=1.5;updateHud();flashMoney();}}],
+    // After op 3 → op 4
+    [{icon:'🔄',name:'דוקטרינת לוגיסטיקה',desc:'כל הנשק נטען מיידית\nפעם אחת לכל המבצע',apply:()=>{for(const b of Object.values(S.batteries))b.cur=b.max;renderBats();}},
+     {icon:'💥',name:'דוקטרינת אש כבדה',desc:'כל רדיוסי פיצוץ ×1.4\nמהירות כל מיירטים +30%',apply:()=>{for(const b of Object.values(S.batteries)){b.radius*=1.4;b.speed*=1.3;}}},
+     {icon:'🏥',name:'דוקטרינת עורף',desc:'כל הערים משוחזרות ל-80%\n+$1500 לאלתר',apply:()=>{for(const k in TARGETS)TARGETS[k].hp=Math.max(TARGETS[k].hp,80);S.money+=1500;updateHud();}}],
+    // After op 4 → OMEGA
+    [{icon:'🌩',name:'דוקטרינת אומגה-ברזל',desc:'כיפת ברזל MAX×30, speed×2\nטעינה 0.8s',apply:()=>{S.batteries.IRON_DOME.max=30;S.batteries.IRON_DOME.cur=30;S.batteries.IRON_DOME.speed*=2;S.batteries.IRON_DOME.reload=800;}},
+     {icon:'↑↑',name:'דוקטרינת אומגה-חץ',desc:'חץ 3: max×4, radius×2\nחץ 2: max×4',apply:()=>{S.batteries.ARROW3.max=4;S.batteries.ARROW3.cur=4;S.batteries.ARROW3.radius*=2;S.batteries.ARROW2.max=4;S.batteries.ARROW2.cur=4;}},
+     {icon:'⚖️',name:'דוקטרינת אומגה-מאוזנת',desc:'כל מערכות ×1.5\n+$3000',apply:()=>{for(const b of Object.values(S.batteries)){b.max=Math.ceil(b.max*1.5);b.cur=b.max;b.radius*=1.3;b.speed*=1.3;}S.money+=3000;updateHud();}}]
+];
+function showSkillTree(treeIdx,cb){
+    if(treeIdx>=SKILL_TREES.length){cb();return;}
+    S.opIntroPhase=true;
+    const tree=SKILL_TREES[treeIdx];
+    const opNames=['מגן ברזל → חזית הצפון','חזית הצפון → ליל הכוכבים','ליל הכוכבים → ים האש','ים האש → שאגת הארי'];
+    document.getElementById('sk-op').textContent=opNames[treeIdx]||'בחר דוקטרינה';
+    const cards=document.getElementById('sk-cards');cards.innerHTML='';
+    tree.forEach((sk,i)=>{
+        const div=document.createElement('div');div.className='sk-card ia';
+        div.innerHTML=`<div class="text-3xl mb-2">${sk.icon}</div><div class="text-[13px] font-black text-white mb-1" style="font-family:'Rajdhani'">${sk.name}</div><div class="text-[9px] text-slate-400 font-mono leading-relaxed">${sk.desc.replace(/\n/g,'<br>')}</div>`;
+        div.onclick=()=>{
+            document.querySelectorAll('.sk-card').forEach(c=>c.classList.remove('chosen'));
+            div.classList.add('chosen');
+            sk.apply();
+            renderBats();updateHud();
+            setTimeout(()=>{document.getElementById('skillov').classList.remove('sh');S.opIntroPhase=false;setTimeout(cb,400);},900);
+        };
+        cards.appendChild(div);
+    });
+    let cnt=20;const cd=document.getElementById('sk-cd');cd.textContent=`בחר תוך ${cnt} שניות...`;
+    const iv=setInterval(()=>{cnt--;cd.textContent=`בחר תוך ${cnt} שניות...`;if(cnt<=0){clearInterval(iv);tree[1].apply();renderBats();updateHud();document.getElementById('skillov').classList.remove('sh');S.opIntroPhase=false;setTimeout(cb,400);}},1000);
+    document.getElementById('skillov').classList.add('sh');
+}
+
+// ════════════════════════════════════════════
+// SIDE MISSIONS
+// ════════════════════════════════════════════
+let SM={active:false,siteId:null,kills:0,target:3,end:0,timerIv:null,bonusReward:600};
+function startSideMission(){
+    if(SM.active||S.upgradePhase||S.intelPhase)return;
+    const avSites=CXY.sites.filter(s=>!S.neutralized.has(s.id));
+    if(!avSites.length)return;
+    const site=avSites[Math.floor(Math.random()*avSites.length)];
+    SM.active=true;SM.siteId=site.id;SM.kills=0;SM.target=3+Math.floor(S.wave/8);SM.bonusReward=600+S.wave*40;
+    SM.end=Date.now()+28000;
+    const pill=document.getElementById('smpill'),txt=document.getElementById('smtxt');
+    txt.textContent=`הזדמנות! הרוס ${SM.target} טילים מ${site.name} — +$${SM.bonusReward}`;
+    pill.classList.add('sh');
+    SM.timerIv=setInterval(()=>{
+        const rem=Math.max(0,Math.floor((SM.end-Date.now())/1000));
+        document.getElementById('smtimer').textContent=rem+'s';
+        if(rem<=0){clearInterval(SM.timerIv);pill.classList.remove('sh');SM.active=false;}
+    },1000);
+}
+function checkSideKill(siteId){
+    if(!SM.active||siteId!==SM.siteId)return;
+    SM.kills++;
+    if(SM.kills>=SM.target){
+        clearInterval(SM.timerIv);SM.active=false;
+        document.getElementById('smpill').classList.remove('sh');
+        addMoney(SM.bonusReward);
+        floatNum(canvas.width/2,canvas.height*0.35,`🎯 משימה הושלמה! +$${SM.bonusReward}`,'#fbbf24');
+        alert2(`🎯 משימת צד הושלמה! +$${SM.bonusReward}`,'ok',4000);
+        // Permanently weaken that site
+        S.neutralized.add(SM.siteId);buildCmd();
+        alert2(`✓ ${SM.siteId.toUpperCase()} מושבת לצמיתות!`,'ok',3000);
+    }
+}
+
+// ════════════════════════════════════════════
 // HIGH SCORE
 // ════════════════════════════════════════════
-const HSK='ironsky_v6';
+const HSK='ironsky_v7';
 function loadHS(){try{const d=JSON.parse(localStorage.getItem(HSK));if(d){document.getElementById('hsdv').classList.remove('hidden');document.getElementById('hsw').textContent=d.wave;document.getElementById('hsa').textContent=d.acc;document.getElementById('hsc').style.display='inline-flex';document.getElementById('hst').textContent=d.wave;}}catch(e){}}
 function saveHS(){const tot=S.kills+S.hits,acc=tot>0?Math.round(S.kills/tot*100):0;try{const p=JSON.parse(localStorage.getItem(HSK));if(!p||S.wave>p.wave||(S.wave===p.wave&&acc>p.acc))localStorage.setItem(HSK,JSON.stringify({wave:S.wave,acc}));}catch(e){}}
 function endGame(){
-    S.active=false;saveHS();
+    S.active=false;saveHS();musPause();
     const tot=S.kills+S.hits,acc=tot>0?Math.round(S.kills/tot*100):0;
     const op=getOp(S.wave);
-    const quotes=[
-        '"הגנו לפי הטוב ביותר — לא לפי הגרוע ביותר." — ועדת חקירה, לאחר הקרב',
-        '"ידענו שיבוא. לא ידענו מתי." — רס"ן מירב כהן, בית חולים',
-        '"מרחק של שתי שניות בין הצלה לאסון." — CNN, שידור ישיר',
-        '"הם ניצלו את הרגע שבחרנו." — ניתוח AAR פיקוד העורף',
-        '"יותם לא יכול היה לעשות יותר ממה שעשה." — גנרל ירקוני, הכנסת'
-    ];
+    const quotes=['"הגנו לפי הטוב ביותר — לא לפי הגרוע ביותר." — ועדת חקירה','	"ידענו שיבוא. לא ידענו מתי." — רס"ן מירב כהן','"מרחק של שתי שניות בין הצלה לאסון." — CNN','"הם ניצלו את הרגע שבחרנו." — ניתוח AAR','"יותם לא יכול היה לעשות יותר ממה שעשה." — גנרל ירקוני'];
     document.getElementById('finw').textContent=S.wave;document.getElementById('finop').textContent=op.short+' — '+op.name;
     document.getElementById('goq').textContent=quotes[Math.floor(Math.random()*quotes.length)];
     document.getElementById('gost').textContent=`יירוטים: ${S.kills} | פגיעות: ${S.hits} | דיוק: ${acc}%`;
@@ -1136,25 +1391,152 @@ function endGame(){
 }
 
 // ════════════════════════════════════════════
-// INPUT
+// BALANCE SAFETY NET
+// ════════════════════════════════════════════
+// Patch HIT_MATRIX: if ARROW3 is empty, ARROW2 gets partial effectiveness vs SEJJIL/MIRV
+function getEffectiveHitMod(weapon,enemyType){
+    let base=HIT_MATRIX[weapon][enemyType]??0.7;
+    // Safety net: if ARROW3 depleted and enemy is SEJJIL/MIRV, ARROW2 gets 42%
+    if((enemyType==='SEJJIL'||enemyType==='MIRV')&&S.batteries.ARROW3.cur<1&&weapon==='ARROW2'){
+        base=Math.max(base,0.42);
+    }
+    // Doctrine bonus
+    if(S.moneyBonus&&S.moneyBonus>1)base=Math.min(1,base);
+    return base;
+}
+
+// ════════════════════════════════════════════
+// INPUT (patched)
 // ════════════════════════════════════════════
 canvas.addEventListener('pointerdown',e=>{
     if(!S.active||S.upgradePhase||S.intelPhase||S.opIntroPhase)return;
     const wpn=S.batteries[S.weapon];
     if(wpn.cur>=1){
-        wpn.cur--;S.shots++;
-        // Calculate hit modifier based on what's nearby
-        let hitMod=1;
-        // Find closest enemy in the shot area and get effectiveness
-        let closestType=null,minDist=150;
+        wpn.cur--;S.shots++;trackShot(S.weapon);
+        let hitMod=1,closestType=null,minDist=160;
         for(const m of E.enemies){if(!m.active)continue;const mp=m.airPos();const d=Math.hypot(mp.x-e.clientX,mp.y-e.clientY);if(d<minDist){minDist=d;closestType=m.type;}}
-        if(closestType)hitMod=HIT_MATRIX[S.weapon][closestType]??0.7;
+        if(closestType)hitMod=getEffectiveHitMod(S.weapon,closestType);
+        // Friendly fire warning: check if multiple enemies close to click
+        const nearCount=E.enemies.filter(m=>{if(!m.active)return false;const p=m.airPos();return Math.hypot(p.x-e.clientX,p.y-e.clientY)<wpn.radius;}).length;
+        if(nearCount>=3){floatNum(e.clientX,e.clientY-30,'🎯 מבזק!','#fbbf24');}
         E.interceptors.push(new Interceptor(S.weapon,e.clientX,e.clientY,hitMod));
         E.particles.push(new TargetMk(e.clientX,e.clientY,wpn.color));
         renderBats();
-        if(hitMod<0.2)alert2(`⚠ ${S.weapon} אינו יעיל נגד מטרה זו!`,'w',1800);
-    }else{alert2(`⚠ ${S.weapon} ריק — ממתין לטעינה`,'w',1300);haptic(180);}
+        if(hitMod<0.25)alert2(`⚠ ${S.weapon==='IRON_DOME'?'ברזל':S.weapon==='SLING'?'קלע':S.weapon==='ARROW2'?'חץ 2':'חץ 3'} — נמוך אפקטיביות!`,'w',1600);
+    }else{alert2(`⚠ ${S.weapon} ריק — ממתין לטעינה`,'w',1200);haptic(170);}
 });
+
+// ════════════════════════════════════════════
+// UPGRADE PHASE (patched)
+// ════════════════════════════════════════════
+function startUpgrade(){
+    S.upgradePhase=true;
+    const bonus=Math.floor(105+S.wave*62);addMoney(bonus);
+    const wk=S.waveKills,wh=S.waveHits;
+    // Show wave clear animation first
+    showWaveClear(wk,wh,()=>{
+        alert2(`✓ גל ${S.wave} הסתיים! +$${bonus}`,'ok',3500);
+        document.getElementById('mwk').textContent=wk;document.getElementById('mwh').textContent=wh;
+        const tot=wk+wh,acc=tot>0?Math.round(wk/tot*100):0;
+        document.getElementById('mwacc').textContent=tot>0?acc+'%':'—';
+        const narr=acc>82?'ביצועים מצוינים — המערך מחזיק.':acc>60?'ביצועים סבירים — שדרג לפני הגל הבא.':acc>30?'⚠ ביצועים חלשים — שדרג עכשיו!':'⚠⚠ כישלון קרב כמעט — שפר מיד!';
+        document.getElementById('mnarr').textContent=narr;
+        renderWpnStats();
+        // Side mission bonus row
+        const smRow=document.getElementById('sm-bonus-row');
+        if(SM.kills>0){smRow.textContent=`🎯 משימת צד: ${SM.kills}/${SM.target} מהות יורטה`;smRow.classList.remove('hidden');}
+        else smRow.classList.add('hidden');
+        updateHud();document.getElementById('mbk').classList.add('op');document.getElementById('um').classList.add('op');
+    });
+}
+
+// ════════════════════════════════════════════
+// NEXT WAVE FLOW (patched — epilogue + skill tree)
+// ════════════════════════════════════════════
+function nextWave(){
+    document.getElementById('um').classList.remove('op');document.getElementById('mbk').classList.remove('op');
+    const nw=S.wave+1,curOp=getOp(S.wave),nxtOp=getOp(nw);
+    const endOfOp=(S.wave%10===0&&S.wave>0);
+    const opIdx=Math.floor(S.wave/10)-1;
+    if(endOfOp&&nxtOp.id!==curOp.id){
+        // End of operation: epilogue → skill tree → new op intro
+        showEpilogue(opIdx,()=>{
+            showSkillTree(opIdx,()=>{
+                checkIntel(nw);
+            });
+        });
+    }else if(nxtOp.waveStart===nw&&nxtOp.id!==curOp.id){
+        showOpIntro(nxtOp,()=>checkIntel(nw));
+    }else{
+        checkIntel(nw);
+    }
+}
+function checkIntel(w){if(WAVE_INTEL[w])showIntel(WAVE_INTEL[w],()=>launchWave(w));else launchWave(w);}
+
+// ════════════════════════════════════════════
+// LAUNCH WAVE (patched — music + side missions)
+// ════════════════════════════════════════════
+function launchWave(w){
+    S.wave=w;
+    const opN=Math.floor((w-1)/10);
+    S.toSpawn=Math.floor(4+w*1.5+opN*3.5);
+    S.spawnDelay=Math.max(480,2800-w*100-opN*65);
+    S.spawned=0;S.waveKills=0;S.waveHits=0;S.empActive=false;S.jamActive=false;
+    if(SM.timerIv)clearInterval(SM.timerIv);SM.active=false;SM.kills=0;document.getElementById('smpill').classList.remove('sh');
+    document.getElementById('jmov').classList.remove('on');document.getElementById('thud').classList.remove('hj');
+    if(S.empCharges>0||S.empAutoRecharge){
+        if(S.empAutoRecharge)S.empCharges=1;
+        document.getElementById('empb').style.display='block';document.getElementById('empab').disabled=false;document.getElementById('empc').textContent=`${S.empCharges}/1`;
+    }
+    if(w>=5&&!S.radarUnlocked&&!S.radarPermanent){S.radarUnlocked=true;document.getElementById('radb').style.display='block';alert2('📡 רדאר נפתח — Stealth מגל זה!','w',4500);}
+    if(S.radarPermanent){S.radarActive=true;S.radarEnd=Infinity;if(!S.radarUnlocked){S.radarUnlocked=true;document.getElementById('radb').style.display='block';}}
+    S.upgradePhase=false;S.lastSpawn=Date.now()+1600;
+    const op=getOp(w);
+    document.getElementById('wbop').textContent=op.short;document.getElementById('wbtxt').textContent=`גל ${w}`;
+    const subs={5:'⚠ STEALTH UAV',7:'⚠ JAMMER',9:'⚠ MAX PRESSURE',15:'⚠ MIRV ראשון',22:'⚠ אמד MRBM',25:'⚠⚠ ס\'ג\'יל ICBM',32:'⚠ בורקאן תימן',38:'⚠⚠ SATURATION'};
+    document.getElementById('wbsub').textContent=subs[w]||'⚠ כוחות עוינים בתנועה';
+    const wbEl=document.getElementById('wb');wbEl.classList.add('sh');setTimeout(()=>wbEl.classList.remove('sh'),2600);
+    updateHud();buildCmd();
+    // Music level based on wave
+    const musLvl=Math.min(3,Math.floor(w/10));musSetLevel(musLvl);
+    // Jammer waves
+    if([7,12,18,26,32,38,44].includes(w))setTimeout(()=>{if(S.active&&!S.jamActive)triggerJammer();},4000+Math.random()*6000);
+    // Side mission: every 5 waves
+    if(w%5===0&&w>4)setTimeout(()=>{if(S.active&&!S.upgradePhase)startSideMission();},8000+Math.random()*5000);
+}
+
+// ════════════════════════════════════════════
+// KILL TRACKING PATCH — trackKill + checkSideKill
+// (patch Explosion.update to call these)
+// ════════════════════════════════════════════
+// Override the kill registration inside Explosion via event
+function registerKill(enemy,killerWeapon){
+    if(!enemy||enemy.isFake)return;
+    trackKill(killerWeapon||S.weapon);
+    checkSideKill(enemy.site?.id);
+    // Character reactions for special kills
+    if(enemy.type==='SEJJIL')charReact('SEJJIL_KILLED');
+    if(S.combo>=5)charReact('COMBO5');
+}
+
+// ════════════════════════════════════════════
+// THREAT MONITORING (music + reactions)
+// ════════════════════════════════════════════
+let lastMusicUpdate=0;
+function updateThreat(){
+    const a=E.enemies.filter(e=>e.active).length;
+    const pct=Math.min(100,a*11+S.wave*2.5);
+    document.getElementById('tmf').style.width=pct+'%';
+    const lbl=pct<22?'נמוך':pct<50?'בינוני':pct<78?'גבוה':'קריטי!';
+    const el=document.getElementById('tmlbl');el.textContent=lbl;
+    el.style.color=pct<22?'#4ade80':pct<50?'#fbbf24':pct<78?'#f97316':'#ef4444';
+    // Music
+    const now=Date.now();
+    if(now-lastMusicUpdate>2000){lastMusicUpdate=now;
+        const lvl=pct<22?Math.min(3,Math.floor(S.wave/10)):pct<50?1:pct<78?2:3;musSetLevel(lvl);}
+    // Low HP reaction
+    for(const k in TARGETS){if(TARGETS[k].hp>0&&TARGETS[k].hp<20)charReact('LOW_HP');}
+}
 
 // ════════════════════════════════════════════
 // GAME LOOP
@@ -1163,11 +1545,14 @@ function startGame(){
     document.getElementById('startsc').classList.add('hidden');
     buildCXY();renderBats();updateHud();buildCmd();loadHS();
     S.active=true;S.lastSpawn=Date.now()+1400;
+    musStart();
     showOpIntro(OPS[0],()=>{launchWave(1);requestAnimationFrame(loop);});
 }
 
 function cull(grp){for(let i=E[grp].length-1;i>=0;i--){const e=E[grp][i];try{if(e.update)e.update();}catch(err){e.active=false;}if(e.active===false)E[grp].splice(i,1);}}
 function drawGrp(grp){for(const e of E[grp])try{e.draw(ctx);}catch(err){}}
+// LOD helper
+function shouldDrawFull(sz){return E.enemies.filter(e=>e.active).length<22||sz>2.5;}
 
 function loop(){
     if(!S.active)return;
@@ -1177,8 +1562,8 @@ function loop(){
         ctx.clearRect(0,0,canvas.width,canvas.height);
         rechargeBats(now);
         if(S.empActive&&now>S.empEnd)S.empActive=false;
-        if(S.radarActive&&now>S.radarEnd){S.radarActive=false;updateHud();}
-        if(S.jamActive&&now>S.jamEnd){S.jamActive=false;document.getElementById('jmov').classList.remove('on');document.getElementById('thud').classList.remove('hj');alert2('✓ Jammer נוטרל — Lead Indicator שוחזר','ok',2500);addRadio('>> ECM CLEAR');}
+        if(!S.radarPermanent&&S.radarActive&&now>S.radarEnd){S.radarActive=false;updateHud();}
+        if(S.jamActive&&now>S.jamEnd){S.jamActive=false;document.getElementById('jmov').classList.remove('on');document.getElementById('thud').classList.remove('hj');alert2('✓ Jammer נוטרל — Lead Indicator שוחזר','ok',2500);addRadio('>> ECM CLEAR');charReact('JAMMER_START',2);}
 
         if(!S.upgradePhase&&!S.intelPhase&&!S.opIntroPhase){
             if(now-S.lastSpawn>S.spawnDelay&&S.spawned<S.toSpawn){
