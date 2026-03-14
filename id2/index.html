@@ -549,115 +549,190 @@ function hr(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5)
 // Each shape draws at origin, pointing RIGHT (+x)
 // Caller does translate/rotate
 // ════════════════════════════════════════════
+// ════════════════════════════════════════════
+// ATTACKER MISSILE SHAPES
+// All drawn at origin facing right (+x), caller does translate/rotate
+// ════════════════════════════════════════════
+
 function drawShahed(c,sz,col,flicker){
-    // Delta wing shape — Shahed-136 is a loitering munition with delta wings
-    const s=sz*1.5;
-    c.fillStyle=col;c.strokeStyle='rgba(255,255,255,0.25)';c.lineWidth=0.5;
-    // Main delta wing
+    // Shahed-136: distinctive delta-wing loitering munition
+    const s=sz*1.7;
+    // Main delta wing with glow
+    c.shadowBlur=flicker?12:4; c.shadowColor=flicker?'#ff4400':col;
+    c.fillStyle=col; c.strokeStyle='rgba(255,200,100,0.3)'; c.lineWidth=0.6;
     c.beginPath();
-    c.moveTo(s*0.9,0);           // nose
-    c.lineTo(-s*0.6,s*0.85);     // left wing tip
-    c.lineTo(-s*0.25,0);         // tail notch
-    c.lineTo(-s*0.6,-s*0.85);    // right wing tip
-    c.closePath();c.fill();c.stroke();
-    // Body centerline
-    c.beginPath();c.moveTo(s*0.9,0);c.lineTo(-s*0.22,0);
-    c.strokeStyle=flicker?'rgba(255,80,0,0.9)':'rgba(255,200,100,0.5)';c.lineWidth=sz*0.35;c.stroke();
-    // Propeller dot at rear
-    c.beginPath();c.arc(-s*0.45,0,sz*0.3,0,Math.PI*2);
-    c.fillStyle=flicker?'#ff4400':'#666';c.fill();
+    c.moveTo(s*0.95,0);
+    c.lineTo(-s*0.65,s*0.9);
+    c.lineTo(-s*0.22,s*0.12);
+    c.lineTo(-s*0.22,-s*0.12);
+    c.lineTo(-s*0.65,-s*0.9);
+    c.closePath(); c.fill(); c.stroke();
+    c.shadowBlur=0;
+    // Fuselage stripe
+    c.strokeStyle=flicker?'rgba(255,100,0,0.95)':'rgba(255,190,80,0.6)';
+    c.lineWidth=sz*0.38; c.lineCap='round';
+    c.beginPath(); c.moveTo(s*0.85,0); c.lineTo(-s*0.18,0); c.stroke();
+    // Engine nacelle
+    c.fillStyle=flicker?'#ff3300':'#333';
+    c.beginPath(); c.arc(-s*0.42,0,sz*0.35,0,Math.PI*2); c.fill();
+    if(flicker){
+        c.fillStyle='rgba(255,140,0,0.7)';
+        c.beginPath(); c.arc(-s*0.52,0,sz*0.5,0,Math.PI*2); c.fill();
+    }
 }
+
 function drawRocket(c,sz,col){
-    // Short cylinder with pointed nose — simple rocket/qassam
-    const s=sz*1.4;
+    // Qassam/M-75 short rocket
+    const s=sz*1.5;
     c.fillStyle=col;
-    c.beginPath();c.ellipse(0,0,s*0.22,s*0.7,Math.PI/2,0,Math.PI*2);c.fill();
-    // Nose cone
-    c.beginPath();c.moveTo(s*0.7,0);c.lineTo(s*0.22,s*0.22);c.lineTo(s*0.22,-s*0.22);c.closePath();
-    c.fillStyle='rgba(255,255,255,0.7)';c.fill();
-    // Small fins
-    c.fillStyle=col;
-    c.beginPath();c.moveTo(-s*0.5,0);c.lineTo(-s*0.3,s*0.42);c.lineTo(-s*0.18,0);c.closePath();c.fill();
-    c.beginPath();c.moveTo(-s*0.5,0);c.lineTo(-s*0.3,-s*0.42);c.lineTo(-s*0.18,0);c.closePath();c.fill();
+    c.shadowBlur=5; c.shadowColor=col;
+    // Body cylinder
+    c.beginPath(); c.ellipse(0,0,s*0.2,s*0.72,Math.PI/2,0,Math.PI*2); c.fill();
+    c.shadowBlur=0;
+    // Nose ogive
+    c.fillStyle='rgba(255,255,255,0.85)';
+    c.beginPath(); c.moveTo(s*0.72,0); c.lineTo(s*0.2,s*0.2); c.lineTo(s*0.2,-s*0.2); c.closePath(); c.fill();
+    // Stabilizer fins
+    c.fillStyle=hr(col,0.9);
+    [-1,1].forEach(side=>{
+        c.beginPath();
+        c.moveTo(-s*0.5,0); c.lineTo(-s*0.28,side*s*0.44); c.lineTo(-s*0.16,0);
+        c.closePath(); c.fill();
+    });
+    // Rocket flame
+    c.fillStyle='rgba(255,120,0,0.8)';
+    c.beginPath(); c.ellipse(-s*0.58,0,sz*0.16,sz*0.18,Math.PI/2,0,Math.PI*2); c.fill();
 }
 
 function drawCruise(c,sz,col){
-    const s=sz*1.4;
+    // Paveh/Soumar cruise missile
+    const s=sz*1.5;
+    c.shadowBlur=6; c.shadowColor=col;
     c.fillStyle=col;
-    c.beginPath();c.ellipse(0,0,s*0.18,s*1.0,Math.PI/2,0,Math.PI*2);c.fill();
-    c.beginPath();c.moveTo(s*1.0,0);c.lineTo(s*0.7,s*0.18);c.lineTo(s*0.7,-s*0.18);c.closePath();
-    c.fillStyle='rgba(255,255,255,0.8)';c.fill();
-    c.fillStyle=col;
-    c.beginPath();c.moveTo(-s*0.1,0);c.lineTo(-s*0.55,s*0.52);c.lineTo(-s*0.22,0);c.closePath();c.fill();
-    c.beginPath();c.moveTo(-s*0.1,0);c.lineTo(-s*0.55,-s*0.52);c.lineTo(-s*0.22,0);c.closePath();c.fill();
-    c.beginPath();c.moveTo(-s*0.7,0);c.lineTo(-s*0.5,s*0.2);c.lineTo(-s*0.4,0);c.closePath();c.fill();
-    c.beginPath();c.moveTo(-s*0.7,0);c.lineTo(-s*0.5,-s*0.2);c.lineTo(-s*0.4,0);c.closePath();c.fill();
+    // Fuselage
+    c.beginPath(); c.ellipse(0,0,s*0.17,s*1.05,Math.PI/2,0,Math.PI*2); c.fill();
+    c.shadowBlur=0;
+    // Nose
+    c.fillStyle='rgba(255,255,255,0.82)';
+    c.beginPath(); c.moveTo(s*1.05,0); c.lineTo(s*0.7,s*0.17); c.lineTo(s*0.7,-s*0.17); c.closePath(); c.fill();
+    // Delta wings
+    c.fillStyle=hr(col,0.92);
+    c.beginPath(); c.moveTo(-s*0.05,0); c.lineTo(-s*0.58,s*0.54); c.lineTo(-s*0.24,s*0.08); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(-s*0.05,0); c.lineTo(-s*0.58,-s*0.54); c.lineTo(-s*0.24,-s*0.08); c.closePath(); c.fill();
+    // Tail fins
+    c.beginPath(); c.moveTo(-s*0.72,0); c.lineTo(-s*0.52,s*0.22); c.lineTo(-s*0.42,0); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(-s*0.72,0); c.lineTo(-s*0.52,-s*0.22); c.lineTo(-s*0.42,0); c.closePath(); c.fill();
+    // Jet intake
+    c.fillStyle='rgba(0,0,0,0.65)';
+    c.beginPath(); c.ellipse(s*0.05,s*0.22,sz*0.1,s*0.2,Math.PI/2,0,Math.PI*2); c.fill();
 }
+
 function drawBallistic(c,sz,col,type){
-    // Elongated missile body with swept fins
-    const s=sz*1.5;const isLarge=(type==='EMAD'||type==='ZULFIQAR');const isSejjil=(type==='SEJJIL');
-    const bodyL=isSejjil?s*1.6:isLarge?s*1.35:s*1.1;
-    const bodyW=isSejjil?s*0.32:isLarge?s*0.28:s*0.22;
-    // Body
-    c.fillStyle=col;
-    c.beginPath();c.ellipse(0,0,bodyW,bodyL,Math.PI/2,0,Math.PI*2);c.fill();
-    // Nose cone (pointed)
-    c.beginPath();c.moveTo(bodyL+sz*0.5,0);c.lineTo(bodyL-sz*0.1,bodyW);c.lineTo(bodyL-sz*0.1,-bodyW);c.closePath();
-    c.fillStyle=isSejjil?'rgba(255,240,180,0.95)':'rgba(255,255,255,0.8)';c.fill();
-    // Warhead section for bigger missiles
-    if(isLarge||isSejjil){
-        c.beginPath();c.ellipse(bodyL*0.65,0,bodyW*1.22,sz*0.18,Math.PI/2,0,Math.PI*2);
-        c.fillStyle='rgba(255,255,255,0.2)';c.fill();
+    const s=sz*1.6;
+    const isSejjil=(type==='SEJJIL');
+    const isKheibar=(type==='KHEIBAR');
+    const isLarge=(type==='EMAD'||type==='QADR'||type==='BURKAN');
+    const bodyL=isSejjil?s*1.7:isLarge?s*1.4:s*1.15;
+    const bodyW=isSejjil?s*0.3:isLarge?s*0.26:s*0.21;
+
+    // Glowing aura for hypersonic
+    if(isSejjil||isKheibar){
+        c.shadowBlur=isSejjil?20:14;
+        c.shadowColor=isSejjil?'#fde68a':'#fbbf24';
     }
-    // Swept fins
-    c.fillStyle=isSejjil?hr('#fde68a',0.75):hr(col,0.85);
-    const finBase=-bodyL*0.8,finTip=-bodyL*0.4;
-    const finW=isSejjil?s*0.72:isLarge?s*0.6:s*0.5;
-    c.beginPath();c.moveTo(finBase,0);c.lineTo(finBase+sz*0.25,finW);c.lineTo(finTip,sz*0.18);c.closePath();c.fill();
-    c.beginPath();c.moveTo(finBase,0);c.lineTo(finBase+sz*0.25,-finW);c.lineTo(finTip,-sz*0.18);c.closePath();c.fill();
-    // 2 more fins (vertical plane) — smaller
-    c.globalAlpha*=0.6;
-    c.beginPath();c.moveTo(finBase*0.95,0);c.lineTo(finBase*0.95+sz*0.18,finW*0.55);c.lineTo(finTip*0.9,sz*0.12);c.closePath();c.fill();
-    c.beginPath();c.moveTo(finBase*0.95,0);c.lineTo(finBase*0.95+sz*0.18,-finW*0.55);c.lineTo(finTip*0.9,-sz*0.12);c.closePath();c.fill();
-    c.globalAlpha/=0.6;
-    // Sejjil glow
+
+    // Main body
+    c.fillStyle=col;
+    c.beginPath(); c.ellipse(0,0,bodyW,bodyL,Math.PI/2,0,Math.PI*2); c.fill();
+    c.shadowBlur=0;
+
+    // Nose cone
+    const noseCol=isSejjil?'rgba(255,245,180,0.98)':isKheibar?'rgba(255,230,140,0.9)':'rgba(255,255,255,0.82)';
+    c.fillStyle=noseCol;
+    c.beginPath();
+    c.moveTo(bodyL+sz*0.55,0);
+    c.lineTo(bodyL-sz*0.08,bodyW*0.95);
+    c.lineTo(bodyL-sz*0.08,-bodyW*0.95);
+    c.closePath(); c.fill();
+
+    // Interstage ring (larger missiles)
+    if(isLarge||isSejjil){
+        c.fillStyle='rgba(255,255,255,0.18)';
+        c.beginPath(); c.ellipse(bodyL*0.6,0,bodyW*1.25,sz*0.2,Math.PI/2,0,Math.PI*2); c.fill();
+    }
+
+    // Swept fins — 4-fin cruciform
+    const finCol=isSejjil?hr('#fde68a',0.82):isKheibar?hr('#fbbf24',0.78):hr(col,0.88);
+    c.fillStyle=finCol;
+    const fb=-bodyL*0.78, ft=-bodyL*0.42;
+    const fw=isSejjil?s*0.75:isLarge?s*0.62:s*0.52;
+    // Main fins (4 of them at 90°)
+    [[fw,0],[0,fw],[-fw,0],[0,-fw]].forEach(([fy,fz])=>{
+        c.beginPath();
+        c.moveTo(fb,fy*0.08); c.lineTo(fb+sz*0.28,fw*0.5*Math.sign(fy||fz||1));
+        c.lineTo(ft,sz*0.2*Math.sign(fy||fz||1)); c.closePath(); c.fill();
+    });
+    // Simplified: just 2 visible fins for 2D view
+    c.beginPath(); c.moveTo(fb,0); c.lineTo(fb+sz*0.28,fw); c.lineTo(ft,sz*0.22); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(fb,0); c.lineTo(fb+sz*0.28,-fw); c.lineTo(ft,-sz*0.22); c.closePath(); c.fill();
+    c.globalAlpha*=0.55;
+    c.beginPath(); c.moveTo(fb*0.92,fw*0.12); c.lineTo(fb*0.92+sz*0.2,fw*0.58); c.lineTo(ft*0.88,sz*0.14); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(fb*0.92,-fw*0.12); c.lineTo(fb*0.92+sz*0.2,-fw*0.58); c.lineTo(ft*0.88,-sz*0.14); c.closePath(); c.fill();
+    c.globalAlpha/=0.55;
+
+    // Sejjil: pulsing heat glow
     if(isSejjil){
-        c.shadowBlur=14;c.shadowColor='#fde68a';
-        c.fillStyle=hr('#fde68a',0.15);c.beginPath();c.ellipse(0,0,sz*1.1,bodyL*0.65,Math.PI/2,0,Math.PI*2);c.fill();
-        c.shadowBlur=0;
+        const pulse=0.12+0.08*Math.sin(Date.now()*0.008);
+        c.fillStyle=`rgba(253,230,138,${pulse})`;
+        c.beginPath(); c.ellipse(0,0,sz*1.4,bodyL*0.7,Math.PI/2,0,Math.PI*2); c.fill();
     }
 }
+
 function drawBurkan(c,sz,col){
-    // Large, somewhat crude Houthi missile
+    // Burkan-2H Houthi MRBM — stocky, crude construction
+    const s=sz*1.6;
+    c.shadowBlur=8; c.shadowColor=col;
+    c.fillStyle=col;
+    c.beginPath(); c.ellipse(0,0,s*0.3,s*1.3,Math.PI/2,0,Math.PI*2); c.fill();
+    c.shadowBlur=0;
+    // Blunt nose
+    c.fillStyle='rgba(255,210,140,0.85)';
+    c.beginPath(); c.moveTo(s*1.3,0); c.lineTo(s*0.88,s*0.36); c.lineTo(s*0.88,-s*0.36); c.closePath(); c.fill();
+    // Large crude stabilizer fins
+    c.fillStyle=hr(col,0.92);
+    c.beginPath(); c.moveTo(-s*1.0,0); c.lineTo(-s*0.64,s*0.78); c.lineTo(-s*0.32,s*0.05); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(-s*1.0,0); c.lineTo(-s*0.64,-s*0.78); c.lineTo(-s*0.32,-s*0.05); c.closePath(); c.fill();
+}
+
+function drawMIRV(c,sz,col){
+    // MIRV reentry bus — conical with blunt base
     const s=sz*1.5;
     c.fillStyle=col;
-    c.beginPath();c.ellipse(0,0,s*0.31,s*1.25,Math.PI/2,0,Math.PI*2);c.fill();
-    c.beginPath();c.moveTo(s*1.25,0);c.lineTo(s*0.9,s*0.34);c.lineTo(s*0.9,-s*0.34);c.closePath();
-    c.fillStyle='rgba(255,220,150,0.8)';c.fill();
-    // Crude large fins
-    c.fillStyle=hr(col,0.9);
-    c.beginPath();c.moveTo(-s*1.0,0);c.lineTo(-s*0.65,s*0.72);c.lineTo(-s*0.35,0);c.closePath();c.fill();
-    c.beginPath();c.moveTo(-s*1.0,0);c.lineTo(-s*0.65,-s*0.72);c.lineTo(-s*0.35,0);c.closePath();c.fill();
+    c.shadowBlur=8; c.shadowColor='#ef4444';
+    c.beginPath();
+    c.moveTo(s*0.85,0); c.lineTo(-s*0.32,s*0.4); c.lineTo(-s*0.52,0); c.lineTo(-s*0.32,-s*0.4);
+    c.closePath(); c.fill();
+    c.shadowBlur=0;
+    // Ablative heat shield
+    c.fillStyle='rgba(220,80,0,0.75)';
+    c.beginPath(); c.ellipse(-s*0.4,0,sz*0.24,s*0.34,Math.PI/2,0,Math.PI*2); c.fill();
 }
-function drawMIRV(c,sz,col){
-    // Reentry vehicle — conical blunt-nosed shape
-    const s=sz*1.4;
-    c.fillStyle=col;
-    c.beginPath();c.moveTo(s*0.8,0);c.lineTo(-s*0.3,s*0.38);c.lineTo(-s*0.5,0);c.lineTo(-s*0.3,-s*0.38);c.closePath();c.fill();
-    // Heat shield at back
-    c.beginPath();c.ellipse(-s*0.38,0,sz*0.22,s*0.32,Math.PI/2,0,Math.PI*2);
-    c.fillStyle='rgba(200,80,0,0.7)';c.fill();
-}
+
 function drawWarhead(c,sz,col){
-    // Small, fast reentry vehicle
-    const s=sz*1.2;
+    // MIRV warhead — small, fast, conical
+    const s=sz*1.3;
     c.fillStyle=col;
-    c.beginPath();c.moveTo(s*0.65,0);c.lineTo(-s*0.28,s*0.28);c.lineTo(-s*0.38,0);c.lineTo(-s*0.28,-s*0.28);c.closePath();c.fill();
+    c.shadowBlur=6; c.shadowColor=col;
+    c.beginPath();
+    c.moveTo(s*0.68,0); c.lineTo(-s*0.3,s*0.3); c.lineTo(-s*0.4,0); c.lineTo(-s*0.3,-s*0.3);
+    c.closePath(); c.fill();
+    c.shadowBlur=0;
 }
+
 function drawDecoy(c,sz,col){
-    // Similar to Fateh but grey/dim
-    drawBallistic(c,sz*0.85,col,'FATEH');
+    drawBallistic(c,sz*0.82,col,'FATEH');
 }
+
 
 // ════════════════════════════════════════════
 // STATE
@@ -841,7 +916,7 @@ class Enemy{
         if(this.t>=1){
             this.active=false;
             if(this.trail.length>1)E.contrails.push({points:[...this.trail],color:this.site.color||'#f59e0b',life:1});
-            if(this.dmg>0){applyDamage(this.tKey,this.dmg);E.explosions.push(new Explosion(this.eXY.x,this.eXY.y,this.sz*13,'#ef4444',true));}
+            if(this.dmg>0){applyDamage(this.tKey,this.dmg);E.explosions.push(new Explosion(this.eXY.x,this.eXY.y,this.sz*18,'#ef4444',true));}
             S.waveHits++;S.hits++;document.getElementById('hui').textContent=S.hits;return;
         }
         if(this.active&&this.maxH>0&&Math.random()>0.56)
@@ -887,25 +962,60 @@ class Enemy{
         }
         // Draw body using proper shapes
         const angle=flightAngle(this.sXY,this.eXY,this.t,this.maxH);
-        // Trail for ballistic missiles
+        // ── TRAIL + HEAT EFFECTS for ballistic missiles ──
         if(this.maxH>0){
             const pos=g3d(this.sXY,this.eXY,this.t,this.maxH);
-            this.trail.push({x:pos.air.x,y:pos.air.y});if(this.trail.length>30)this.trail.shift();
+            this.trail.push({x:pos.air.x,y:pos.air.y}); if(this.trail.length>32)this.trail.shift();
+
             if(this.trail.length>1){
-                const tg=c.createLinearGradient(this.trail[0].x,this.trail[0].y,pos.air.x,pos.air.y);
-                const tc=this.isFake?'#94a3b8':(this.site.color||'#f59e0b');
-                tg.addColorStop(0,'rgba(0,0,0,0)');tg.addColorStop(0.5,tc);tg.addColorStop(1,'rgba(255,255,255,0.8)');
-                c.beginPath();c.moveTo(this.trail[0].x,this.trail[0].y);for(let i=1;i<this.trail.length;i++)c.lineTo(this.trail[i].x,this.trail[i].y);
-                c.strokeStyle=tg;c.lineWidth=this.sz*1.2;c.lineCap='round';c.stroke();
+                const isFastMissile=(this.termAccel>2&&this.t>0.55);
+                // Draw trail with color-gradient (cold→hot near head)
+                for(let i=1;i<this.trail.length;i++){
+                    const a=(i/this.trail.length);
+                    c.beginPath();
+                    c.moveTo(this.trail[i-1].x,this.trail[i-1].y);
+                    c.lineTo(this.trail[i].x,this.trail[i].y);
+                    c.lineCap='round';
+                    // Hot missiles glow orange/white near tip
+                    if(isFastMissile&&i>this.trail.length*0.7){
+                        const heat=(i-this.trail.length*0.7)/(this.trail.length*0.3);
+                        const r=Math.round(255);
+                        const g=Math.round(80+heat*175);
+                        const b=Math.round(heat*80);
+                        c.strokeStyle=`rgba(${r},${g},${b},${(a*0.95).toFixed(3)})`;
+                    } else {
+                        c.strokeStyle=this.isFake?`rgba(148,163,184,${(a*0.5).toFixed(3)})`:this.site.color||'#f59e0b';
+                        c.globalAlpha=a*0.75;
+                    }
+                    c.lineWidth=this.sz*(0.5+0.7*a);
+                    c.stroke();
+                    c.globalAlpha=1;
+                }
             }
-            // Plasma heating glow for fast missiles
+
+            // ── Plasma heating glow for terminal-phase fast missiles ──
             if(this.t>0.6&&this.termAccel>2){
-                const heatAlpha=((this.t-0.6)/0.4)*(this.termAccel/5)*0.6;
-                c.globalAlpha=Math.min(heatAlpha,0.65)*stA;
-                c.fillStyle=this.type==='SEJJIL'?'#fff8dc':'rgba(255,180,50,0.9)';
-                c.shadowBlur=14;c.shadowColor=this.type==='SEJJIL'?'#fde68a':'#ff8c00';
-                c.beginPath();c.arc(pos.air.x,pos.air.y,this.sz*(1+this.t*0.4),0,Math.PI*2);c.fill();
-                c.shadowBlur=0;c.globalAlpha=stA;
+                const intensity=((this.t-0.6)/0.4)*Math.min(1,(this.termAccel-2)/3);
+                const glowR=this.sz*(1.8+intensity*2.5);
+                const pg=c.createRadialGradient(pos.air.x,pos.air.y,0,pos.air.x,pos.air.y,glowR);
+                const isIcbm=(this.type==='SEJJIL'||this.type==='KHEIBAR');
+                pg.addColorStop(0,isIcbm?`rgba(255,255,220,${(intensity*0.95).toFixed(3)})`:`rgba(255,180,50,${(intensity*0.88).toFixed(3)})`);
+                pg.addColorStop(0.4,isIcbm?`rgba(253,230,138,${(intensity*0.4).toFixed(3)})`:`rgba(255,100,10,${(intensity*0.32).toFixed(3)})`);
+                pg.addColorStop(1,'rgba(0,0,0,0)');
+                c.fillStyle=pg;
+                c.beginPath();c.arc(pos.air.x,pos.air.y,glowR,0,Math.PI*2);c.fill();
+            }
+        } else {
+            // Flat movers (UAV/cruise): smoke trail
+            const p2=this.airPos();
+            if(!this._st)this._st=[];
+            this._st.push({x:p2.x,y:p2.y});if(this._st.length>20)this._st.shift();
+            if(this._st.length>1){
+                for(let i=1;i<this._st.length;i++){
+                    c.beginPath();c.moveTo(this._st[i-1].x,this._st[i-1].y);c.lineTo(this._st[i].x,this._st[i].y);
+                    c.strokeStyle='rgba(160,100,50,0.35)';c.lineWidth=1.5*(i/this._st.length);
+                    c.globalAlpha=0.3*(i/this._st.length);c.stroke();c.globalAlpha=1;
+                }
             }
         }
         // Draw the shape — LOD: if >20 enemies and small, just draw dot
@@ -944,10 +1054,11 @@ class Enemy{
 // minF = minimum flight frames (missile always visible)
 // ════════════════════════════════════════════
 const WPN_CFG={
-    IRON_DOME:{ spd:0.060, arc:25,  prox:20,  plume:8,  lw:2,   minF:22 },
-    SLING:    { spd:0.036, arc:65,  prox:55,  plume:14, lw:2.5, minF:34 },
-    ARROW2:   { spd:0.026, arc:155, prox:82,  plume:20, lw:3,   minF:46 },
-    ARROW3:   { spd:0.020, arc:290, prox:115, plume:30, lw:3.5, minF:58 }
+    // spd=travel speed, arc=visual arc height, prox=kill radius, minF=min flight frames
+    IRON_DOME:{ spd:0.072, arc:18,  prox:28,  plume:10, lw:2,   minF:20 },
+    SLING:    { spd:0.048, arc:55,  prox:70,  plume:18, lw:2.5, minF:28 },
+    ARROW2:   { spd:0.036, arc:130, prox:105, plume:26, lw:3,   minF:38 },
+    ARROW3:   { spd:0.028, arc:240, prox:145, plume:38, lw:4,   minF:48 }
 };
 
 // ════════════════════════════════════════════
@@ -1052,44 +1163,111 @@ class Interceptor{
     draw(c){
         const p=this.pos(this.t);
         this.trail.push({x:p.x,y:p.y});
-        if(this.trail.length>20) this.trail.shift();
+        if(this.trail.length>24) this.trail.shift();
+        const T=this.trail;
         c.save();
-        // Fading trail
-        if(this.trail.length>1){
-            c.lineCap='round';c.lineJoin='round';
-            for(let i=1;i<this.trail.length;i++){
-                c.beginPath();
-                c.moveTo(this.trail[i-1].x,this.trail[i-1].y);
-                c.lineTo(this.trail[i].x,this.trail[i].y);
-                c.strokeStyle=this.color;
-                c.lineWidth=this.lw*(0.2+0.8*i/this.trail.length);
-                c.globalAlpha=(i/this.trail.length)*0.88;
-                c.stroke();
+
+        // ── TRAIL: each weapon has its own style ──
+        if(T.length>1){
+            c.lineCap='round'; c.lineJoin='round';
+            if(this.type==='ARROW3'){
+                // Arrow-3: thick glowing purple trail, fades dramatically
+                for(let i=1;i<T.length;i++){
+                    const a=Math.pow(i/T.length,0.6)*0.92;
+                    c.beginPath();c.moveTo(T[i-1].x,T[i-1].y);c.lineTo(T[i].x,T[i].y);
+                    c.strokeStyle='#c084fc';c.lineWidth=this.lw*(0.15+0.85*i/T.length)*1.4;
+                    c.globalAlpha=a;c.stroke();
+                }
+                // Inner white core on recent trail
+                for(let i=Math.max(1,T.length-6);i<T.length;i++){
+                    c.beginPath();c.moveTo(T[i-1].x,T[i-1].y);c.lineTo(T[i].x,T[i].y);
+                    c.strokeStyle='rgba(255,255,255,0.7)';c.lineWidth=1.2;
+                    c.globalAlpha=(i-T.length+6)/6*0.8;c.stroke();
+                }
+            } else if(this.type==='ARROW2'){
+                // Arrow-2: bright green, medium thickness
+                for(let i=1;i<T.length;i++){
+                    const a=Math.pow(i/T.length,0.7)*0.88;
+                    c.beginPath();c.moveTo(T[i-1].x,T[i-1].y);c.lineTo(T[i].x,T[i].y);
+                    c.strokeStyle='#34d399';c.lineWidth=this.lw*(0.2+0.8*i/T.length);
+                    c.globalAlpha=a;c.stroke();
+                }
+            } else {
+                // Dome/Sling: standard colored trail
+                for(let i=1;i<T.length;i++){
+                    c.beginPath();c.moveTo(T[i-1].x,T[i-1].y);c.lineTo(T[i].x,T[i].y);
+                    c.strokeStyle=this.color;
+                    c.lineWidth=this.lw*(0.15+0.85*i/T.length);
+                    c.globalAlpha=(i/T.length)*0.85;c.stroke();
+                }
             }
             c.globalAlpha=1;
         }
-        // Exhaust plume
-        if(this.trail.length>3){
-            const prev=this.trail[this.trail.length-4];
+
+        // ── EXHAUST PLUME: direction-aware, per-weapon ──
+        if(T.length>3){
+            const prev=T[T.length-4];
             const ang=Math.atan2(p.y-prev.y,p.x-prev.x);
-            const px2=p.x-Math.cos(ang)*this.plume;
-            const py2=p.y-Math.sin(ang)*this.plume;
-            const pg=c.createLinearGradient(p.x,p.y,px2,py2);
-            pg.addColorStop(0,'rgba(255,245,210,0.95)');
-            pg.addColorStop(0.3,this.color);
-            pg.addColorStop(1,'rgba(0,0,0,0)');
-            c.beginPath();c.moveTo(p.x,p.y);c.lineTo(px2,py2);
-            c.strokeStyle=pg;c.lineWidth=this.lw+1.5;c.globalAlpha=0.82;c.stroke();c.globalAlpha=1;
+            const pl=this.plume;
+
+            if(this.type==='ARROW3'){
+                // Arrow-3: massive multi-layered exhaust
+                const px2=p.x-Math.cos(ang)*pl*1.6;
+                const py2=p.y-Math.sin(ang)*pl*1.6;
+                // Outer hot gas cloud
+                const og=c.createLinearGradient(p.x,p.y,px2,py2);
+                og.addColorStop(0,'rgba(200,140,255,0.9)');
+                og.addColorStop(0.3,'rgba(160,80,255,0.6)');
+                og.addColorStop(0.7,'rgba(80,20,180,0.25)');
+                og.addColorStop(1,'rgba(0,0,0,0)');
+                c.beginPath();c.moveTo(p.x,p.y);c.lineTo(px2,py2);
+                c.strokeStyle=og;c.lineWidth=pl*0.7;c.globalAlpha=0.7;c.stroke();
+                // Inner white-hot core
+                const ig=c.createLinearGradient(p.x,p.y,p.x-Math.cos(ang)*pl*0.7,p.y-Math.sin(ang)*pl*0.7);
+                ig.addColorStop(0,'rgba(255,255,255,0.98)');
+                ig.addColorStop(1,'rgba(200,160,255,0)');
+                c.beginPath();c.moveTo(p.x,p.y);c.lineTo(p.x-Math.cos(ang)*pl*0.7,p.y-Math.sin(ang)*pl*0.7);
+                c.strokeStyle=ig;c.lineWidth=5;c.globalAlpha=0.95;c.stroke();
+                c.globalAlpha=1;
+            } else if(this.type==='ARROW2'){
+                // Arrow-2: bright green core + white tip
+                const px2=p.x-Math.cos(ang)*pl;
+                const py2=p.y-Math.sin(ang)*pl;
+                const g2=c.createLinearGradient(p.x,p.y,px2,py2);
+                g2.addColorStop(0,'rgba(255,255,220,0.95)');
+                g2.addColorStop(0.25,'rgba(52,211,153,0.85)');
+                g2.addColorStop(1,'rgba(0,0,0,0)');
+                c.beginPath();c.moveTo(p.x,p.y);c.lineTo(px2,py2);
+                c.strokeStyle=g2;c.lineWidth=pl*0.45;c.globalAlpha=0.88;c.stroke();c.globalAlpha=1;
+            } else {
+                // Dome/Sling: sharp hot plume
+                const px2=p.x-Math.cos(ang)*pl;
+                const py2=p.y-Math.sin(ang)*pl;
+                const gs=c.createLinearGradient(p.x,p.y,px2,py2);
+                gs.addColorStop(0,'rgba(255,248,200,0.95)');
+                gs.addColorStop(0.2,this.color);
+                gs.addColorStop(1,'rgba(0,0,0,0)');
+                c.beginPath();c.moveTo(p.x,p.y);c.lineTo(px2,py2);
+                c.strokeStyle=gs;c.lineWidth=this.lw+1.5;c.globalAlpha=0.85;c.stroke();c.globalAlpha=1;
+            }
         }
-        // Head glow + dot
-        c.shadowBlur=16;c.shadowColor=this.color;
-        c.fillStyle='#ffffff';c.beginPath();c.arc(p.x,p.y,3.5,0,Math.PI*2);c.fill();
+
+        // ── MISSILE HEAD: glow + bright dot ──
+        const glowR=this.type==='ARROW3'?22:this.type==='ARROW2'?16:10;
+        const glowG=c.createRadialGradient(p.x,p.y,0,p.x,p.y,glowR);
+        glowG.addColorStop(0,this.color+'cc');
+        glowG.addColorStop(1,'rgba(0,0,0,0)');
+        c.fillStyle=glowG;c.beginPath();c.arc(p.x,p.y,glowR,0,Math.PI*2);c.fill();
+        // White hot tip
+        c.shadowBlur=18;c.shadowColor=this.color;
+        c.fillStyle='#ffffff';c.beginPath();c.arc(p.x,p.y,3.8,0,Math.PI*2);c.fill();
         c.shadowBlur=0;
-        c.fillStyle=this.color;c.beginPath();c.arc(p.x,p.y,2,0,Math.PI*2);c.fill();
+        c.fillStyle=this.color;c.beginPath();c.arc(p.x,p.y,2.2,0,Math.PI*2);c.fill();
+
         c.restore();
     }
-}
 
+}
 // ════════════════════════════════════════════
 // EXPLOSION
 // ════════════════════════════════════════════
@@ -1568,33 +1746,25 @@ canvas.addEventListener('pointerdown',e=>{
         haptic(170);
         return;
     }
-    // Lock-on: find nearest enemy within 100px of click
-    const LOCK=100;
-    let target=null,minD=LOCK;
-    for(const m of E.enemies){
-        if(!m.active) continue;
-        const mp=m.airPos();
-        const d=Math.hypot(mp.x-e.clientX,mp.y-e.clientY);
-        if(d<minD){minD=d;target=m;}
-    }
-    if(!target){
-        floatNum(e.clientX,e.clientY-16,'לחץ ליד אויב','#64748b');
-        return;
-    }
-    // Warn if wrong weapon
-    const bestW=BEST_WEAPON[target.type];
-    if(bestW&&bestW!==S.weapon&&HIT_MATRIX[S.weapon][target.type]<0.25){
-        const nm={IRON_DOME:'כיפת ברזל',SLING:'קלע דוד',ARROW2:'חץ 2',ARROW3:'חץ 3'};
-        alert2('נשק שגוי - השתמש ב' + (nm[bestW]||bestW),'w',1800);
-    }
-    // Fire toward enemy's current position
-    const mp=target.airPos();
+    // Fire toward click point — player aims freely, Lead Indicator guides them
+    const tx=e.clientX, ty=e.clientY;
     wpn.cur--;S.shots++;trackShot(S.weapon);
-    // Cluster bonus hint
-    const near=E.enemies.filter(m=>{if(!m.active)return false;const p=m.airPos();return Math.hypot(p.x-mp.x,p.y-mp.y)<wpn.radius*1.5;}).length;
-    if(near>=3) floatNum(mp.x,mp.y-28,'מבזק!','#fbbf24');
-    E.interceptors.push(new Interceptor(S.weapon,mp.x,mp.y));
-    E.particles.push(new TargetMk(mp.x,mp.y,wpn.color));
+
+    // Warn if nearest enemy needs a different weapon (but still fire)
+    let nearest=null,nd=Infinity;
+    for(const m of E.enemies){if(!m.active)continue;const mp=m.airPos();const d=Math.hypot(mp.x-tx,mp.y-ty);if(d<nd){nd=d;nearest=m;}}
+    if(nearest&&nd<180){
+        const bestW=BEST_WEAPON[nearest.type];
+        if(bestW&&bestW!==S.weapon&&HIT_MATRIX[S.weapon][nearest.type]<0.25){
+            const nm={IRON_DOME:'כיפת ברזל',SLING:'קלע דוד',ARROW2:'חץ 2',ARROW3:'חץ 3'};
+            alert2('נשק שגוי - נסה ב' + (nm[bestW]||bestW),'w',1600);
+        }
+        // Cluster bonus
+        const near=E.enemies.filter(m=>{if(!m.active)return false;const p=m.airPos();return Math.hypot(p.x-nearest.airPos().x,p.y-nearest.airPos().y)<wpn.radius*1.5;}).length;
+        if(near>=3) floatNum(tx,ty-28,'מבזק!','#fbbf24');
+    }
+    E.interceptors.push(new Interceptor(S.weapon,tx,ty));
+    E.particles.push(new TargetMk(tx,ty,wpn.color));
     renderBats();
 });
 
