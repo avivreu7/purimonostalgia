@@ -1567,17 +1567,34 @@ HaKod: "OMEGA INCOMING. No timetable. No limit. This is it."`,
      quote:'"זה לא אמור להיות אפשרי." — תא"ל ירקוני, 20 באוקטובר 2024'}
 ];
 function showEpilogue(opIdx,cb){
-    if(opIdx>=EPILOGUES.length){cb();return;}
+    if(opIdx<0||opIdx>=EPILOGUES.length){cb();return;}
     const ep=EPILOGUES[opIdx];
-    document.getElementById('ep-tag').textContent=ep.tag;
-    document.getElementById('ep-title').textContent=ep.title;
-    document.getElementById('ep-body').textContent=ep.body;
-    document.getElementById('ep-quote').textContent=`"${ep.quote.replace(/^"(.+)"$/,'$1')}"`;
-    const ov=document.getElementById('epilov');ov.classList.add('sh');
-    sndIntel();charReact('OP_COMPLETE',opIdx%3);
-    let cnt=7;const cd=document.getElementById('ep-cd');cd.textContent=`ממשיך ב-${cnt}...`;
-    const iv=setInterval(()=>{cnt--;cnt>0?cd.textContent=`ממשיך ב-${cnt}...`:cd.textContent='פרק הבא...';},1000);
-    setTimeout(()=>{clearInterval(iv);ov.classList.remove('sh');setTimeout(cb,500);},8000);
+    if(!ep){cb();return;}
+    try{
+        document.getElementById('ep-tag').textContent=ep.tag||'';
+        document.getElementById('ep-title').textContent=ep.title||'';
+        document.getElementById('ep-body').textContent=ep.body||'';
+        const q=ep.quote||'';
+        document.getElementById('ep-quote').textContent=q;
+        const ov=document.getElementById('epilov');
+        ov.classList.add('sh');
+        sndIntel();
+        let cnt=7;
+        const cd=document.getElementById('ep-cd');
+        if(cd)cd.textContent='ממשיך ב-'+cnt+'...';
+        const iv=setInterval(()=>{
+            cnt--;
+            if(cd)cd.textContent=cnt>0?'ממשיך ב-'+cnt+'...':'פרק הבא...';
+        },1000);
+        setTimeout(()=>{
+            clearInterval(iv);
+            ov.classList.remove('sh');
+            setTimeout(cb,500);
+        },8000);
+    }catch(e){
+        console.warn('showEpilogue error:',e);
+        cb();
+    }
 }
 
 // ════════════════════════════════════════════
@@ -1602,27 +1619,46 @@ const SKILL_TREES=[
      {icon:'⚖️',name:'דוקטרינת אומגה-מאוזנת',desc:'כל מערכות ×1.5\n+$3000',apply:()=>{for(const b of Object.values(S.batteries)){b.max=Math.ceil(b.max*1.5);b.cur=b.max;b.radius*=1.3;b.speed*=1.3;}S.money+=3000;updateHud();}}]
 ];
 function showSkillTree(treeIdx,cb){
-    if(treeIdx>=SKILL_TREES.length){cb();return;}
+    if(treeIdx<0||treeIdx>=SKILL_TREES.length){cb();return;}
     S.opIntroPhase=true;
     const tree=SKILL_TREES[treeIdx];
-    const opNames=['מגן ברזל → חזית הצפון','חזית הצפון → ליל הכוכבים','ליל הכוכבים → ים האש','ים האש → שאגת הארי'];
-    document.getElementById('sk-op').textContent=opNames[treeIdx]||'בחר דוקטרינה';
-    const cards=document.getElementById('sk-cards');cards.innerHTML='';
-    tree.forEach((sk,i)=>{
+    const opNames=['מלחמת הצל → הבטחת האמת א','הבטחת האמת א → ב','הבטחת האמת ב → כלביא','כלביא → שאגת הארי'];
+    const skOp=document.getElementById('sk-op');
+    if(skOp)skOp.textContent=opNames[treeIdx]||'בחר דוקטרינה';
+    const cards=document.getElementById('sk-cards');
+    if(!cards){S.opIntroPhase=false;cb();return;}
+    cards.innerHTML='';
+
+    const done=(sk)=>{
+        try{sk.apply();}catch(e){console.warn('skill apply error',e);}
+        renderBats();updateHud();
+        const skillov=document.getElementById('skillov');
+        if(skillov)skillov.classList.remove('sh');
+        S.opIntroPhase=false;
+        setTimeout(cb,400);
+    };
+
+    tree.forEach((sk)=>{
         const div=document.createElement('div');div.className='sk-card ia';
         div.innerHTML=`<div class="text-3xl mb-2">${sk.icon}</div><div class="text-[13px] font-black text-white mb-1" style="font-family:'Rajdhani'">${sk.name}</div><div class="text-[9px] text-slate-400 font-mono leading-relaxed">${sk.desc.replace(/\n/g,'<br>')}</div>`;
         div.onclick=()=>{
             document.querySelectorAll('.sk-card').forEach(c=>c.classList.remove('chosen'));
             div.classList.add('chosen');
-            sk.apply();
-            renderBats();updateHud();
-            setTimeout(()=>{document.getElementById('skillov').classList.remove('sh');S.opIntroPhase=false;setTimeout(cb,400);},900);
+            setTimeout(()=>done(sk),900);
         };
         cards.appendChild(div);
     });
-    let cnt=20;const cd=document.getElementById('sk-cd');cd.textContent=`בחר תוך ${cnt} שניות...`;
-    const iv=setInterval(()=>{cnt--;cd.textContent=`בחר תוך ${cnt} שניות...`;if(cnt<=0){clearInterval(iv);tree[1].apply();renderBats();updateHud();document.getElementById('skillov').classList.remove('sh');S.opIntroPhase=false;setTimeout(cb,400);}},1000);
-    document.getElementById('skillov').classList.add('sh');
+
+    let cnt=20;
+    const cd=document.getElementById('sk-cd');
+    if(cd)cd.textContent='בחר תוך '+cnt+' שניות...';
+    const iv=setInterval(()=>{
+        cnt--;
+        if(cd)cd.textContent='בחר תוך '+cnt+' שניות...';
+        if(cnt<=0){clearInterval(iv);done(tree[0]);}
+    },1000);
+    const skillov=document.getElementById('skillov');
+    if(skillov)skillov.classList.add('sh');
 }
 
 // ════════════════════════════════════════════
@@ -1753,23 +1789,35 @@ function startUpgrade(){
 }
 
 // ════════════════════════════════════════════
-// NEXT WAVE FLOW (patched — epilogue + skill tree)
+// WAVE FLOW — simple and bulletproof
 // ════════════════════════════════════════════
 function nextWave(){
-    document.getElementById('um').classList.remove('op');document.getElementById('mbk').classList.remove('op');
-    const nw=S.wave+1,curOp=getOp(S.wave),nxtOp=getOp(nw);
+    document.getElementById('um').classList.remove('op');
+    document.getElementById('mbk').classList.remove('op');
+
+    const nw=S.wave+1;
+    const curOp=getOp(S.wave);
+    const nxtOp=getOp(nw);
+    const opChanged=(nxtOp.id!==curOp.id);
     const endOfOp=(S.wave%10===0&&S.wave>0);
-    const opIdx=Math.floor(S.wave/10)-1;
-    if(endOfOp&&nxtOp.id!==curOp.id){
-        // End of operation: epilogue → skill tree → new op intro
+
+    if(endOfOp&&opChanged){
+        // End of operation → Epilogue → Op Intro → wave
+        const opIdx=Math.floor(S.wave/10)-1;
         showEpilogue(opIdx,()=>{
-            showSkillTree(opIdx,()=>{
-                checkIntel(nw);
+            showOpIntro(nxtOp,()=>{
+                // Skill tree as bonus (skip if broken, game continues)
+                try{
+                    showSkillTree(opIdx,()=>checkIntel(nw));
+                }catch(e){
+                    checkIntel(nw);
+                }
             });
         });
-    }else if(nxtOp.waveStart===nw&&nxtOp.id!==curOp.id){
+    } else if(opChanged&&nxtOp.waveStart===nw){
+        // Op changed mid-run (shouldn't happen with 10-wave ops, but safe)
         showOpIntro(nxtOp,()=>checkIntel(nw));
-    }else{
+    } else {
         checkIntel(nw);
     }
 }
