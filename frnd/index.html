@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תיק חקירה: הסיפור "החבר"</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&family=Amatic+SC:wght@700&family=Courier+Prime&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Alef', sans-serif;
+            background-color: #3e2723;
+            background-image: url('https://www.transparenttextures.com/patterns/cork-board.png');
+            overflow-x: hidden;
+        }
+
+        .typewriter {
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .handwriting {
+            font-family: 'Amatic SC', cursive;
+            font-size: 1.5rem;
+        }
+
+        .paper-card {
+            background-color: #fdfbf7;
+            box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .paper-card::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background-color: rgba(255, 0, 0, 0.6);
+            border-radius: 50%;
+            box-shadow: inset 0 -2px 5px rgba(0,0,0,0.5), 0 2px 2px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .polaroid {
+            background: white;
+            padding: 10px 10px 30px 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            transform: rotate(-3deg);
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        .polaroid img {
+            width: 100%;
+            max-width: 250px;
+            height: auto;
+            border: 1px solid #ddd;
+            filter: sepia(0.3) contrast(1.2);
+        }
+
+        .sticky-note {
+            background-color: #fce473;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            padding: 15px;
+            transform: rotate(2deg);
+            position: relative;
+        }
+
+        .stamp {
+            color: #d32f2f;
+            border: 4px solid #d32f2f;
+            padding: 5px 10px;
+            font-weight: bold;
+            font-size: 1.5rem;
+            transform: rotate(-15deg);
+            display: inline-block;
+            opacity: 0.8;
+            border-radius: 5px;
+        }
+
+        .hidden-stage {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .word-bank-item {
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        
+        .word-bank-item.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .drop-zone {
+            min-height: 120px;
+            border: 2px dashed #888;
+            transition: all 0.2s;
+        }
+
+        .drop-zone.active-target {
+            border-color: #3b82f6;
+            background-color: rgba(255,255,255,0.8);
+        }
+
+        /* Censored words for stage 2 */
+        .censored {
+            background-color: #111;
+            color: #111;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            padding: 0 6px;
+            border-radius: 3px;
+            user-select: none;
+        }
+        .censored:hover {
+            box-shadow: 0 0 5px rgba(255,0,0,0.5);
+        }
+        .censored.revealed {
+            background-color: transparent;
+            color: #b91c1c;
+            font-weight: bold;
+            border-bottom: 2px dashed #b91c1c;
+        }
+
+        .timer-bar {
+            height: 10px;
+            background-color: #ef4444;
+            width: 100%;
+            transition: width 1s linear;
+        }
+        
+        button {
+            touch-action: manipulation; /* Improves mobile tap response */
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto pb-10">
+        
+        <!-- Header -->
+        <header class="text-center mb-8 fade-in">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-2" style="text-shadow: 2px 2px 4px #000;">תיק חקירה מס' 57</h1>
+            <p class="text-yellow-200 text-lg typewriter">הנושא: האמת מאחורי האשליה - הסיפור "החבר"</p>
+        </header>
+
+        <!-- Stage 0: Intro -->
+        <section id="stage-0" class="paper-card p-6 md:p-10 mb-8 fade-in max-w-2xl mx-auto">
+            <div class="stamp absolute top-4 left-4">סודי ביותר</div>
+            <h2 class="text-2xl font-bold mb-4 typewriter mt-4 md:mt-0">תקציר האירוע:</h2>
+            <p class="text-lg leading-relaxed mb-6">
+                חוקרים יקרים, הוטל עליכם לפענח תעלומה מתוך זיכרונותיו של נער (המספר, אאוגוסטו). 
+                התיק סובב סביב תלמיד כיתה ח' יפה תואר שזכה לכינוי "רב-מלאך". 
+                כולם חשבו שהם יודעים עליו הכול, אך המציאות הייתה שונה לחלוטין.
+            </p>
+            <p class="text-lg leading-relaxed mb-8 font-bold text-red-700">
+                המשימה שלכם: לאסוף את הראיות, להבין מי הוא באמת, ולנתח את העימות הגורלי ביניהם.
+            </p>
+            <div class="text-center">
+                <button onclick="nextStage(1)" class="bg-gray-800 text-white px-8 py-4 md:py-3 rounded-lg text-xl font-bold hover:bg-gray-700 transition shadow-lg w-full md:w-auto">פתח תיק חקירה</button>
+            </div>
+        </section>
+
+        <!-- Stage 1: The Illusion -->
+        <section id="stage-1" class="hidden-stage fade-in">
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="polaroid">
+                    <img src="https://images.unsplash.com/photo-1485546246426-74dc88dec4d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="נער מסתורי">
+                    <p class="handwriting text-center mt-2">"רב המלאך"</p>
+                </div>
+                <div class="paper-card p-6 relative">
+                    <h3 class="text-xl font-bold mb-4 typewriter border-b-2 border-gray-300 pb-2">שלב 1: איסוף נתונים</h3>
+                    <p class="mb-4 text-sm md:text-base">לחצו על מילה מהבנק למטה, ולאחר מכן לחצו על התיקייה שאליה היא שייכת.</p>
+                    
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div id="zone-illusion" class="drop-zone w-full md:w-1/2 p-3 bg-white/50 cursor-pointer rounded" onclick="placeWord('zone-illusion')">
+                            <h4 class="font-bold text-center mb-2 text-red-600">מה שחשבו (האשליה)</h4>
+                        </div>
+                        <div id="zone-reality" class="drop-zone w-full md:w-1/2 p-3 bg-white/50 cursor-pointer rounded" onclick="placeWord('zone-reality')">
+                            <h4 class="font-bold text-center mb-2 text-blue-600">האמת (המציאות)</h4>
+                        </div>
+                    </div>
+
+                    <div id="word-bank" class="flex flex-wrap gap-3 justify-center mb-6 min-h-[50px] bg-gray-100 p-3 rounded">
+                        <span class="word-bank-item border-2 border-gray-400 bg-white px-4 py-2 md:px-3 md:py-1 rounded-full shadow-sm" onclick="selectWord(this)">בן עשירים</span>
+                        <span class="word-bank-item border-2 border-gray-400 bg-white px-4 py-2 md:px-3 md:py-1 rounded-full shadow-sm" onclick="selectWord(this)">מלווה במשרתת</span>
+                        <span class="word-bank-item border-2 border-gray-400 bg-white px-4 py-2 md:px-3 md:py-1 rounded-full shadow-sm" onclick="selectWord(this)">עני מרוד</span>
+                        <span class="word-bank-item border-2 border-gray-400 bg-white px-4 py-2 md:px-3 md:py-1 rounded-full shadow-sm" onclick="selectWord(this)">חי בארמון</span>
+                        <span class="word-bank-item border-2 border-gray-400 bg-white px-4 py-2 md:px-3 md:py-1 rounded-full shadow-sm" onclick="selectWord(this)">יתום מאם ואב</span>
+                    </div>
+
+                    <button id="btn-check-1" onclick="checkStage1()" class="w-full bg-blue-600 text-white py-3 md:py-2 rounded-lg font-bold hover:bg-blue-700 shadow">בדוק ראיות</button>
+                    <p id="msg-stage1" class="text-center mt-3 font-bold hidden"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stage 2: The Document -->
+        <section id="stage-2" class="hidden-stage fade-in">
+            <div class="paper-card p-6 md:p-8 max-w-2xl mx-auto text-center relative">
+                <div class="stamp absolute top-4 right-4 hidden md:block" style="transform: rotate(20deg); border-color: #1976d2; color: #1976d2;">ראיה חדשה</div>
+                <h3 class="text-2xl font-bold mb-4 typewriter text-red-700 mt-2 md:mt-0">דו"ח היעדרות - בית ספר גימנסיה</h3>
+                
+                <p class="text-sm font-bold bg-yellow-200 inline-block px-3 py-1 mb-4 rounded border border-yellow-400">
+                    משימה: הדו"ח צונזר! לחצו על המילים המושחרות כדי לחשוף את האמת.
+                </p>
+
+                <div class="bg-gray-100 p-4 md:p-6 border border-dashed border-gray-400 mb-6 text-right font-serif leading-loose text-lg shadow-inner">
+                    "התלמיד נעדר מלימודיו. התברר כי האמת שונה לחלוטין מכפי שהציג. <br>
+                    האישה הפשוטה שנהגה להמתין לו בשער לא הייתה משרתת כלל, אלא <span class="censored" onclick="revealWord(this)">אמו החולה</span>.<br>
+                    היא <span class="censored" onclick="revealWord(this)">נפטרה</span> בלילה, והנער נותר <span class="censored" onclick="revealWord(this)">יתום</span> וחסר כל, ונשלח לעבוד בחנות של דודו."
+                </div>
+                
+                <p class="text-lg mb-6 handwriting">הוא שיקר כדי להסתיר את עוניו... הקומדיה הזאת עוררה במספר בוז ורצון לנקום.</p>
+                
+                <button id="btn-stage2" onclick="nextStage(3)" class="w-full md:w-auto bg-gray-400 text-white px-8 py-3 md:py-2 rounded-lg text-lg font-bold shadow-md cursor-not-allowed transition duration-300" disabled>
+                    חשפו את כל המילים כדי להמשיך
+                </button>
+            </div>
+        </section>
+
+        <!-- Stage 3: The Dilemma -->
+        <section id="stage-3" class="hidden-stage fade-in">
+            <div class="max-w-3xl mx-auto bg-black text-white p-6 md:p-8 rounded-lg shadow-2xl border-4 border-gray-800 relative">
+                <h3 class="text-2xl md:text-3xl text-red-500 font-bold mb-2 typewriter">זירת האירוע: החנות</h3>
+                <p class="text-base md:text-lg mb-6 text-gray-200">
+                    חודשים לאחר מכן, המספר נכנס במקרה לחנות. הוא רואה את חברו לבוש בבגד צר וקצר מדי. 
+                    החבר, בניסיון להגן על כבודו הפגוע, מסתכל עליו ביהירות ופולט בזלזול:
+                </p>
+                
+                <div class="text-center text-5xl font-bold text-yellow-400 mb-8 handwriting tracking-widest">
+                    "חרשן."
+                </div>
+
+                <div class="timer-bar mb-6" id="dilemma-timer"></div>
+
+                <div id="dilemma-options">
+                    <p class="mb-4 font-bold text-lg">איך המספר יגיב? בחר מהר!</p>
+                    <div class="grid gap-4 md:grid-cols-3 mb-2">
+                        <button onclick="chooseDilemma('לשתוק ולצאת מן החנות')" class="bg-gray-700 hover:bg-gray-600 p-4 rounded-lg text-center transition border border-gray-500 shadow text-lg">לשתוק ולצאת</button>
+                        <button onclick="chooseDilemma('לצעוק עליו בחזרה')" class="bg-gray-700 hover:bg-gray-600 p-4 rounded-lg text-center transition border border-gray-500 shadow text-lg">להחזיר קללה רגילה</button>
+                        <button onclick="chooseDilemma('בן של משרתת!')" class="bg-gray-700 hover:bg-gray-600 p-4 rounded-lg text-center transition border border-gray-500 shadow text-lg font-bold text-red-200">להגיד: "בן של משרתת!"</button>
+                    </div>
+                </div>
+
+                <!-- Result Message (Hidden initially) -->
+                <div id="dilemma-result" class="hidden p-5 bg-gray-900 border-r-4 border-red-500 mt-6">
+                    <p class="text-xl mb-3 font-bold text-red-400" id="dilemma-feedback"></p>
+                    <p class="text-gray-300 text-lg" id="dilemma-desc"></p>
+                    
+                    <button id="dilemma-retry-btn" onclick="retryDilemma()" class="mt-5 w-full md:w-auto bg-yellow-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-yellow-500 shadow hidden">
+                        חזור אחורה ונסה שוב
+                    </button>
+                    
+                    <button id="dilemma-next-btn" onclick="nextStage(4)" class="mt-5 w-full md:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-500 shadow hidden">
+                        המשך לשאלון הסיכום
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stage 4: The Quiz -->
+        <section id="stage-4" class="hidden-stage fade-in">
+            <div class="paper-card p-5 md:p-10 max-w-3xl mx-auto relative">
+                <div class="stamp absolute top-4 left-4 hidden md:block" style="border-color: #2e7d32; color: #2e7d32; font-size: 1.2rem;">פרוטוקול סופי</div>
+                <h3 class="text-2xl font-bold mb-4 typewriter mt-2 md:mt-0">שאלון סגירת תיק</h3>
+                <p class="mb-6 font-bold text-gray-600">ענו נכונה על כל השאלות כדי לנעול את התיק ולשלוח דו"ח. אם טעיתם, תוכלו לנסות שוב!</p>
+
+                <div id="quiz-container" class="space-y-6 md:space-y-8">
+                    <!-- Quiz generated by JS -->
+                </div>
+
+                <div class="text-center mt-10 hidden p-6 bg-green-50 border-2 border-green-200 rounded-lg" id="quiz-complete-div">
+                    <p class="text-2xl font-bold text-green-700 mb-2">כל הכבוד! פענחתם את התיק בהצלחה.</p>
+                    <p class="text-gray-600 mb-6">עניתם על כל השאלות והבנתם את עומק הסיפור.</p>
+                    <button onclick="nextStage(5)" class="w-full md:w-auto bg-gray-800 text-white px-8 py-4 md:py-3 rounded-lg text-xl font-bold hover:bg-gray-700 shadow-lg">הכן דו"ח למורה</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stage 5: WhatsApp Export -->
+        <section id="stage-5" class="hidden-stage fade-in">
+            <div class="sticky-note max-w-md mx-auto p-6 md:p-8 mt-4 md:mt-8">
+                <h3 class="text-2xl font-bold mb-4 handwriting border-b border-gray-800 pb-2">שליחת הדו"ח</h3>
+                <p class="mb-4 text-lg">הזינו את השם שלכם. בלחיצה על השליחה ייפתח הוואטסאפ שלכם ותוכלו לבחור לאיזו קבוצה או מורה לשלוח.</p>
+                
+                <div class="space-y-6 mb-6">
+                    <div>
+                        <label class="block font-bold mb-2 text-lg">השם שלכם (לצורך הדו"ח):</label>
+                        <input type="text" id="studentName" class="w-full border-b-2 border-gray-800 bg-transparent p-2 text-xl focus:outline-none focus:border-blue-600" placeholder="לדוגמה: נועה כהן">
+                    </div>
+                </div>
+
+                <button onclick="sendWhatsApp()" class="w-full bg-[#25D366] text-white py-4 md:py-3 rounded-lg text-lg font-bold hover:bg-green-600 flex justify-center items-center gap-3 shadow-lg transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                    פתיחת וואטסאפ ושליחה
+                </button>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // --- Stage Management ---
+        function nextStage(stageNum) {
+            document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden-stage'));
+            document.getElementById(`stage-${stageNum}`).classList.remove('hidden-stage');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            if(stageNum === 3) startDilemmaTimer();
+            if(stageNum === 4) renderQuiz();
+        }
+
+        // --- Stage 1 Logic (Word Sorting with Retry) ---
+        let selectedWordBtn = null;
+        
+        const correctAnswers = {
+            'בן עשירים': 'zone-illusion',
+            'חי בארמון': 'zone-illusion',
+            'מלווה במשרתת': 'zone-illusion',
+            'עני מרוד': 'zone-reality',
+            'יתום מאם ואב': 'zone-reality'
+        };
+
+        function selectWord(btn) {
+            if(selectedWordBtn) selectedWordBtn.classList.remove('selected');
+            selectedWordBtn = btn;
+            btn.classList.add('selected');
+            document.querySelectorAll('.drop-zone').forEach(z => z.classList.add('active-target'));
+        }
+
+        function placeWord(zoneId) {
+            if (!selectedWordBtn) return;
+            
+            const zone = document.getElementById(zoneId);
+            zone.appendChild(selectedWordBtn);
+            
+            selectedWordBtn.classList.remove('selected');
+            selectedWordBtn.classList.add('m-1', 'inline-block');
+            
+            selectedWordBtn = null;
+            document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('active-target'));
+            
+            // Clear message if moving items around
+            document.getElementById('msg-stage1').classList.add('hidden');
+        }
+
+        function checkStage1() {
+            let allCorrect = true;
+            const msg = document.getElementById('msg-stage1');
+            const words = document.querySelectorAll('.word-bank-item');
+            const wordBank = document.getElementById('word-bank');
+            
+            msg.classList.remove('hidden');
+
+            if(wordBank.children.length > 0) {
+                msg.innerText = "יש למיין את כל הכרטיסיות לפני הבדיקה.";
+                msg.className = "text-center mt-3 font-bold text-red-600 block text-lg";
+                return;
+            }
+
+            words.forEach(btn => {
+                const word = btn.innerText;
+                const parentId = btn.parentElement.id;
+                
+                if(correctAnswers[word] !== parentId) {
+                    allCorrect = false;
+                    // Add shake effect and temporary red background
+                    btn.classList.add('shake', 'bg-red-200', 'border-red-500');
+                    
+                    // Automatically move wrong answers back to the word bank after a short delay
+                    setTimeout(() => {
+                        btn.classList.remove('shake', 'bg-red-200', 'border-red-500');
+                        btn.classList.add('bg-white'); // Reset to default
+                        wordBank.appendChild(btn);
+                    }, 800);
+                } else {
+                    btn.classList.remove('bg-white');
+                    btn.classList.add('bg-green-100', 'border-green-500');
+                }
+            });
+
+            if (allCorrect) {
+                msg.innerText = "מעולה! עמדתם על הפער בין האשליה למציאות.";
+                msg.className = "text-center mt-3 font-bold text-green-600 block text-lg";
+                setTimeout(() => nextStage(2), 1500);
+            } else {
+                msg.innerText = "חלק מהכרטיסיות אינן במקום הנכון. הן הוחזרו לבנק המילים. נסו שוב!";
+                msg.className = "text-center mt-3 font-bold text-red-600 block text-lg";
+            }
+        }
+
+        // --- Stage 2 Logic (Censored Words) ---
+        let revealedCount = 0;
+        function revealWord(el) {
+            if(!el.classList.contains('revealed')) {
+                el.classList.add('revealed');
+                revealedCount++;
+                
+                // If all 3 words are revealed, enable the continue button
+                if(revealedCount === 3) {
+                    const btn = document.getElementById('btn-stage2');
+                    btn.disabled = false;
+                    btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                    btn.classList.add('bg-gray-800', 'hover:bg-gray-700');
+                    btn.innerText = "המשך לעימות";
+                }
+            }
+        }
+
+        // --- Stage 3 Logic (Dilemma with Retry) ---
+        let dilemmaTimeout;
+        function startDilemmaTimer() {
+            document.getElementById('dilemma-options').classList.remove('hidden');
+            document.getElementById('dilemma-result').classList.add('hidden');
+            
+            const bar = document.getElementById('dilemma-timer');
+            bar.style.transition = 'none';
+            bar.style.width = '100%';
+            
+            // Force reflow
+            void bar.offsetWidth;
+            
+            bar.style.transition = 'width 5s linear';
+            bar.style.width = '0%';
+            
+            dilemmaTimeout = setTimeout(() => {
+                if(document.getElementById('dilemma-result').classList.contains('hidden')) {
+                    chooseDilemma('הזמן נגמר... שתיקה מביכה');
+                }
+            }, 5000); // 5 seconds pressure
+        }
+
+        function chooseDilemma(choice) {
+            clearTimeout(dilemmaTimeout);
+            
+            document.getElementById('dilemma-options').classList.add('hidden');
+            
+            const feedback = document.getElementById('dilemma-feedback');
+            const desc = document.getElementById('dilemma-desc');
+            const resultDiv = document.getElementById('dilemma-result');
+            const retryBtn = document.getElementById('dilemma-retry-btn');
+            const nextBtn = document.getElementById('dilemma-next-btn');
+            
+            resultDiv.classList.remove('hidden');
+            
+            if(choice === "בן של משרתת!") {
+                feedback.innerText = "בחרתם בדיוק כפי שהמספר בחר!";
+                feedback.className = "text-xl md:text-2xl mb-3 font-bold text-green-400";
+                desc.innerText = "זו הייתה נקמה שנבעה מקנאה ורגש נחיתות. מיד לאחר מכן, הוא ראה את פניו של החבר מחווירות, ואהבתו אליו חזרה בבת אחת. המספר ברח מהחנות מוכה אשמה.";
+                
+                retryBtn.classList.add('hidden');
+                nextBtn.classList.remove('hidden');
+            } else {
+                feedback.innerText = `הבחירה שלכם: "${choice}".`;
+                feedback.className = "text-xl md:text-2xl mb-3 font-bold text-yellow-400";
+                desc.innerText = "זה אולי מה שאתה היית עושה בחיים האמיתיים כדי להימנע מריב, אבל בסיפור – המספר פעל מתוך דחף ועלבון עמוק. נסה לחזור אחורה ולחשוב מה הוא אמר לו כדי לנקום בו.";
+                
+                retryBtn.classList.remove('hidden');
+                nextBtn.classList.add('hidden');
+            }
+        }
+
+        function retryDilemma() {
+            startDilemmaTimer();
+        }
+
+        // --- Stage 4 Logic (Quiz with Retry) ---
+        const questions = [
+            {
+                q: '1. מדוע היו אאוגוסטו וחבריו לכיתה בטוחים ש"החבר" מגיע ממשפחה עשירה ומכובדת?',
+                options: [
+                    'מכיוון שהוא סיפר להם על עסקיו של אביו.',
+                    'מכיוון שהייתה אישה שנהגה לאסוף אותו והוא טען שהיא המשרתת שלו.',
+                    'מכיוון שהוא חילק לחבריו מתנות יקרות ערך.',
+                    'מכיוון שהמורים נתנו לו ציונים גבוהים למרות שלא השקיע.'
+                ],
+                ans: 1
+            },
+            {
+                q: '2. מהי התגלית המפתיעה שמשנה את יחסם של ילדי הכיתה כלפי "החבר"?',
+                options: [
+                    'ש"המשרתת" שאספה אותו כל יום הייתה למעשה אימו הענייה שנפטרה.',
+                    'שהוא גנב את ספרי הלימוד שלו מחנות מקומית.',
+                    'שהוא עומד לעבור ללמוד בפנימייה לעשירים בלבד.',
+                    'שהוא למעשה תלמיד מצטיין שהסתיר את חוכמתו.'
+                ],
+                ans: 0
+            },
+            {
+                q: '3. כיצד מגיב "החבר" כאשר המספר פוגש אותו במקרה עובד בחנות?',
+                options: [
+                    'הוא מתבייש ומתחבא מאחורי הדלפק.',
+                    'הוא שמח לקראתו ומזמין אותו לביתו.',
+                    'הוא עוטה הבעה מזלזלת וקורא למספר "חרשן".',
+                    'הוא מבקש מהמספר עזרה כלכלית בלימודיו.'
+                ],
+                ans: 2
+            },
+            {
+                q: '4. על פי דף העבודה, לאיזה סוג מספר משתייך המספר בסיפור "החבר"?',
+                options: [
+                    'מספר כל יודע.',
+                    'מספר עד.',
+                    'מספר גיבור (דמות המספרת את הסיפור של עצמה).',
+                    'מספר אובייקטיבי.'
+                ],
+                ans: 2
+            },
+            {
+                q: '5. כאשר אנו מסיקים מידע על הדמות מתוך סגנון הלבוש שלה (הפער בין בגדיו בהתחלה לבגדיו בחנות), מדובר באפיון מסוג:',
+                options: [
+                    'אפיון ישיר.',
+                    'אפיון עקיף.',
+                    'אפיון חיצוני בלבד.',
+                    'אפיון פסיכולוגי.'
+                ],
+                ans: 1
+            },
+            {
+                q: '6. כיצד מסתיים הסיפור ומה הוא מלמד על יחסו האמיתי של המספר ל"חבר"?',
+                options: [
+                    'המספר מכריז שלעולם לא יסלח לחבר על ההעלבה בחנות.',
+                    'המספר שוכח את החבר וממשיך בחייו כאילו כלום לא קרה.',
+                    'המספר פונה לדודו של החבר ומבקש שיחזיר אותו ללימודים.',
+                    'המספר מצהיר על אהבה חזקה וטוען שהיה מוכן לשבת במקומו בכלא.'
+                ],
+                ans: 3
+            }
+        ];
+
+        let score = 0; // Number of questions answered correctly on FIRST try
+        let answeredQuestions = 0;
+        let qAttempts = {}; // Tracks attempts per question
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            
+            questions.forEach((item, qIndex) => {
+                qAttempts[qIndex] = 0; // Reset attempts tracking
+                
+                const qDiv = document.createElement('div');
+                qDiv.className = 'bg-white p-5 md:p-6 rounded-lg shadow-sm border border-gray-200';
+                
+                let html = `<h4 class="font-bold mb-4 text-lg md:text-xl">${item.q}</h4><div class="space-y-3">`;
+                
+                item.options.forEach((opt, oIndex) => {
+                    html += `
+                        <label id="label-${qIndex}-${oIndex}" class="block p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition quiz-opt-${qIndex} text-base md:text-lg" onclick="checkAnswer(${qIndex}, ${oIndex}, this)">
+                            <input type="radio" name="q${qIndex}" class="hidden">
+                            ${opt}
+                        </label>
+                    `;
+                });
+                
+                html += `</div><p id="feedback-${qIndex}" class="mt-4 font-bold hidden text-lg"></p>`;
+                qDiv.innerHTML = html;
+                container.appendChild(qDiv);
+            });
+        }
+
+        function checkAnswer(qIndex, oIndex, labelEl) {
+            const isCorrect = questions[qIndex].ans === oIndex;
+            const feedback = document.getElementById(`feedback-${qIndex}`);
+            
+            // If already answered correctly, do nothing
+            if (feedback.classList.contains('text-green-600')) return;
+
+            if (isCorrect) {
+                // If it's the first attempt, give a point
+                if (qAttempts[qIndex] === 0) {
+                    score++;
+                }
+                
+                // Highlight correct, disable others
+                const labels = document.querySelectorAll(`.quiz-opt-${qIndex}`);
+                labels.forEach((lbl, idx) => {
+                    lbl.classList.remove('hover:bg-gray-50', 'cursor-pointer');
+                    lbl.onclick = null; // Disable further clicks
+                    if (idx === questions[qIndex].ans) {
+                        lbl.classList.add('bg-green-100', 'border-green-500');
+                    }
+                });
+
+                feedback.innerText = "תשובה נכונה! כל הכבוד.";
+                feedback.className = "mt-4 font-bold text-green-600 block text-lg";
+                
+                answeredQuestions++;
+                if (answeredQuestions === questions.length) {
+                    document.getElementById('quiz-complete-div').classList.remove('hidden');
+                    // Scroll to completion message
+                    document.getElementById('quiz-complete-div').scrollIntoView({behavior: "smooth", block: "center"});
+                }
+            } else {
+                qAttempts[qIndex]++;
+                
+                // Temporarily show error and shake, don't reveal correct answer
+                labelEl.classList.add('bg-red-100', 'border-red-500', 'shake');
+                feedback.innerText = "תשובה שגויה... נסו לחשוב שוב!";
+                feedback.className = "mt-4 font-bold text-red-600 block text-lg";
+                
+                setTimeout(() => {
+                    labelEl.classList.remove('bg-red-100', 'border-red-500', 'shake');
+                    feedback.classList.add('hidden');
+                }, 1500); // Reset after 1.5 seconds
+            }
+        }
+
+        // --- Stage 5 Logic (WhatsApp Open) ---
+        function sendWhatsApp() {
+            const name = document.getElementById('studentName').value.trim();
+            
+            if (!name) {
+                alert("אנא הזינו את שמכם כדי שנוכל לכלול אותו בדו\"ח.");
+                return;
+            }
+
+            // Message text to share
+            const message = `שלום! 🕵️‍♂️\nסיימתי את פעילות 'תיק חקירה' על הסיפור 'החבר'.\nהשם שלי: *${name}*\nעניתי נכונה בניסיון הראשון על *${score} מתוך ${questions.length}* שאלות בשאלון המסכם!\nהיה ממש מעניין לגלות שהמראה החיצוני יכול להטעות.`;
+            
+            // Open WhatsApp generic link (user chooses contact inside the app)
+            const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
