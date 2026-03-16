@@ -1,346 +1,513 @@
-import React, { useState, useEffect } from 'react';
-
-// --- Data: The Traditions and their "Source Code" ---
-const traditionsData = [
-  {
-    id: 'maggid',
-    title: 'קריאת ההגדה',
-    subtitle: 'מגילת המגיד',
-    icon: '📜',
-    original: 'קריאת טקסטים עתיקים, חלקם בארמית, המספרים את סיפור יציאת מצרים מתחילתו ועד סופו סביב השולחן.',
-    coreMeaning: 'העברת הנרטיב ההיסטורי והזיכרון הקולקטיבי של העם מדור לדור, כדי שנזכור מאיפה באנו ולאן אנחנו הולכים.',
-    modernOptions: [
-      "סבב שבו כל אחד מספר על 'יציאת מצרים' פרטית שלו השנה.",
-      "צפייה בסרטון טיקטוק/רילס (3 דקות) שמסכם את הסיפור.",
-      "פודקאסט משפחתי: סבא/סבתא מספרים את ההיסטוריה המשפחתית."
-    ]
-  },
-  {
-    id: 'maror',
-    title: 'אכילת מרור',
-    subtitle: 'שורש הדמעות',
-    icon: '🌿',
-    original: 'אכילת שורש חזרת חריף או עלי חסה מרירים שמעלים דמעות, כזכר לשעבוד במצרים.',
-    coreMeaning: 'לחוות פיזית מעט מהקושי והכאב, כדי לפתח אמפתיה, רגישות וחמלה לחלשים ולשקופים בחברה שלנו היום.',
-    modernOptions: [
-      "אתגר ניתוק: מפקידים את כל הטלפונים בקופסה לחצי שעה.",
-      "דיון פתוח על 'עבדות מודרנית' (חרמות ברשת, לחץ חברתי).",
-      "תרומה אקטיבית: הכנת מארז מזון למשפחה נזקקת לחג."
-    ]
-  },
-  {
-    id: 'afikoman',
-    title: 'החבאת האפיקומן',
-    subtitle: 'האוצר האבוד',
-    icon: '💎',
-    original: 'החבאת חצי מצה וחיפוש שלה על ידי הילדים בתמורה להבטחת פרס או מתנה מהמבוגרים.',
-    coreMeaning: 'לשמור על עירנות, סקרנות ומעורבות אקטיבית של הדור הצעיר לאורך כל הערב הארוך.',
-    modernOptions: [
-      "הקמת 'חדר בריחה' סביב שולחן הסדר עם חידות על המשפחה.",
-      "טורניר Kahoot משפחתי מטורף כשהמנצח מקבל את הפרס.",
-      "משחק חפש את המטמון עם סריקת קודי QR ברחבי הבית."
-    ]
-  },
-  {
-    id: 'four_cups',
-    title: 'ארבע כוסות',
-    subtitle: 'גביעי החירות',
-    icon: '🍷',
-    original: 'שתיית 4 כוסות יין (או תירוש) בנקודות ציון ספציפיות במהלך קריאת ההגדה.',
-    coreMeaning: 'ציוני דרך ורגעים של עצירה להוקרת תודה על החופש, על ההצלה ועל הטוב שיש לנו בחיים.',
-    modernOptions: [
-      "4 'הפסקות מים' שבהן כל אחד מחלק מחמאה למישהו אחר בשולחן.",
-      "הרמת 4 כוסות לחיי דברים שחשובים לנו היום (בריאות, מדינה, עתיד).",
-      "מיקסולוגיה: הכנת 4 סוגים שונים של קוקטיילים/שייקים לערב."
-    ]
-  }
-];
-
-export default function App() {
-  const [currentStep, setCurrentStep] = useState(-1);
-  const [decisions, setDecisions] = useState({});
-  const [viewingCore, setViewingCore] = useState(false);
-
-  // Auto-scroll logic for better UX
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentStep]);
-
-  const startSystem = () => setCurrentStep(0);
-
-  const handleDecision = (traditionId, choice) => {
-    setDecisions(prev => ({ ...prev, [traditionId]: { choice, customUpdate: '' } }));
-    if (choice === 'keep') {
-      setTimeout(() => proceedToNext(), 600);
-    }
-  };
-
-  const handleUpdateSelection = (traditionId, option) => {
-    setDecisions(prev => ({ ...prev, [traditionId]: { ...prev[traditionId], customUpdate: option } }));
-    setTimeout(() => proceedToNext(), 600);
-  };
-
-  const proceedToNext = () => {
-    setViewingCore(false);
-    if (currentStep < traditionsData.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      setCurrentStep(99); 
-    }
-  };
-
-  const getWhatsappUrl = () => {
-    const keptCount = Object.values(decisions).filter(d => d.choice === 'keep').length;
-    const total = traditionsData.length;
-    let text = `*🚀 HAGGADAH.OS | עדכון גרסה הושלם! 🚀*\n\n`;
-    text += `סיימתי לקמפל את ליל הסדר שלי! ✨\n`;
-    text += `*מדד שמרנות מול חדשנות:* 📊 ${keptCount} מתוך ${total} נשארו במקור.\n\n`;
-    text += `*הנה החפיסה שלי:* 👇\n\n`;
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HAGGADAH.OS - ריסטארט למסורת</title>
     
-    traditionsData.forEach(t => {
-      const dec = decisions[t.id];
-      if(dec) {
-          text += `*${t.icon} ${t.title}*\n`;
-          text += `${dec.choice === 'keep' ? '📜 נשאר קלאסי ונאמן למקור' : '⚡ ריסטארט V2.0: ' + dec.customUpdate}\n\n`;
-      }
-    });
-    text += `—\n_🤖 הופק באמצעות HAGGADAH.OS_`;
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    return `https://wa.me/?text=${encodeURIComponent(text)}`;
-  };
+    <!-- Tailwind Config for Custom Animations & Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fadeIn': 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slideUpCard': 'slideUpCard 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+                        'float': 'float 5s ease-in-out infinite',
+                        'revealCore': 'revealCore 0.8s ease-out forwards',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'shimmer': 'shimmer 2s infinite',
+                        'bounce-horizontal': 'bounce-horizontal 2s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(15px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideUpCard: {
+                            '0%': { opacity: '0', transform: 'translateY(40px) scale(0.95)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' }
+                        },
+                        revealCore: {
+                            '0%': { opacity: '0', filter: 'blur(10px)', transform: 'translateY(15px)' },
+                            '100%': { opacity: '1', filter: 'blur(0)', transform: 'translateY(0)' }
+                        },
+                        shimmer: {
+                            '0%': { transform: 'translateX(-150%) skewX(-15deg)' },
+                            '100%': { transform: 'translateX(150%) skewX(-15deg)' }
+                        },
+                        'bounce-horizontal': {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '50%': { transform: 'translateX(-6px)' }
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        serif: ['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
 
-  const keptCount = Object.values(decisions).filter(d => d?.choice === 'keep').length;
-  const traditionPercentage = traditionsData.length > 0 ? (keptCount / traditionsData.length) * 100 : 0;
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.3); }
 
-  return (
-    <div className="min-h-screen bg-[#05010a] text-[#E2E8F0] font-sans rtl flex flex-col items-center overflow-x-hidden relative" dir="rtl">
-      
-      {/* Background Immersive Elements (z-0, pointer-events-none to prevent blocking clicks) */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-5%] w-[60vw] h-[60vw] bg-purple-900/20 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow"></div>
-        <div className="absolute bottom-[-5%] right-[-5%] w-[50vw] h-[50vw] bg-amber-700/15 rounded-full blur-[100px] mix-blend-screen animate-float"></div>
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }}></div>
-      </div>
+        body {
+            background-color: #05010a;
+            color: #E2E8F0;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-      {/* Main App Container (z-10) */}
-      <div className="relative z-10 w-full max-w-5xl flex flex-col min-h-screen">
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(15, 8, 22, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(17, 9, 26, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* Hide elements dynamically */
+        .hidden-step { display: none !important; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center relative">
+
+    <!-- Background Immersive Elements (z-0, pointer-events-none) -->
+    <div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div class="absolute top-[-10%] left-[-5%] w-[60vw] h-[60vw] bg-purple-900/20 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow"></div>
+        <div class="absolute bottom-[-5%] right-[-5%] w-[50vw] h-[50vw] bg-amber-700/15 rounded-full blur-[100px] mix-blend-screen animate-float" style="animation-delay: -2s;"></div>
+        <!-- Noise Texture -->
+        <div class="absolute inset-0 opacity-[0.03]" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E');"></div>
+    </div>
+
+    <!-- Main App Container (z-10) -->
+    <div class="relative z-10 w-full max-w-5xl flex flex-col min-h-screen">
         
-        {/* Responsive Header */}
-        <header className="sticky top-0 z-50 w-full px-6 py-4 md:py-6 flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/5 bg-[#05010a]/80 backdrop-blur-xl">
-          <div className="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br from-amber-500 to-purple-700 shadow-lg shadow-amber-500/10 shrink-0">
-              <span className="text-2xl drop-shadow-md">🔮</span>
+        <!-- Responsive Header -->
+        <header class="sticky top-0 z-50 w-full px-6 py-4 md:py-6 flex flex-col md:flex-row items-center justify-between gap-4 border-b border-white/5 bg-[#05010a]/80 backdrop-blur-xl">
+            <div class="flex items-center gap-4 w-full md:w-auto justify-center md:justify-start">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br from-amber-500 to-purple-700 shadow-lg shadow-amber-500/10 shrink-0">
+                    <span class="text-2xl drop-shadow-md">🔮</span>
+                </div>
+                <div class="text-right">
+                    <h1 class="text-xl md:text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-400 to-amber-600 uppercase">
+                        HAGGADAH.OS
+                    </h1>
+                    <p class="text-[10px] md:text-xs text-purple-300 font-mono tracking-[0.3em] font-bold">Tradition Sync Protocol</p>
+                </div>
             </div>
-            <div className="text-right">
-              <h1 className="text-xl md:text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-400 to-amber-600 uppercase">
-                HAGGADAH.OS
-              </h1>
-              <p className="text-[10px] md:text-xs text-purple-300 font-mono tracking-[0.3em] font-bold">Tradition Sync Protocol</p>
-            </div>
-          </div>
 
-          {currentStep >= 0 && currentStep < 99 && (
-            <div className="w-full md:w-64 bg-white/5 rounded-full h-2.5 overflow-hidden border border-white/10 shrink-0 mt-2 md:mt-0">
-              <div 
-                className="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-700 shadow-[0_0_10px_rgba(251,191,36,0.5)]"
-                style={{ width: `${((currentStep + 1) / traditionsData.length) * 100}%` }}
-              ></div>
+            <!-- Progress Bar Container -->
+            <div id="progress-container" class="w-full md:w-64 bg-white/5 rounded-full h-2.5 overflow-hidden border border-white/10 shrink-0 mt-2 md:mt-0 hidden-step">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-700 shadow-[0_0_10px_rgba(251,191,36,0.5)]" style="width: 0%"></div>
             </div>
-          )}
         </header>
 
-        {/* Scrollable Content Area */}
-        <main className="flex-1 flex flex-col p-4 md:p-8 w-full mx-auto relative z-20">
-          
-          {/* --- STEP: Intro --- */}
-          {currentStep === -1 && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center animate-fadeIn py-8 md:py-12">
-              <div className="w-full max-w-2xl bg-[#0f0816]/80 backdrop-blur-xl border border-white/10 p-8 md:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-purple-600/20 rounded-[3rem] blur-2xl transition opacity-50"></div>
-                <div className="text-7xl md:text-8xl mb-8 animate-float drop-shadow-xl relative z-10">📖</div>
-                <h2 className="text-3xl md:text-5xl font-black mb-6 text-white leading-tight relative z-10">והגדת לבנך:<br/><span className="text-amber-400">ריסטארט למסורת</span></h2>
-                <p className="text-slate-300 text-base md:text-xl leading-relaxed mb-8 max-w-md mx-auto relative z-10">
-                  איך מעבירים סיפור בן אלפי שנים לדור שחי בטיקטוק? <br/>
-                  בואו נבחן את הקוד של ליל הסדר.
-                </p>
-                <button onClick={startSystem} className="relative z-20 w-full md:w-auto px-10 py-5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-black text-xl rounded-2xl shadow-xl hover:shadow-amber-500/20 transition-all transform hover:scale-105 active:scale-95">
-                  שלוף קלף ראשון ✨
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* --- STEP: Evaluating Traditions --- */}
-          {currentStep >= 0 && currentStep < traditionsData.length && (
-            <div className="flex-1 flex flex-col animate-slideUpCard max-w-5xl mx-auto w-full">
-              <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-start h-full">
-                
-                {/* Left Side: Ancient Tradition */}
-                <div className="bg-[#11091a] border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 flex flex-col shadow-2xl relative overflow-hidden">
-                  <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"></div>
-                  <div className="text-center mb-6 md:mb-8">
-                    <div className="text-4xl md:text-5xl mb-4 p-4 bg-black/40 inline-block rounded-2xl border border-white/5">{traditionsData[currentStep].icon}</div>
-                    <h2 className="text-2xl md:text-3xl font-black text-white">{traditionsData[currentStep].title}</h2>
-                    <p className="text-amber-500/70 text-xs md:text-sm font-serif uppercase tracking-widest mt-2">{traditionsData[currentStep].subtitle}</p>
-                  </div>
-                  
-                  <div className="flex-1 flex flex-col justify-center mb-6 md:mb-8">
-                    <div className="bg-black/30 border border-amber-900/30 p-5 md:p-6 rounded-2xl text-amber-100/90 font-serif text-lg md:text-xl leading-relaxed italic text-center relative shadow-inner">
-                      <span className="absolute top-2 right-4 text-4xl text-amber-700/30">"</span>
-                      <span className="relative z-10">{traditionsData[currentStep].original}</span>
-                      <span className="absolute bottom-[-10px] left-4 text-4xl text-amber-700/30">"</span>
-                    </div>
-                  </div>
-
-                  {!viewingCore && (
-                    <button onClick={() => setViewingCore(true)} className="w-full mt-auto py-4 md:py-5 border border-amber-500/30 bg-amber-900/10 text-amber-400 rounded-2xl font-bold hover:bg-amber-500/20 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-[0_0_15px_rgba(217,119,6,0.1)]">
-                      <span className="text-xl">👁️‍🗨️</span> 
-                      <span>פענח משמעות נסתרת</span>
-                    </button>
-                  )}
-                </div>
-
-                {/* Right Side: Core Meaning & Decision */}
-                <div className="flex flex-col gap-6">
-                  {viewingCore ? (
-                    <div className="animate-revealCore flex flex-col h-full gap-6">
-                      <div className="bg-cyan-950/20 border border-cyan-500/20 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] flex flex-col justify-center text-center shadow-[inset_0_0_20px_rgba(34,211,238,0.05)] backdrop-blur-sm">
-                        <div className="text-cyan-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-4 flex items-center justify-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]"></span> קוד מקור אותר
-                        </div>
-                        <p className="text-cyan-50 text-lg md:text-xl font-medium leading-relaxed italic">{traditionsData[currentStep].coreMeaning}</p>
-                      </div>
-
-                      {/* Decision Controls */}
-                      {!decisions[traditionsData[currentStep].id]?.choice ? (
-                        <div className="grid grid-cols-2 gap-4">
-                          <button onClick={() => handleDecision(traditionsData[currentStep].id, 'keep')} className="group p-5 md:p-6 bg-[#1a1005] border border-amber-700/50 rounded-[1.5rem] flex flex-col items-center gap-3 hover:bg-amber-900/40 hover:border-amber-400 transition-all active:scale-95 shadow-lg">
-                            <span className="text-3xl md:text-4xl group-hover:scale-110 transition-transform">📜</span>
-                            <span className="font-bold text-amber-200 md:text-lg">שמור מקור</span>
-                          </button>
-                          <button onClick={() => handleDecision(traditionsData[currentStep].id, 'update')} className="group p-5 md:p-6 bg-[#12051a] border border-purple-700/50 rounded-[1.5rem] flex flex-col items-center gap-3 hover:bg-purple-900/40 hover:border-cyan-400 transition-all active:scale-95 shadow-lg">
-                            <span className="text-3xl md:text-4xl group-hover:scale-110 transition-transform drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">⚡</span>
-                            <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 md:text-lg">ריסטארט V2.0</span>
-                          </button>
-                        </div>
-                      ) : decisions[traditionsData[currentStep].id]?.choice === 'update' && (
-                        <div className="flex flex-col gap-3 animate-fadeIn bg-black/40 p-5 rounded-3xl border border-white/5 backdrop-blur-md">
-                          <h4 className="text-[10px] md:text-xs font-black text-cyan-400 uppercase text-center mb-3 tracking-widest">בחר עדכון גרסה הולוגרפי:</h4>
-                          {traditionsData[currentStep].modernOptions.map((opt, i) => (
-                            <button key={i} onClick={() => handleUpdateSelection(traditionsData[currentStep].id, opt)} className="w-full text-right p-4 bg-white/5 border border-white/10 rounded-2xl hover:border-cyan-500/60 hover:bg-purple-900/30 transition-all text-sm md:text-base text-purple-100 leading-relaxed flex items-start gap-3 active:scale-[0.98] shadow-sm">
-                              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500/50 shrink-0 mt-1.5 shadow-[0_0_8px_#22d3ee]"></span>
-                              <span>{opt}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="hidden md:flex flex-col items-center justify-center h-full border-2 border-dashed border-white/10 rounded-[2.5rem] p-12 text-slate-500 bg-white/5">
-                      <p className="text-center italic text-lg max-w-xs leading-relaxed">המתינו לפענוח קוד המקור כדי לקבל החלטה גורלית על עתיד המסורת...</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* --- STEP: Summary --- */}
-          {currentStep === 99 && (
-            <div className="flex-1 flex flex-col animate-fadeIn w-full max-w-5xl mx-auto">
-              
-              <div className="text-center mb-8 md:mb-12">
-                <div className="inline-block relative">
-                    <span className="text-5xl md:text-6xl inline-block mb-4 animate-float drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]">🎴</span>
-                </div>
-                <h2 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-white to-purple-300 drop-shadow-lg">החפיסה שלכם מוכנה</h2>
-                <p className="text-slate-400 text-sm md:text-base mt-2 font-medium">המערכת קומפלה בהצלחה</p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-6 md:gap-8 items-start">
-                
-                {/* Statistics Sidebar */}
-                <div className="md:col-span-1 flex flex-col gap-6 sticky top-24">
-                  <div className="bg-[#11091a]/90 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-[2rem] text-center shadow-2xl">
-                    <h2 className="text-xl font-black text-white mb-6">סיכום תצורה</h2>
-                    <div className="space-y-4">
-                      <div className="flex justify-between text-[10px] md:text-xs font-bold uppercase text-slate-400 px-1">
-                        <span>שמרנות</span>
-                        <span>חדשנות</span>
-                      </div>
-                      <div className="h-3 w-full bg-black rounded-full overflow-hidden flex border border-white/10 shadow-inner">
-                        <div className="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-1000 relative" style={{ width: `${traditionPercentage}%` }}>
-                             <div className="absolute inset-0 bg-white/20 w-full animate-[shimmer_2s_infinite]"></div>
-                        </div>
-                        <div className="h-full bg-gradient-to-l from-cyan-500 to-purple-600 transition-all duration-1000 relative" style={{ width: `${100 - traditionPercentage}%` }}>
-                             <div className="absolute inset-0 bg-white/20 w-full animate-[shimmer_2s_infinite]"></div>
-                        </div>
-                      </div>
-                      <p className="text-xs md:text-sm text-amber-200/80 font-medium leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
-                        {traditionPercentage > 60 ? 'גישה שמרנית - מכבדים את קוד המקור.' : traditionPercentage < 40 ? 'גישה מהפכנית - כותבים מחדש.' : 'גישה מאוזנת - שילוב עבר ועתיד.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <a href={getWhatsappUrl()} target="_blank" rel="noopener noreferrer" className="w-full py-4 md:py-5 bg-gradient-to-r from-[#128C7E] to-[#25D366] text-white font-black text-lg md:text-xl rounded-[1.5rem] shadow-xl hover:shadow-emerald-500/30 transition-all flex items-center justify-center gap-3 active:scale-95 text-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                    שתפו בוואטסאפ
-                  </a>
-                </div>
-
-                {/* Detailed Results List */}
-                <div className="md:col-span-2 flex flex-col gap-4">
-                  {traditionsData.map(t => {
-                    const dec = decisions[t.id];
-                    if(!dec) return null;
-                    const isKept = dec.choice === 'keep';
-                    return (
-                      <div key={t.id} className="bg-white/5 border border-white/10 p-5 md:p-6 rounded-[1.5rem] hover:bg-white/10 transition-colors">
-                        <div className="flex items-center gap-3 mb-4">
-                          <span className="text-2xl md:text-3xl bg-black/40 p-2 rounded-xl border border-white/5 shadow-inner">{t.icon}</span>
-                          <span className="font-bold text-white text-lg md:text-xl">{t.title}</span>
-                        </div>
-                        {isKept ? (
-                          <div className="text-sm md:text-base text-amber-300/90 bg-amber-900/20 p-4 rounded-xl border border-amber-500/20 font-serif flex items-start gap-3">
-                            <span className="text-xl">📜</span>
-                            <span>נשאר נאמן למקור.</span>
-                          </div>
-                        ) : (
-                          <div className="text-sm md:text-base text-cyan-50 bg-cyan-900/20 p-4 rounded-xl border border-cyan-500/20 font-sans flex items-start gap-3">
-                            <span className="text-xl filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">⚡</span>
-                            <div>
-                                <span className="block text-[10px] md:text-xs font-black uppercase text-cyan-400 mb-1 tracking-widest">שדרוג מותקן:</span>
-                                <span>{dec.customUpdate}</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
+        <!-- Dynamic Content Area -->
+        <main id="app-content" class="flex-1 flex flex-col p-4 md:p-8 w-full mx-auto relative z-20">
+            <!-- Content injected via JS -->
         </main>
-      </div>
 
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUpCard { 0% { opacity: 0; transform: translateY(30px); } 100% { opacity: 1; transform: translateY(0); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        @keyframes revealCore { 0% { opacity: 0; filter: blur(8px); transform: translateY(15px); } 100% { opacity: 1; filter: blur(0); transform: translateY(0); } }
-        @keyframes shimmer { 0% { transform: translateX(-150%) skewX(-15deg); } 100% { transform: translateX(150%) skewX(-15deg); } }
-        
-        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
-        .animate-slideUpCard { animation: slideUpCard 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        .animate-float { animation: float 5s ease-in-out infinite; }
-        .animate-revealCore { animation: revealCore 0.7s ease-out forwards; }
-        .animate-pulse-slow { animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-      `}</style>
     </div>
-  );
-}
 
+    <script>
+        // --- DATA ---
+        const traditionsData = [
+            {
+                id: 'maggid',
+                title: 'קריאת ההגדה',
+                subtitle: 'מגילת המגיד',
+                icon: '📜',
+                original: 'קריאת טקסטים עתיקים, חלקם בארמית, המספרים את סיפור יציאת מצרים מתחילתו ועד סופו סביב השולחן.',
+                coreMeaning: 'העברת הנרטיב ההיסטורי והזיכרון הקולקטיבי של העם מדור לדור, כדי שנזכור מאיפה באנו ולאן אנחנו הולכים.',
+                modernOptions: [
+                    "סבב שבו כל אחד מספר על 'יציאת מצרים' פרטית שלו השנה.",
+                    "צפייה בסרטון טיקטוק/רילס (3 דקות) שמסכם את הסיפור.",
+                    "פודקאסט משפחתי: סבא/סבתא מספרים את ההיסטוריה המשפחתית."
+                ]
+            },
+            {
+                id: 'maror',
+                title: 'אכילת מרור',
+                subtitle: 'שורש הדמעות',
+                icon: '🌿',
+                original: 'אכילת שורש חזרת חריף או עלי חסה מרירים שמעלים דמעות, כזכר לשעבוד במצרים.',
+                coreMeaning: 'לחוות פיזית מעט מהקושי והכאב, כדי לפתח אמפתיה, רגישות וחמלה לחלשים ולשקופים בחברה שלנו היום.',
+                modernOptions: [
+                    "אתגר ניתוק: מפקידים את כל הטלפונים בקופסה לחצי שעה.",
+                    "דיון פתוח על 'עבדות מודרנית' (חרמות ברשת, לחץ חברתי).",
+                    "תרומה אקטיבית: הכנת מארז מזון למשפחה נזקקת לחג."
+                ]
+            },
+            {
+                id: 'afikoman',
+                title: 'החבאת האפיקומן',
+                subtitle: 'האוצר האבוד',
+                icon: '💎',
+                original: 'החבאת חצי מצה וחיפוש שלה על ידי הילדים בתמורה להבטחת פרס או מתנה מהמבוגרים.',
+                coreMeaning: 'לשמור על עירנות, סקרנות ומעורבות אקטיבית של הדור הצעיר לאורך כל הערב הארוך.',
+                modernOptions: [
+                    "הקמת 'חדר בריחה' סביב שולחן הסדר עם חידות על המשפחה.",
+                    "טורניר Kahoot משפחתי מטורף כשהמנצח מקבל את הפרס.",
+                    "משחק חפש את המטמון עם סריקת קודי QR ברחבי הבית."
+                ]
+            },
+            {
+                id: 'four_cups',
+                title: 'ארבע כוסות',
+                subtitle: 'גביעי החירות',
+                icon: '🍷',
+                original: 'שתיית 4 כוסות יין (או תירוש) בנקודות ציון ספציפיות במהלך קריאת ההגדה.',
+                coreMeaning: 'ציוני דרך ורגעים של עצירה להוקרת תודה על החופש, על ההצלה ועל הטוב שיש לנו בחיים.',
+                modernOptions: [
+                    "4 'הפסקות מים' שבהן כל אחד מחלק מחמאה למישהו אחר בשולחן.",
+                    "הרמת 4 כוסות לחיי דברים שחשובים לנו היום (בריאות, מדינה, עתיד).",
+                    "מיקסולוגיה: הכנת 4 סוגים שונים של קוקטיילים/שייקים לערב."
+                ]
+            }
+        ];
 
+        // --- STATE ---
+        let currentStep = -1;
+        let decisions = {}; 
+        let viewingCore = false;
+
+        const appContent = document.getElementById('app-content');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+
+        // --- CORE FUNCTIONS ---
+        function init() {
+            renderIntro();
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateProgress() {
+            if (currentStep >= 0 && currentStep < traditionsData.length) {
+                progressContainer.classList.remove('hidden-step');
+                const percentage = ((currentStep + 1) / traditionsData.length) * 100;
+                progressBar.style.width = `${percentage}%`;
+            } else {
+                progressContainer.classList.add('hidden-step');
+            }
+        }
+
+        // --- RENDER INTRO ---
+        function renderIntro() {
+            scrollToTop();
+            updateProgress();
+            
+            appContent.innerHTML = `
+                <div class="flex-1 flex flex-col items-center justify-center text-center animate-fadeIn py-8 md:py-12 w-full">
+                    <div class="w-full max-w-2xl glass-panel p-8 md:p-12 rounded-[2.5rem] md:rounded-[3rem] shadow-2xl relative group">
+                        <div class="absolute -inset-1 bg-gradient-to-r from-amber-500/20 to-purple-600/20 rounded-[3rem] blur-2xl transition opacity-50 pointer-events-none"></div>
+                        <div class="text-7xl md:text-8xl mb-8 animate-float drop-shadow-xl relative z-10">📖</div>
+                        <h2 class="text-3xl md:text-5xl font-black mb-6 text-white leading-tight relative z-10">והגדת לבנך:<br/><span class="text-amber-400">ריסטארט למסורת</span></h2>
+                        <p class="text-slate-300 text-base md:text-xl leading-relaxed mb-8 max-w-md mx-auto relative z-10">
+                            איך מעבירים סיפור בן אלפי שנים לדור שחי בטיקטוק? <br/>
+                            בואו נבחן את הקוד של ליל הסדר.
+                        </p>
+                        <button id="btn-start" class="relative z-20 w-full md:w-auto px-10 py-5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-black text-xl rounded-2xl shadow-xl hover:shadow-amber-500/20 transition-all transform hover:scale-105 active:scale-95">
+                            שלוף קלף ראשון ✨
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('btn-start').addEventListener('click', () => {
+                currentStep = 0;
+                renderCard();
+            });
+        }
+
+        // --- RENDER CARD (STEPS) ---
+        function renderCard() {
+            scrollToTop();
+            updateProgress();
+            viewingCore = false;
+            
+            const t = traditionsData[currentStep];
+            const hasDecision = decisions[t.id] && decisions[t.id].choice;
+            const isUpdate = hasDecision && decisions[t.id].choice === 'update';
+
+            // Generate Modern Options HTML
+            let modernOptionsHtml = '';
+            t.modernOptions.forEach((opt, i) => {
+                modernOptionsHtml += `
+                    <button data-opt-index="${i}" class="btn-modern-opt w-full text-right p-4 bg-white/5 border border-white/10 rounded-2xl hover:border-cyan-500/60 hover:bg-purple-900/30 transition-all text-sm md:text-base text-purple-100 leading-relaxed flex items-start gap-3 active:scale-[0.98] shadow-sm">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-500/50 shrink-0 mt-1.5 shadow-[0_0_8px_#22d3ee]"></span>
+                        <span>${opt}</span>
+                    </button>
+                `;
+            });
+
+            appContent.innerHTML = `
+                <div class="flex-1 flex flex-col animate-slideUpCard max-w-5xl mx-auto w-full">
+                    <div class="grid md:grid-cols-2 gap-6 md:gap-8 items-start h-full">
+                        
+                        <!-- Left Side: Ancient Tradition -->
+                        <div class="glass-card rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 flex flex-col relative overflow-hidden h-full">
+                            <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"></div>
+                            <div class="text-center mb-6 md:mb-8">
+                                <div class="text-4xl md:text-5xl mb-4 p-4 bg-black/40 inline-block rounded-2xl border border-white/5">${t.icon}</div>
+                                <h2 class="text-2xl md:text-3xl font-black text-white">${t.title}</h2>
+                                <p class="text-amber-500/70 text-xs md:text-sm font-serif uppercase tracking-widest mt-2">${t.subtitle}</p>
+                            </div>
+                            
+                            <div class="flex-1 flex flex-col justify-center mb-6 md:mb-8">
+                                <div class="bg-black/30 border border-amber-900/30 p-5 md:p-6 rounded-2xl text-amber-100/90 font-serif text-lg md:text-xl leading-relaxed italic text-center relative shadow-inner">
+                                    <span class="absolute top-2 right-4 text-4xl text-amber-700/30">"</span>
+                                    <span class="relative z-10">${t.original}</span>
+                                    <span class="absolute bottom-[-10px] left-4 text-4xl text-amber-700/30">"</span>
+                                </div>
+                            </div>
+
+                            <button id="btn-reveal" class="w-full mt-auto py-4 md:py-5 border border-amber-500/30 bg-amber-900/10 text-amber-400 rounded-2xl font-bold hover:bg-amber-500/20 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-[0_0_15px_rgba(217,119,6,0.1)]">
+                                <span class="text-xl">👁️‍🗨️</span> 
+                                <span>פענח משמעות נסתרת</span>
+                            </button>
+                        </div>
+
+                        <!-- Right Side: Core Meaning & Decision -->
+                        <div class="flex flex-col gap-6 h-full">
+                            
+                            <!-- State 1: Awaiting Reveal -->
+                            <div id="awaiting-reveal" class="hidden md:flex flex-col items-center justify-center h-full border-2 border-dashed border-white/10 rounded-[2.5rem] p-12 text-slate-500 bg-white/5">
+                                <p class="text-center italic text-lg max-w-xs leading-relaxed">המתינו לפענוח קוד המקור כדי לקבל החלטה גורלית על עתיד המסורת...</p>
+                            </div>
+
+                            <!-- State 2: Core Meaning Revealed -->
+                            <div id="core-revealed" class="hidden flex-col h-full gap-6 animate-revealCore">
+                                <div class="bg-cyan-950/20 border border-cyan-500/20 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] flex flex-col justify-center text-center shadow-[inset_0_0_20px_rgba(34,211,238,0.05)] backdrop-blur-sm">
+                                    <div class="text-cyan-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-4 flex items-center justify-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]"></span> קוד מקור אותר
+                                    </div>
+                                    <p class="text-cyan-50 text-lg md:text-xl font-medium leading-relaxed italic">${t.coreMeaning}</p>
+                                </div>
+
+                                <!-- Decisions -->
+                                <div id="decision-controls" class="grid grid-cols-2 gap-4">
+                                    <button id="btn-keep" class="group p-5 md:p-6 bg-[#1a1005] border border-amber-700/50 rounded-[1.5rem] flex flex-col items-center gap-3 hover:bg-amber-900/40 hover:border-amber-400 transition-all active:scale-95 shadow-lg">
+                                        <span class="text-3xl md:text-4xl group-hover:scale-110 transition-transform">📜</span>
+                                        <span class="font-bold text-amber-200 md:text-lg">שמור מקור</span>
+                                    </button>
+                                    <button id="btn-update" class="group p-5 md:p-6 bg-[#12051a] border border-purple-700/50 rounded-[1.5rem] flex flex-col items-center gap-3 hover:bg-purple-900/40 hover:border-cyan-400 transition-all active:scale-95 shadow-lg">
+                                        <span class="text-3xl md:text-4xl group-hover:scale-110 transition-transform drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">⚡</span>
+                                        <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-300 md:text-lg">ריסטארט V2.0</span>
+                                    </button>
+                                </div>
+
+                                <!-- Modern Options -->
+                                <div id="modern-options" class="hidden flex-col gap-3 animate-fadeIn bg-black/40 p-5 rounded-3xl border border-white/5 backdrop-blur-md">
+                                    <h4 class="text-[10px] md:text-xs font-black text-cyan-400 uppercase text-center mb-3 tracking-widest">בחר עדכון גרסה הולוגרפי:</h4>
+                                    ${modernOptionsHtml}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Attach Listeners
+            const btnReveal = document.getElementById('btn-reveal');
+            const awaitingReveal = document.getElementById('awaiting-reveal');
+            const coreRevealed = document.getElementById('core-revealed');
+            const decisionControls = document.getElementById('decision-controls');
+            const modernOptions = document.getElementById('modern-options');
+
+            btnReveal.addEventListener('click', () => {
+                viewingCore = true;
+                btnReveal.classList.add('hidden');
+                awaitingReveal.classList.add('hidden');
+                awaitingReveal.classList.remove('md:flex');
+                coreRevealed.classList.remove('hidden');
+                coreRevealed.classList.add('flex');
+            });
+
+            document.getElementById('btn-keep').addEventListener('click', () => {
+                saveDecision(t.id, 'keep', '');
+            });
+
+            document.getElementById('btn-update').addEventListener('click', () => {
+                decisionControls.classList.add('hidden');
+                modernOptions.classList.remove('hidden');
+                modernOptions.classList.add('flex');
+            });
+
+            const optButtons = document.querySelectorAll('.btn-modern-opt');
+            optButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = e.currentTarget.getAttribute('data-opt-index');
+                    saveDecision(t.id, 'update', t.modernOptions[idx]);
+                });
+            });
+        }
+
+        function saveDecision(traditionId, choice, customUpdate) {
+            decisions[traditionId] = { choice, customUpdate };
+            setTimeout(() => {
+                if (currentStep < traditionsData.length - 1) {
+                    currentStep++;
+                    renderCard();
+                } else {
+                    currentStep = 99;
+                    renderSummary();
+                }
+            }, 500);
+        }
+
+        // --- RENDER SUMMARY ---
+        function renderSummary() {
+            scrollToTop();
+            updateProgress();
+
+            const keptCount = Object.values(decisions).filter(d => d.choice === 'keep').length;
+            const traditionPercentage = traditionsData.length > 0 ? (keptCount / traditionsData.length) * 100 : 0;
+            
+            let interpretation = 'גישה מאוזנת - שילוב עבר ועתיד.';
+            if (traditionPercentage > 60) interpretation = 'גישה שמרנית - מכבדים את קוד המקור.';
+            if (traditionPercentage < 40) interpretation = 'גישה מהפכנית - כותבים מחדש.';
+
+            // Generate WhatsApp URL
+            const whatsappUrl = getWhatsappUrl(keptCount, traditionsData.length);
+
+            // Generate Results HTML
+            let resultsHtml = '';
+            traditionsData.forEach(t => {
+                const dec = decisions[t.id];
+                if (!dec) return;
+                
+                if (dec.choice === 'keep') {
+                    resultsHtml += `
+                        <div class="bg-white/5 border border-white/10 p-5 md:p-6 rounded-[1.5rem] hover:bg-white/10 transition-colors">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="text-2xl md:text-3xl bg-black/40 p-2 rounded-xl border border-white/5 shadow-inner">${t.icon}</span>
+                                <span class="font-bold text-white text-lg md:text-xl">${t.title}</span>
+                            </div>
+                            <div class="text-sm md:text-base text-amber-300/90 bg-amber-900/20 p-4 rounded-xl border border-amber-500/20 font-serif flex items-start gap-3">
+                                <span class="text-xl">📜</span>
+                                <span>נשאר נאמן למקור.</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultsHtml += `
+                        <div class="bg-white/5 border border-white/10 p-5 md:p-6 rounded-[1.5rem] hover:bg-white/10 transition-colors">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="text-2xl md:text-3xl bg-black/40 p-2 rounded-xl border border-white/5 shadow-inner">${t.icon}</span>
+                                <span class="font-bold text-white text-lg md:text-xl">${t.title}</span>
+                            </div>
+                            <div class="text-sm md:text-base text-cyan-50 bg-cyan-900/20 p-4 rounded-xl border border-cyan-500/20 font-sans flex items-start gap-3">
+                                <span class="text-xl filter drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">⚡</span>
+                                <div>
+                                    <span class="block text-[10px] md:text-xs font-black uppercase text-cyan-400 mb-1 tracking-widest">שדרוג מותקן:</span>
+                                    <span>${dec.customUpdate}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            appContent.innerHTML = `
+                <div class="flex-1 flex flex-col animate-fadeIn w-full max-w-5xl mx-auto py-8">
+                    
+                    <div class="text-center mb-8 md:mb-12">
+                        <div class="inline-block relative">
+                            <span class="text-5xl md:text-6xl inline-block mb-4 animate-float drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]">🎴</span>
+                        </div>
+                        <h2 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-white to-purple-300 drop-shadow-lg">החפיסה שלכם מוכנה</h2>
+                        <p class="text-slate-400 text-sm md:text-base mt-2 font-medium">המערכת קומפלה בהצלחה</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-6 md:gap-8 items-start">
+                        
+                        <!-- Statistics Sidebar -->
+                        <div class="md:col-span-1 flex flex-col gap-6 sticky top-24">
+                            <div class="glass-panel border border-white/10 p-6 md:p-8 rounded-[2rem] text-center shadow-2xl">
+                                <h2 class="text-xl font-black text-white mb-6">סיכום תצורה</h2>
+                                <div class="space-y-4">
+                                    <div class="flex justify-between text-[10px] md:text-xs font-bold uppercase text-slate-400 px-1">
+                                        <span>שמרנות</span>
+                                        <span>חדשנות</span>
+                                    </div>
+                                    <div class="h-3 w-full bg-black rounded-full overflow-hidden flex border border-white/10 shadow-inner">
+                                        <div class="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-1000 relative" style="width: ${traditionPercentage}%">
+                                            <div class="absolute inset-0 bg-white/20 w-full animate-shimmer"></div>
+                                        </div>
+                                        <div class="h-full bg-gradient-to-l from-cyan-500 to-purple-600 transition-all duration-1000 relative" style="width: ${100 - traditionPercentage}%">
+                                            <div class="absolute inset-0 bg-white/20 w-full animate-shimmer"></div>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs md:text-sm text-amber-200/80 font-medium leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
+                                        ${interpretation}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="w-full py-4 md:py-5 bg-gradient-to-r from-[#128C7E] to-[#25D366] text-white font-black text-lg md:text-xl rounded-[1.5rem] shadow-[0_10px_30px_rgba(37,211,102,0.3)] hover:brightness-110 transition-all flex items-center justify-center gap-3 active:scale-95 text-center decoration-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                                שתפו בוואטסאפ
+                            </a>
+                        </div>
+
+                        <!-- Detailed Results List -->
+                        <div class="md:col-span-2 flex flex-col gap-4">
+                            ${resultsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- WHATSAPP FORMATTER ---
+        function getWhatsappUrl(keptCount, total) {
+            let text = `*🚀 HAGGADAH.OS | עדכון גרסה הושלם! 🚀*\n\n`;
+            text += `סיימתי לקמפל את ליל הסדר שלי! ✨\n`;
+            text += `*מדד שמרנות מול חדשנות:* 📊 ${keptCount} מתוך ${total} נשארו במקור.\n\n`;
+            text += `*הנה החפיסה שלי:* 👇\n\n`;
+            
+            traditionsData.forEach(t => {
+                const dec = decisions[t.id];
+                if(dec) {
+                    text += `*${t.icon} ${t.title}*\n`;
+                    text += `${dec.choice === 'keep' ? '📜 נשאר קלאסי ונאמן למקור' : '⚡ ריסטארט V2.0:\n' + dec.customUpdate}\n\n`;
+                }
+            });
+            text += `—\n_🤖 הופק באמצעות HAGGADAH.OS_`;
+            
+            return `https://wa.me/?text=${encodeURIComponent(text)}`;
+        }
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
 
