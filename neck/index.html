@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בוחן: המחרוזת / גי דה מופאסאן</title>
+    <!-- שימוש ב-Tailwind CSS לעיצוב מהיר ויפה -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #f3f4f6;
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .theme-bg {
+            background-color: #1a202c; /* כחול כהה אלגנטי */
+        }
+        .theme-text {
+            color: #d4af37; /* צבע זהב */
+        }
+        .theme-border {
+            border-color: #d4af37;
+        }
+        .btn-option {
+            transition: all 0.3s ease;
+        }
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-correct {
+            background-color: #10b981 !important;
+            color: white !important;
+            border-color: #10b981 !important;
+        }
+        .btn-wrong {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #ef4444 !important;
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- מיכל ראשי -->
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-2xl w-full border-t-8 theme-border">
+        
+        <!-- כותרת עליונה -->
+        <div class="theme-bg p-6 text-center text-white">
+            <h1 class="text-3xl font-extrabold theme-text">המחרוזת</h1>
+            <p class="text-sm mt-2 opacity-80">מאת גי דה מופאסאן | בוחן בקיאות</p>
+        </div>
+
+        <!-- אזור תוכן -->
+        <div class="p-6 md:p-8">
+
+            <!-- מסך 1: פתיחה -->
+            <div id="welcome-screen" class="text-center space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">ברוכים הבאים לבוחן המסכם!</h2>
+                <p class="text-gray-600">כדי להגיש את המטלה למורה, עליכם לענות נכון על כל 15 השאלות. במקרה של טעות, המערכת תעזור לכם להבין ולתקן.</p>
+                
+                <div class="mt-8 max-w-xs mx-auto">
+                    <label for="student-name" class="block text-right font-semibold text-gray-700 mb-2">הכניסו את שמכם המלא:</label>
+                    <input type="text" id="student-name" placeholder="לדוגמה: רוני כהן" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-yellow-600 transition">
+                </div>
+                
+                <button onclick="startQuiz()" class="theme-bg theme-text font-bold text-lg px-8 py-3 rounded-full mt-6 hover:opacity-90 transition shadow-lg w-full md:w-auto">
+                    התחל בוחן
+                </button>
+            </div>
+
+            <!-- מסך 2: שאלות -->
+            <div id="quiz-screen" class="hidden">
+                <!-- מד התקדמות -->
+                <div class="mb-6">
+                    <div class="flex justify-between text-sm font-semibold text-gray-500 mb-2">
+                        <span id="question-counter">שאלה 1 מתוך 15</span>
+                        <span id="progress-text">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div id="progress-bar" class="theme-bg h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- השאלה -->
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold text-gray-800 mb-6 leading-tight"></h2>
+
+                <!-- אפשרויות תשובה -->
+                <div id="options-container" class="space-y-3">
+                    <!-- כפתורי תשובה יוזרקו לכאן דרך JS -->
+                </div>
+            </div>
+
+            <!-- מסך 3: סיום -->
+            <div id="finish-screen" class="hidden text-center space-y-6">
+                <div class="text-6xl mb-4">🏆</div>
+                <h2 class="text-3xl font-bold text-gray-800">כל הכבוד, <span id="display-name" class="theme-text"></span>!</h2>
+                <p class="text-lg text-gray-600">סיימת את הבוחן בהצלחה מלאה (100%). הפגנת בקיאות מרשימה בעלילת הסיפור "המחרוזת".</p>
+                
+                <div class="pt-6">
+                    <p class="font-bold text-gray-800 mb-4">כעת ניתן להגיש את הציון למורה:</p>
+                    <button onclick="sendWhatsApp()" class="bg-green-500 text-white font-bold text-lg px-8 py-4 rounded-xl hover:bg-green-600 transition shadow-lg flex items-center justify-center w-full md:w-auto mx-auto gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.391.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564c.173.087.289.129.332.202.043.073.043.423-.101.827z"></path>
+                            <path d="M12 2C6.477 2 2 6.477 2 12c0 1.84.498 3.565 1.364 5.031L2 22l5.12-1.31A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18.232c-1.616 0-3.159-.425-4.48-1.203l-.321-.19-3.332.851.87-3.21-.21-.33A7.957 7.957 0 014.068 12C4.068 7.619 7.619 4.068 12 4.068c4.381 0 7.932 3.549 7.932 7.932 0 4.381-3.551 7.932-7.932 7.932z"></path>
+                        </svg>
+                        שלח ציון למורה בוואטסאפ
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- מודל (חלון קופץ) ללמידה בעת טעות -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all">
+            <div class="bg-red-500 text-white p-4 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-xl font-bold mt-2">תשובה שגויה</h3>
+            </div>
+            <div class="p-6 text-center text-gray-800">
+                <p id="feedback-text" class="text-lg"></p>
+                <button onclick="closeModal()" class="mt-6 w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-700 transition">
+                    הבנתי, בואו ננסה שוב
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- הלוגיקה והנתונים (JavaScript) -->
+    <script>
+        // בנק השאלות המלא לפי הסיפור
+        const questions = [
+            {
+                q: "מדוע מטילדה לואזל חשה אומללה בתחילת הסיפור?",
+                options: [
+                    "היא סבלה מבעיות בריאותיות שמנעו ממנה לצאת.",
+                    "היא נולדה למשפחת פקידים וחלמה על חיי מותרות, הדר ועושר.",
+                    "בעלה התייחס אליה בזלזול ולא נתן לה כסף לאוכל.",
+                    "היא לא הצליחה למצוא עבודה כפקידה."
+                ],
+                correct: 1,
+                feedback: "שים לב! למטילדה לא היה חסר כסף למחיה בסיסית ובעלה היה טוב אליה. האומללות שלה נבעה מהפער שבין מוצאה הפשוט (משפחת פקידים) לבין הפנטזיות שלה על חיי זוהר ומותרות."
+            },
+            {
+                q: "היכן עבד בעלה של מטילדה (מר לואזל)?",
+                options: [
+                    "כפקיד זוטר במשרד לענייני חינוך.",
+                    "כמנהל בנק עשיר בפריז.",
+                    "כתכשיטן מצליח.",
+                    "כשר החינוך בכבודו ובעצמו."
+                ],
+                correct: 0,
+                feedback: "טעות. בעלה של מטילדה היה איש פשוט, הוא עבד כפקיד זוטר במשרד לענייני חינוך. בדיוק בגלל זה הוא התאמץ כל כך להשיג להם את ההזמנה לנשף של השר."
+            },
+            {
+                q: "כיצד הגיבה מטילדה כשהבעל הביא לה את ההזמנה לנשף המפואר?",
+                options: [
+                    "היא קפצה מאושר והודתה לו מיד.",
+                    "היא התקשרה מיד לחברתה כדי לספר לה.",
+                    "היא השליכה את ההזמנה בבוז ופרצה בבכי.",
+                    "היא סירבה ללכת כי לא אהבה מסיבות."
+                ],
+                correct: 2,
+                feedback: "למרות שהבעל ציפה שתשמח על ההזדמנות הנדירה לצאת, מטילדה הגיבה בתסכול, השליכה את ההזמנה ובכתה, כיוון שלא הייתה לה שמלה ראויה לאירוע כזה."
+            },
+            {
+                q: "מה תכנן מר לואזל לעשות ב-400 הפרנקים שחסך, לפני שנתן אותם למטילדה לשמלה?",
+                options: [
+                    "לשפץ את הדירה שלהם.",
+                    "לקנות רובה ציד כדי לבלות עם חבריו.",
+                    "לשלם חוב ישן של משפחתו.",
+                    "לצאת לחופשה בנורמנדי."
+                ],
+                correct: 1,
+                feedback: "מר לואזל חסך את הכסף בדקדקנות כדי לקנות לעצמו רובה ציד, על מנת שיוכל להצטרף לחבריו בימי ראשון בקיץ. הוא הקריב את רצונו האישי למען אשתו."
+            },
+            {
+                q: "איזה פתרון זול הציע הבעל לבעיית התכשיטים של מטילדה (פתרון שהיא דחתה)?",
+                options: [
+                    "לענוד תכשיטים מזויפים מפלסטיק.",
+                    "לענוד ורדים טבעיים שניתן לקנות ב-10 פרנקים.",
+                    "ללכת בלי תכשיטים כלל - הפשטות היא היפה ביותר.",
+                    "לענוד שרשרת ישנה של אימו."
+                ],
+                correct: 1,
+                feedback: "הבעל הציע פתרון יצירתי וזול - לקנות פרחים טבעיים (שלושה ורדים נהדרים) שהיו באופנה באותה עונה. מטילדה סירבה כי חשבה שזה מדגיש את עונייה."
+            },
+            {
+                q: "למי פנתה מטילדה כדי לשאול תכשיט לנשף?",
+                options: [
+                    "לאחותה הגדולה.",
+                    "לאחת השכנות בבניין.",
+                    "לחברתה העשירה מתקופת הלימודים, מרת פורסטייה.",
+                    "לחנות להשכרת תכשיטים בפריז."
+                ],
+                correct: 2,
+                feedback: "בעצת בעלה, מטילדה פנתה למרת פורסטייה, חברה עשירה מתקופת לימודיה במנזר, שאותה נמנעה מלבקר בדרך כלל כי המפגשים איתה גרמו לה לעצב רב על מצבה."
+            },
+            {
+                q: "איזה תכשיט בחרה מטילדה מתוך התיבה של חברתה?",
+                options: [
+                    "מחרוזת יהלומים נהדרת בקופסת סאטן שחורה.",
+                    "צמיד זהב ופנינים עתיק.",
+                    "עגילי אודם ענקיים.",
+                    "טבעת משובצת אבן ברקת."
+                ],
+                correct: 0,
+                feedback: "לאחר שבחנה מספר תכשיטים ללא החלטה, גילתה מטילדה קופסת סאטן שחורה ובתוכה מחרוזת יהלומים מרהיבה ששבתה את לבה מיד."
+            },
+            {
+                q: "כיצד הרגישה מטילדה במהלך הנשף עצמו?",
+                options: [
+                    "היא הרגישה נחותה ומבוישת ליד הנשים העשירות.",
+                    "היא השתעממה ורצתה לחזור הביתה מוקדם.",
+                    "מאושרת לחלוטין, שתויית ניצחון ונערצת על ידי כולם.",
+                    "היא הייתה חולה ונחה רוב הערב בכורסה."
+                ],
+                correct: 2,
+                feedback: "הנשף היה שיא חייה של מטילדה - התגשמות כל חלומותיה. היא הייתה האישה היפה ביותר במקום, כל הגברים חיזרו אחריה והיא רקדה מתוך שיכרון חושים."
+            },
+            {
+                q: "מה קרה מיד כשהגיעו הביתה לאחר הנשף?",
+                options: [
+                    "מר לואזל הודיע שפוטר מעבודתו.",
+                    "מטילדה גילתה שהשמלה שלה נקרעה כליל.",
+                    "פורצים רוקנו להם את הדירה.",
+                    "מטילדה גילתה שמחרוזת היהלומים נעלמה מצווארה."
+                ],
+                correct: 3,
+                feedback: "האסון הכה מיד עם החזרה לדירה הדלה. כשהסירה את מעילה כדי להביט בעצמה פעם אחרונה במראה, גילתה לתדהמתה שהמחרוזת איננה."
+            },
+            {
+                q: "איזה 'סיפור כיסוי' כתבו הזוג לואזל למרת פורסטייה כדי להרוויח זמן לחיפושים?",
+                options: [
+                    "שהם נסעו לחופשה ארוכה וייקח זמן להחזירה.",
+                    "שהסוגר של המחרוזת נשבר ושהם מסרו אותה לתיקון אצל הצורף.",
+                    "שמטילדה חולה מרותקת למיטה ואינה יכולה לצאת.",
+                    "שהמחרוזת נגנבה והם עירבו את המשטרה."
+                ],
+                correct: 1,
+                feedback: "כדי להרוויח שהות להמשיך לחפש או למצוא פתרון, הבעל הכתיב למטילדה מכתב לחברתה בו ציינו כי הסוגר נשבר והמחרוזת נמצאת בתיקון."
+            },
+            {
+                q: "כמה עלתה המחרוזת החלופית שהם מצאו אצל התכשיטן?",
+                options: [
+                    "400 פרנקים.",
+                    "500 פרנקים.",
+                    "36,000 פרנקים.",
+                    "18,000 פרנקים."
+                ],
+                correct: 2,
+                feedback: "התכשיטן בחנות ב'פלה-רואיאל' דרש תחילה 40,000 פרנק, אך הסכים למכור להם את המחרוזת, שהייתה זהה לחלוטין לאבודה, ב-36,000 פרנקים."
+            },
+            {
+                q: "כיצד מימן מר לואזל את קניית המחרוזת החדשה?",
+                options: [
+                    "הוא השתמש ב-18,000 פרנק שירש, ואת השאר השיג בהלוואות קשות.",
+                    "הוא זכה בלוטו בסכום המדויק.",
+                    "המשפחה של מטילדה עזרה להם לשלם.",
+                    "הוא שדד את הבנק בו עבד חברו."
+                ],
+                correct: 0,
+                feedback: "כדי לשלם את סכום העתק, מר לואזל מסר את כל ירושתו מאביו (18 אלף פרנק), וחתם על שטרות חוב והלוואות בריבית קצוצה מאנשים מפוקפקים, מה ששיעבד את עתידו."
+            },
+            {
+                q: "כמה זמן לקח לזוג לואזל לעבוד ולשלם את כל חובותיהם בעקבות קניית המחרוזת?",
+                options: [
+                    "חודש אחד בלבד.",
+                    "שנתיים.",
+                    "עשר שנים.",
+                    "הם מעולם לא הצליחו להחזיר את החוב."
+                ],
+                correct: 2,
+                feedback: "מחיר הטעות היה כבד מאוד: במשך 10 שנים תמימות הזוג עבד בעבודות פרך, החליף דירה לגג זול, חי חיי עוני קשים כדי להחזיר את כל החובות והריביות."
+            },
+            {
+                q: "כיצד השתנתה מטילדה בעקבות שנות העבודה הקשות לכיסוי החוב?",
+                options: [
+                    "היא נשארה יפהפייה ועדינה כשהייתה.",
+                    "היא הפכה לאישה חסונה, מחוספסת וקשה שנראית זקנה לגילה.",
+                    "היא למדה רפואה והפכה לרופאה מצליחה.",
+                    "היא ברחה מבעלה ונסעה לאמריקה."
+                ],
+                correct: 1,
+                feedback: "עבודות הבית הקשות - שאיבת מים, שטיפת רצפות, כיבוס בידיים ומריבות עם רוכלים בשוק - גבו ממנה מחיר פיזי. היא איבדה את החן והיופי שלה והפכה לאישה 'עממית' ונוקשה."
+            },
+            {
+                q: "מה היה הגילוי המפתיע (הפואנטה) של מרת פורסטייה בסוף הסיפור?",
+                options: [
+                    "שהיא בעצמה איבדה את המחרוזת וקנתה חדשה.",
+                    "שבעלה של מטילדה גנב את המחרוזת מלכתחילה.",
+                    "שהמחרוזת שהשאילה למטילדה הייתה מזויפת ושווה לכל היותר 500 פרנק.",
+                    "שהמחרוזת הביאה קללה על כל מי שענד אותה."
+                ],
+                correct: 2,
+                feedback: "זהו סוף הסיפור האירוני והטרגי - לאחר 10 שנים של חיי עוני וסבל כדי לשלם על מחרוזת יהלומים אמיתית, חברתה מגלה לה שהמחרוזת המקורית הייתה רק חיקוי זול שלא היה שווה יותר מ-500 פרנקים!"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let studentName = "";
+
+        // אתחול מערכת
+        function startQuiz() {
+            const nameInput = document.getElementById('student-name').value.trim();
+            if (nameInput === "") {
+                alert("אנא הכניסו את שמכם כדי להתחיל בבוחן.");
+                return;
+            }
+            studentName = nameInput;
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        // הצגת שאלה
+        function renderQuestion() {
+            const qData = questions[currentQuestionIndex];
+            
+            // עדכון התקדמות
+            document.getElementById('question-counter').textContent = `שאלה ${currentQuestionIndex + 1} מתוך ${questions.length}`;
+            const progressPercentage = (currentQuestionIndex / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+            document.getElementById('progress-text').textContent = `${Math.round(progressPercentage)}%`;
+
+            // הזרקת טקסט השאלה
+            document.getElementById('question-text').textContent = qData.q;
+
+            // הזרקת כפתורי התשובות
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = ""; // ניקוי קודם
+            
+            qData.options.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = "btn-option w-full text-right p-4 rounded-xl border-2 border-gray-200 text-gray-700 font-medium hover:border-gray-400 focus:outline-none transition block";
+                btn.textContent = optText;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // בדיקת התשובה
+        function checkAnswer(selectedIndex, btnElement) {
+            const qData = questions[currentQuestionIndex];
+            
+            // נטרול כל הכפתורים כדי למנוע לחיצות נוספות
+            const allBtns = document.querySelectorAll('.btn-option');
+            allBtns.forEach(b => b.disabled = true);
+
+            if (selectedIndex === qData.correct) {
+                // תשובה נכונה
+                btnElement.classList.add('btn-correct');
+                
+                // מעבר לשאלה הבאה אחרי השהייה קצרה
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < questions.length) {
+                        renderQuestion();
+                    } else {
+                        showFinishScreen();
+                    }
+                }, 1200);
+            } else {
+                // תשובה שגויה
+                btnElement.classList.add('btn-wrong');
+                
+                setTimeout(() => {
+                    showFeedbackModal(qData.feedback);
+                }, 600); // המתנה קצרה שהאנימציה של הרטט תסתיים
+            }
+        }
+
+        // הצגת מודל משוב (למידה מטעויות)
+        function showFeedbackModal(feedbackText) {
+            document.getElementById('feedback-text').textContent = feedbackText;
+            document.getElementById('feedback-modal').classList.remove('hidden');
+        }
+
+        // סגירת המודל ואיפוס השאלה הנוכחית כדי לנסות שוב
+        function closeModal() {
+            document.getElementById('feedback-modal').classList.add('hidden');
+            renderQuestion(); // מרנדר את השאלה מחדש כדי לאפשר בחירה מחדש
+        }
+
+        // מסך סיום
+        function showFinishScreen() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('finish-screen').classList.remove('hidden');
+            document.getElementById('display-name').textContent = studentName;
+            
+            // עדכון פס התקדמות ל-100% בסיום (ויזואלי בלבד)
+            document.getElementById('progress-bar').style.width = `100%`;
+        }
+
+        // שליחת ווטסאפ
+        function sendWhatsApp() {
+            const message = `שלום המורה, אני ${studentName} וסיימתי את הבוחן המקוון על הסיפור "המחרוזת" בהצלחה של 100%! עניתי נכון על כל השאלות.`;
+            const encodedMessage = encodeURIComponent(message);
+            // פותח את ממשק הווטסאפ עם ההודעה המוכנה. התלמיד יצטרך רק לבחור את המורה מרשימת אנשי הקשר.
+            window.open(`https://api.whatsapp.com/send?text=${encodedMessage}`, '_blank');
+        }
+    </script>
+</body>
+</html>
