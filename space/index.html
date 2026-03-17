@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משימת עיתונאות: הליכת החלל הראשונה</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@700;900&family=Heebo:wght@400;700&family=Space+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #2c3e50;
+            background-image: radial-gradient(#34495e 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #ecf0f1;
+        }
+
+        /* סגנון לטלפרינטר (מסך ירוק ישן) */
+        .teleprinter-screen {
+            font-family: 'Space Mono', monospace;
+            background-color: #0a0a0a;
+            color: #33ff00;
+            box-shadow: inset 0 0 18px rgba(0,255,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* אפקט קווים של מסך ישן */
+        .teleprinter-screen::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* סגנון אזור הכתיבה (מכונת כתיבה / נייר) */
+        .paper-input {
+            background-color: #f4f1ea;
+            color: #2c3e50;
+            font-family: 'Courier New', Courier, monospace;
+            background-image: linear-gradient(transparent 95%, #cbd5e1 5%);
+            background-size: 100% 2rem;
+            line-height: 2rem;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* סגנון שער העיתון הסופי */
+        .newspaper-layout {
+            background-color: #f1ebd9;
+            color: #1a1a1a;
+            font-family: 'Frank Ruhl Libre', serif;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.1);
+            border: 1px solid #d3c9a3;
+        }
+        
+        .newspaper-title {
+            font-family: 'Frank Ruhl Libre', serif;
+            border-bottom: 4px double #1a1a1a;
+            border-top: 4px double #1a1a1a;
+        }
+
+        .newspaper-columns {
+            column-count: 2;
+            column-gap: 2rem;
+            column-rule: 1px solid #ccc;
+            text-align: justify;
+        }
+
+        @media (max-width: 768px) {
+            .newspaper-columns {
+                column-count: 1;
+            }
+        }
+
+        /* הסתרת אלמנטים בזמן הדפסה */
+        @media print {
+            body {
+                background: white;
+            }
+            #dashboard-view {
+                display: none !important;
+            }
+            #newspaper-view {
+                display: block !important;
+                box-shadow: none;
+                border: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        /* קרן לייזר מהבהבת לטלפרינטר */
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background-color: #33ff00;
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <!-- מסך ראשי: סביבת העבודה -->
+    <div id="dashboard-view" class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- כותרת עליונה -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-5xl font-bold tracking-wider text-white drop-shadow-lg uppercase">מערכת החדשות - מרץ 1965</h1>
+            <p class="text-gray-300 mt-2 text-lg">דסק חדשות חוץ | סיקור המרוץ לחלל</p>
+        </header>
+
+        <!-- אזור המידע (וידאו + טלפרינטר) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- אזור הוידאו -->
+            <div class="bg-gray-800 p-3 rounded-lg shadow-2xl border border-gray-700">
+                <div class="flex justify-between items-center mb-2 px-2">
+                    <span class="text-xs text-red-400 font-bold animate-pulse">● LIVE FEED</span>
+                    <span class="text-xs text-gray-400 font-mono">VOSKHOD-2_CAM</span>
+                </div>
+                <div class="aspect-video bg-black rounded overflow-hidden relative">
+                    <!-- סרטון ארכיון אותנטי מיוטיוב -->
+                    <iframe class="absolute top-0 left-0 w-full h-full" 
+                            src="https://www.youtube.com/embed/uAPBRvd8OTY?rel=0&modestbranding=1" 
+                            title="Alexey Leonov Spacewalk" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+
+            <!-- טלפרינטר מנגיש מידע בעברית -->
+            <div class="teleprinter-screen p-6 rounded-lg shadow-2xl border border-gray-700 h-64 md:h-auto overflow-y-auto flex flex-col justify-start text-sm md:text-base">
+                <div class="mb-2 text-gray-500 border-b border-gray-700 pb-1 flex justify-between">
+                    <span>ערוץ תקשורת מיוחד</span>
+                    <span>18.03.1965</span>
+                </div>
+                <div id="teleprinter-text" class="whitespace-pre-wrap leading-relaxed"></div>
+                <div><span class="cursor" id="cursor"></span></div>
+            </div>
+
+        </div>
+
+        <!-- אזור המשימה והכתיבה -->
+        <div class="bg-white text-gray-800 p-6 md:p-8 rounded-lg shadow-2xl mt-8">
+            <div class="mb-6 border-l-4 border-red-600 pl-4 bg-red-50 p-4 rounded-r">
+                <h2 class="text-xl font-bold text-red-700 mb-2">משימה דחופה ממנהל המערכת:</h2>
+                <p class="text-gray-700">"כתבנו הבכיר, העולם כולו עוצר את נשימתו! צפה בתיעוד מהחלל וקרא את מבזקי הטלפרינטר. עליך לנסח כעת את הכותרת הראשית ואת הכתבה שתסביר לציבור את גודל ההישג ואת הדרמה שהתרחשה. שגר לדפוס בהקדם!"</p>
+            </div>
+
+            <form id="news-form" class="space-y-6">
+                <div>
+                    <label for="headline" class="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wide">כותרת ראשית לעיתון:</label>
+                    <input type="text" id="headline" required placeholder="הזן כותרת דרמטית ועניינית..." class="w-full px-4 py-3 text-xl paper-input font-bold rounded focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                </div>
+
+                <div>
+                    <label for="article" class="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wide">גוף הכתבה:</label>
+                    <textarea id="article" required rows="6" placeholder="תאר את האירוע, ההישג של ליאונוב, ומשמעותו למרוץ לחלל..." class="w-full px-4 py-2 paper-input rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none transition-shadow"></textarea>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button type="submit" class="bg-red-700 hover:bg-red-800 text-white font-bold py-4 px-8 rounded shadow-lg transform hover:-translate-y-1 transition-all text-xl flex items-center gap-2">
+                        <span>העבר לדפוס!</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- מסך התוצאה: שער העיתון (מוסתר כברירת מחדל) -->
+    <div id="newspaper-view" class="hidden max-w-4xl mx-auto bg-white p-4 md:p-10 shadow-2xl newspaper-layout my-8 rounded">
+        
+        <!-- כפתורי פעולה (לא מודפסים) -->
+        <div class="no-print flex flex-col sm:flex-row justify-between gap-4 mb-8 border-b border-gray-300 pb-4">
+            <button onclick="goBack()" class="text-blue-600 hover:text-blue-800 font-bold flex items-center justify-center gap-1 order-last sm:order-first mt-2 sm:mt-0 p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                חזור לעריכה
+            </button>
+            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <button onclick="sendToWhatsApp()" class="bg-[#25D366] text-white px-4 py-3 sm:py-2 rounded hover:bg-[#128C7E] flex items-center justify-center gap-2 shadow-md font-bold transition-colors w-full sm:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c-.003 1.396.366 2.76 1.061 3.963L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+                    </svg>
+                    שלח למורה בווטסאפ
+                </button>
+                <button onclick="window.print()" class="bg-gray-800 text-white px-4 py-3 sm:py-2 rounded hover:bg-gray-700 flex items-center justify-center gap-2 shadow-md w-full sm:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    הדפס / PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- ראש העיתון -->
+        <div class="text-center mb-8">
+            <h1 class="text-6xl md:text-8xl font-black newspaper-title py-4 mb-2">העולם הבוקר</h1>
+            <div class="flex justify-between border-b-2 border-black pb-1 text-sm md:text-base font-bold uppercase tracking-widest">
+                <span>יום שישי, 19 במרץ 1965</span>
+                <span>מהדורה מיוחדת</span>
+                <span>מחיר: 15 אגורות</span>
+            </div>
+        </div>
+
+        <!-- תוכן הכתבה -->
+        <main>
+            <h2 id="print-headline" class="text-4xl md:text-6xl font-bold text-center mb-8 leading-tight">כאן תופיע הכותרת</h2>
+            
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="md:w-1/3">
+                    <div class="border-4 border-gray-800 p-1 bg-white mb-2 rotate-1">
+                        <!-- תמונה חלופית המייצגת את האירוע מעוצבת ב-CSS -->
+                        <div class="bg-gray-200 aspect-square flex items-center justify-center relative overflow-hidden grayscale contrast-125">
+                            <div class="absolute inset-0 bg-[url('https://upload.wikimedia.org/wikipedia/commons/e/ea/Leonov_spacewalk_1965.jpg')] bg-cover bg-center opacity-80 mix-blend-multiply"></div>
+                            <div class="text-center z-10 p-2 bg-black/50 text-white w-full absolute bottom-0">
+                                [ צילום מתוך שידור החללית ווסחוד 2 ]
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 italic mt-2 text-center font-bold">הקוסמונאוט אלכסיי ליאונוב מרחף מעל כדור הארץ. הישג סובייטי חסר תקדים.</p>
+                </div>
+                
+                <div class="md:w-2/3">
+                    <div class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="bg-black text-white px-2 py-1 uppercase text-sm">מאת כתבנו המיוחד</span>
+                    </div>
+                    <div id="print-article" class="newspaper-columns text-lg leading-relaxed whitespace-pre-wrap">
+                        כאן יופיע תוכן הכתבה...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // טקסטים לטלפרינטר
+        const messages = [
+            "[ הודעה נכנסת... ]",
+            "תאריך: 18 במרץ, 1965.",
+            "מקור: סוכנות החלל הסובייטית.",
+            "משימה: 'ווסחוד 2'.",
+            " ",
+            "*** עדכון חירום ***",
+            "הקוסמונאוט אלכסיי ליאונוב יצא מתוך החללית!",
+            "הוא האדם הראשון בהיסטוריה שצועד בחלל הפתוח.",
+            "הוא מחובר לחללית באמצעות כבל באורך 5 מטרים בלבד.",
+            "זמן שהייה בוואקום כרגע: 12 דקות.",
+            " ",
+            "אזהרה: התגלתה בעיה חמורה.",
+            "חליפת החלל של ליאונוב התנפחה עקב היעדר לחץ אוויר.",
+            "הוא אינו מצליח להיכנס חזרה דרך פתח החללית.",
+            "סכנת חיים. הוא מנסה לשחרר לחץ מהחליפה באופן ידני.",
+            "העולם עוקב במתח...",
+            "[ סוף שדר ]"
+        ];
+
+        let msgIndex = 0;
+        let charIndex = 0;
+        const speed = 40; // מהירות הקלדה באלפיות שניה
+        const delayBetweenLines = 600; // השהייה בין שורות
+        const teleprinterDiv = document.getElementById("teleprinter-text");
+
+        function typeWriter() {
+            if (msgIndex < messages.length) {
+                if (charIndex < messages[msgIndex].length) {
+                    teleprinterDiv.innerHTML += messages[msgIndex].charAt(charIndex);
+                    charIndex++;
+                    // גלילה אוטומטית למטה
+                    teleprinterDiv.parentElement.scrollTop = teleprinterDiv.parentElement.scrollHeight;
+                    setTimeout(typeWriter, speed);
+                } else {
+                    teleprinterDiv.innerHTML += "<br>";
+                    msgIndex++;
+                    charIndex = 0;
+                    setTimeout(typeWriter, delayBetweenLines);
+                }
+            }
+        }
+
+        // התחלת האנימציה מיד עם טעינת הדף
+        window.onload = function() {
+            setTimeout(typeWriter, 1000);
+        };
+
+        // טיפול בשליחת הטופס והצגת העיתון
+        document.getElementById('news-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // קבלת הערכים מהמשתמש
+            const headline = document.getElementById('headline').value;
+            const article = document.getElementById('article').value;
+            
+            // העברת הערכים לתבנית העיתון
+            document.getElementById('print-headline').innerText = headline;
+            document.getElementById('print-article').innerText = article;
+            
+            // אפקט פלאש (מעבר מסך)
+            const flash = document.createElement('div');
+            flash.style.position = 'fixed';
+            flash.style.top = '0'; flash.style.left = '0'; flash.style.width = '100%'; flash.style.height = '100%';
+            flash.style.backgroundColor = 'white';
+            flash.style.zIndex = '9999';
+            flash.style.transition = 'opacity 0.8s ease-out';
+            document.body.appendChild(flash);
+            
+            // החלפת תצוגות
+            setTimeout(() => {
+                document.getElementById('dashboard-view').classList.add('hidden');
+                document.getElementById('newspaper-view').classList.remove('hidden');
+                flash.style.opacity = '0';
+                window.scrollTo(0, 0);
+                
+                setTimeout(() => {
+                    flash.remove();
+                }, 800);
+            }, 100);
+        });
+
+        // פונקציית חזרה לעריכה
+        function goBack() {
+            document.getElementById('newspaper-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+        }
+
+        // פונקציה לשליחה בווטסאפ
+        function sendToWhatsApp() {
+            const headline = document.getElementById('headline').value;
+            const article = document.getElementById('article').value;
+            
+            // יצירת תוכן ההודעה
+            const message = `שלום המורה, סיימתי את משימת העיתונאות! 🚀\n\n*הכותרת שלי:*\n${headline}\n\n*גוף הכתבה:*\n${article}`;
+            
+            // קידוד הטקסט לפורמט שמתאים לקישור
+            const encodedMessage = encodeURIComponent(message);
+            
+            // פתיחת חלון חדש עם הקישור לווטסאפ
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+    </script>
+</body>
+</html>
