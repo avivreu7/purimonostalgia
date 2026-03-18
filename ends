@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>הפתק שלי לסיכום השבוע</title>
+    <!-- שימוש בספריית סמלים (FontAwesome) עבור כפתור הוואטסאפ -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* משתני צבע בסיסיים לעיצוב האפליקציה */
+        :root {
+            --bg-color: #f0f4f8;
+            --container-bg: #ffffff;
+            --text-color: #333;
+            --primary-color: #4CAF50;
+            --primary-hover: #45a049;
+            --whatsapp-color: #25D366;
+            --whatsapp-hover: #128C7E;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            background-color: var(--container-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .instructions {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            resize: vertical; /* מאפשר שינוי גודל רק לגובה */
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+        }
+
+        textarea {
+            min-height: 100px;
+        }
+
+        /* עיצוב בחירת צבע הפתק */
+        .color-selector {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        /* הסימון של הצבע הנבחר */
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+
+        /* הגדרת הצבעים האפשריים לפתקים */
+        .color-yellow { background-color: #fffacd; } /* LemonChiffon */
+        .color-pink   { background-color: #ffb6c1; } /* LightPink */
+        .color-blue   { background-color: #add8e6; } /* LightBlue */
+        .color-green  { background-color: #98fb98; } /* PaleGreen */
+        .color-orange { background-color: #ffe4b5; } /* Moccasin */
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            width: 100%;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-download {
+            background-color: var(--primary-color);
+        }
+
+        .btn-download:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-whatsapp {
+            background-color: var(--whatsapp-color);
+        }
+
+        .btn-whatsapp:hover {
+            background-color: var(--whatsapp-hover);
+        }
+
+        /* הודעת הצלחה (נסתרת כברירת מחדל) */
+        .success-message {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: bold;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* התאמה למסכים קטנים (טלפונים) */
+        @media (max-width: 400px) {
+            .color-selector {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>הפתק שלי 📝</h1>
+        <p class="instructions">
+            שלום! אנא מלאו את הפרטים למטה כדי להכין את הפתק שלכם לסיכום השבוע. 
+            בסיום, תוכלו להוריד את הפתק כקובץ ולשלוח למורה, או לשלוח אותו ישירות בוואטסאפ.
+        </p>
+
+        <div class="form-group">
+            <label for="studentName">איך קוראים לך?</label>
+            <input type="text" id="studentName" placeholder="הכנס/י שם פרטי ומשפחה" required>
+        </div>
+
+        <div class="form-group">
+            <label for="noteText">סיכום השבוע שלי:</label>
+            <textarea id="noteText" placeholder="כתבו כאן את מה שאתם רוצים לשתף... מה למדתם? משהו מעניין שקרה? או סתם משהו נחמד לומר לכיתה." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>בחר/י את צבע הפתק:</label>
+            <div class="color-selector" id="colorSelector">
+                <!-- Data-color שומר את ערך הצבע שישמש אותנו באפליקציית המורה -->
+                <div class="color-option color-yellow selected" data-color="#fffacd" title="צהוב"></div>
+                <div class="color-option color-pink" data-color="#ffb6c1" title="ורוד"></div>
+                <div class="color-option color-blue" data-color="#add8e6" title="תכלת"></div>
+                <div class="color-option color-green" data-color="#98fb98" title="ירוק"></div>
+                <div class="color-option color-orange" data-color="#ffe4b5" title="כתום"></div>
+            </div>
+        </div>
+
+        <div class="buttons-container">
+            <button class="btn-download" onclick="downloadNote()">
+                <i class="fas fa-download"></i> הורד קובץ פתק למורה
+            </button>
+            <button class="btn-whatsapp" onclick="sendToWhatsApp()">
+                <i class="fab fa-whatsapp"></i> שלח כהודעה בוואטסאפ
+            </button>
+        </div>
+
+        <div id="successMessage" class="success-message">
+            הפתק הוכן בהצלחה! 🎉<br>
+            אל תשכחו לשלוח את הקובץ שירד למורה.
+        </div>
+    </div>
+
+    <script>
+        // משתנה לשמירת הצבע הנבחר - מתחיל עם צהוב כברירת מחדל
+        let selectedColor = '#fffacd';
+
+        // הוספת מאזיני אירועים לכל אפשרויות הצבעים
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // מסיר את מחלקת ה'selected' מכל האפשרויות
+                document.querySelectorAll('.color-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // מוסיף 'selected' לאפשרות שנלחצה
+                this.classList.add('selected');
+                
+                // מעדכן את המשתנה של הצבע הנבחר
+                selectedColor = this.getAttribute('data-color');
+            });
+        });
+
+        // פונקציה לבדיקה שהשדות מלאים
+        function validateForm() {
+            const name = document.getElementById('studentName').value.trim();
+            const text = document.getElementById('noteText').value.trim();
+
+            if (!name || !text) {
+                alert('אנא מלאו גם את השם וגם את תוכן הפתק.');
+                return false;
+            }
+            return { name, text, color: selectedColor };
+        }
+
+        // פונקציה ליצירת קובץ JSON והורדתו (עבור אפליקציית המורה)
+        function downloadNote() {
+            const data = validateForm();
+            if (!data) return;
+
+            // הוספת מזהה ייחודי קטן ותאריך לפתק
+            const noteData = {
+                id: 'note_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                studentName: data.name,
+                content: data.text,
+                color: data.color,
+                dateCreated: new Date().toISOString()
+            };
+
+            // המרת האובייקט למחרוזת JSON
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(noteData));
+            
+            // יצירת אלמנט קישור זמני להורדה
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href",     dataStr);
+            // קריאת הקובץ על שם התלמיד כדי שלמורה יהיה קל לזהות
+            downloadAnchorNode.setAttribute("download", "פתק_שבועי_" + data.name.replace(/\s+/g, '_') + ".json");
+            
+            // הוספה ל-DOM, לחיצה והסרה
+            document.body.appendChild(downloadAnchorNode); 
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+
+            // הצגת הודעת הצלחה
+            showSuccess();
+        }
+
+        // פונקציה לשליחת הטקסט לוואטסאפ של המורה
+        function sendToWhatsApp() {
+            const data = validateForm();
+            if (!data) return;
+
+            // כאן המורה יכולה להכניס את מספר הטלפון שלה מראש (כולל קידומת מדינה, ללא פלוס או אפסים. למשל לישראל: 972501234567)
+            // אם משאירים ריק, זה יפתח את הוואטסאפ עם רשימת אנשי הקשר של התלמיד לבחירה.
+            const teacherPhoneNumber = ""; 
+            
+            // בניית הודעת הוואטסאפ
+            const message = `*סיכום שבועי מאת: ${data.name}* 📝\n\n${data.text}`;
+            
+            // קידוד ההודעה לפורמט שמתאים ל-URL
+            const encodedMessage = encodeURIComponent(message);
+            
+            // יצירת הקישור לפתיחת וואטסאפ
+            let whatsappUrl = `https://wa.me/${teacherPhoneNumber}?text=${encodedMessage}`;
+            
+            // פתיחת וואטסאפ בחלון חדש או באפליקציה
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // פונקציית עזר להצגת הודעת ההצלחה לכמה שניות
+        function showSuccess() {
+            const successMsg = document.getElementById('successMessage');
+            successMsg.style.display = 'block';
+            
+            // הסתרת ההודעה לאחר 5 שניות
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+
