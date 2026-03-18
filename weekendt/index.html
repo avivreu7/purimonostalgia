@@ -4,180 +4,369 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>לוח סיכום שבועי - מורה</title>
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+    <!-- הוספת פונטים של כתב יד מגוגל לקבלת מראה אותנטי -->
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Heebo:wght@400;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- ספרייה לצילום המסך -->
+    <!-- ספרייה לצילום המסך באיכות גבוהה -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         :root {
-            --board-bg: #d2b48c;
-            --cork-texture: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.1"><rect width="100" height="100" fill="%23a0522d"/><path d="M10 10h10v10H10zM30 30h10v10H30zM50 10h10v10H50zM70 30h10v10H70zM10 50h10v10H10zM30 70h10v10H30zM50 50h10v10H50zM70 70h10v10H70zM90 10h10v10H90zM90 50h10v10H90zM90 90h10v10H90zM10 90h10v10H10zM50 90h10v10H50z" fill="%238b4513"/></svg>');
+            /* צבעי רקע ועץ */
+            --wood-frame: #5C4033;
+            --wood-frame-light: #8B5A2B;
+            --cork-bg: #D2B48C;
+            --cork-texture: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" opacity="0.15"><circle cx="10" cy="10" r="2" fill="%235C4033"/><circle cx="40" cy="30" r="3" fill="%235C4033"/><circle cx="20" cy="50" r="1.5" fill="%235C4033"/><circle cx="50" cy="10" r="2.5" fill="%238B5A2B"/><circle cx="10" cy="40" r="2" fill="%238B5A2B"/></svg>');
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Heebo', sans-serif; background-color: #f4f4f4; display: flex; flex-direction: column; min-height: 100vh; }
+        body { font-family: 'Heebo', sans-serif; background-color: #e9ecef; display: flex; flex-direction: column; min-height: 100vh; }
 
+        /* --- סרגל כלים עליון --- */
         .toolbar {
-            background-color: #2c3e50; color: white; padding: 15px 20px; display: flex; 
-            justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10;
+            background-color: #2c3e50; color: white; padding: 15px 25px; display: flex; 
+            justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 100;
         }
 
-        .toolbar h1 { font-size: 24px; display: flex; align-items: center; gap: 10px; margin: 0; }
-        .toolbar-actions { display: flex; gap: 10px; }
+        .toolbar h1 { font-size: 22px; display: flex; align-items: center; gap: 10px; margin: 0; }
+        .toolbar-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
         .btn {
-            padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;
-            display: flex; align-items: center; gap: 8px; font-family: 'Heebo', sans-serif; transition: 0.2s;
+            padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px;
+            display: flex; align-items: center; gap: 8px; font-family: 'Heebo', sans-serif; transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
         .btn-primary { background-color: #3498db; color: white; }
         .btn-primary:hover { background-color: #2980b9; }
-        .btn-capture { background-color: #27ae60; color: white; }
-        .btn-capture:hover { background-color: #2ecc71; }
+        .btn-capture { background-color: #27ae60; color: white; font-size: 16px; padding: 12px 20px;}
+        .btn-capture:hover { background-color: #2ecc71; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4); }
         .btn-danger { background-color: #e74c3c; color: white; }
         .btn-danger:hover { background-color: #c0392b; }
 
-        /* אזור ההדבקה */
-        .paste-area-container {
-            background-color: white; padding: 20px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        /* --- אזור ההדבקה (ניהול בלבד, לא יופיע בצילום) --- */
+        .admin-area {
+            background-color: white; padding: 25px; margin: 20px auto; border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 1000px; width: 95%;
         }
-        .paste-area-container h3 { margin-bottom: 10px; color: #333; }
+        .admin-area h3 { margin-bottom: 15px; color: #2c3e50; font-size: 18px; display: flex; align-items: center; gap: 8px; }
         textarea#pasteArea {
-            width: 100%; height: 80px; padding: 10px; border: 2px dashed #ccc; border-radius: 5px; font-size: 16px; margin-bottom: 10px; resize: vertical;
+            width: 100%; height: 80px; padding: 15px; border: 2px dashed #bdc3c7; border-radius: 8px; 
+            font-size: 16px; margin-bottom: 15px; resize: vertical; transition: border-color 0.3s;
+            background-color: #f8f9fa;
         }
-        textarea#pasteArea:focus { border-color: #3498db; outline: none; }
+        textarea#pasteArea:focus { border-color: #3498db; outline: none; background-color: #fff; }
 
-        /* לוח השעם */
-        .board-container {
-            flex-grow: 1; background-color: var(--board-bg); background-image: var(--cork-texture);
-            border: 15px solid #8b4513; border-radius: 10px; margin: 0 20px 20px 20px;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.3);
-            padding: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 30px; align-items: start; position: relative;
+        /* --- האזור המיועד לצילום (The Export Wrapper) --- */
+        .export-wrapper {
+            background-color: var(--cork-bg);
+            background-image: var(--cork-texture);
+            border: 20px solid var(--wood-frame);
+            border-image: linear-gradient(45deg, var(--wood-frame), var(--wood-frame-light)) 1;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 15px 40px rgba(0,0,0,0.3);
+            margin: 0 auto 40px auto;
+            max-width: 1200px;
+            width: 95%;
+            position: relative;
+            /* הגדרות קריטיות לצילום תקין */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        .empty-state { text-align: center; color: rgba(0,0,0,0.5); font-size: 20px; grid-column: 1 / -1; padding: 50px; }
+        /* כותרת הלוח בתוך התמונה */
+        .board-title-container {
+            text-align: center;
+            padding: 30px 20px 10px 20px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .board-title-input {
+            background: rgba(255, 255, 255, 0.85);
+            border: 2px dashed rgba(0,0,0,0.2);
+            border-radius: 15px;
+            padding: 10px 30px;
+            font-family: 'Amatic SC', cursive;
+            font-size: 45px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .board-title-input:focus {
+            background: #fff;
+            border-color: #3498db;
+            outline: none;
+            border-style: solid;
+        }
+        
+        /* בעת צילום המסך, נסיר את גבולות שדה הטקסט כדי שייראה כמו שלט אמיתי */
+        .export-mode .board-title-input {
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 2px 4px 15px rgba(0,0,0,0.2);
+        }
 
-        /* הפתקיות */
+        .board-date {
+            font-family: 'Heebo', sans-serif;
+            font-size: 18px;
+            color: white;
+            background-color: #e74c3c;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: -15px;
+            position: relative;
+            z-index: 3;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* רשת הפתקים */
+        .board-grid {
+            padding: 30px 40px 50px 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 35px;
+            align-items: start;
+            min-height: 400px;
+            flex-grow: 1;
+        }
+
+        .empty-state { text-align: center; color: rgba(92, 64, 51, 0.6); font-size: 24px; grid-column: 1 / -1; padding: 60px; font-weight: bold; }
+
+        /* סגיר תחתון למזכרת */
+        .board-footer {
+            text-align: center;
+            padding: 15px;
+            font-family: 'Heebo', sans-serif;
+            font-size: 16px;
+            color: rgba(0,0,0,0.5);
+            font-weight: bold;
+            background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
+        }
+
+        /* --- עיצוב הפתקיות (מציאותי ומרשים) --- */
         .note {
-            padding: 20px; box-shadow: 2px 4px 8px rgba(0,0,0,0.2); position: relative;
-            transition: transform 0.2s; word-wrap: break-word; min-height: 150px;
+            padding: 25px 20px 20px 20px; 
+            box-shadow: 3px 6px 15px rgba(0,0,0,0.2); 
+            position: relative;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            word-wrap: break-word; 
+            min-height: 180px;
+            border-radius: 2px 15px 2px 15px; /* צורה קצת א-סימטרית וטבעית */
+            /* הוספת גרדיאנט עדין שנותן תחושת תאורה לנייר */
+            background-image: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.1) 100%);
         }
-        .note::before {
-            content: ''; position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
-            width: 12px; height: 12px; background-color: #e74c3c; border-radius: 50%; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3);
+        
+        .note:hover {
+            transform: scale(1.05) rotate(0deg) !important;
+            box-shadow: 8px 12px 25px rgba(0,0,0,0.3);
+            z-index: 10;
         }
-        .note-header { font-family: 'Amatic SC', cursive; font-size: 28px; font-weight: bold; margin-bottom: 10px; border-bottom: 2px dashed rgba(0,0,0,0.1); padding-bottom: 5px; text-align: center; }
-        .note-content { font-size: 16px; line-height: 1.4; white-space: pre-wrap; }
+
+        /* סיכת נעץ תלת מימדית מציאותית */
+        .note-pin {
+            position: absolute; 
+            top: 8px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            width: 16px; 
+            height: 16px; 
+            border-radius: 50%; 
+            /* צבע הסיכה ייבחר אקראית בקוד */
+            box-shadow: 
+                inset -3px -3px 6px rgba(0,0,0,0.4), 
+                inset 2px 2px 4px rgba(255,255,255,0.7),
+                2px 5px 5px rgba(0,0,0,0.4); /* צל הסיכה על הדף */
+            z-index: 2;
+        }
+
+        /* קיפול נייר קטן בתחתית */
+        .note::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0;
+            border-width: 20px 20px 0 0;
+            border-style: solid;
+            /* הצבע יותאם לקצת יותר כהה מצבע הפתק (מבוצע ב-CSS) */
+            border-color: rgba(0,0,0,0.1) #c2a781 rgba(0,0,0,0) rgba(0,0,0,0); /* #c2a781 זה צבע השעם שמבצבץ */
+            display: block;
+            width: 0;
+            box-shadow: -2px -2px 3px rgba(0,0,0,0.1);
+        }
+
+        .note-header { 
+            font-family: 'Amatic SC', cursive; 
+            font-size: 32px; 
+            font-weight: bold; 
+            margin-bottom: 12px; 
+            border-bottom: 2px solid rgba(0,0,0,0.05); 
+            padding-bottom: 8px; 
+            text-align: center; 
+            color: #222;
+        }
+        
+        .note-content { 
+            /* שימוש בפונט שנראה כמו כתיבה אמיתית בעט */
+            font-family: 'Kalam', cursive; 
+            font-size: 19px; 
+            line-height: 1.5; 
+            white-space: pre-wrap;
+            color: #111;
+        }
         
         .delete-btn {
-            position: absolute; top: 5px; right: 5px; background: none; border: none; color: rgba(0,0,0,0.3);
-            cursor: pointer; opacity: 0; transition: 0.2s;
+            position: absolute; top: -10px; right: -10px; background: white; border: none; color: #e74c3c;
+            width: 28px; height: 28px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer; opacity: 0; transition: 0.2s; font-size: 14px; z-index: 5;
         }
-        .note:hover .delete-btn { opacity: 1; color: #e74c3c; }
+        .note:hover .delete-btn { opacity: 1; }
+        
+        /* הסתרת כפתור המחיקה בעת צילום מסך */
+        .export-mode .delete-btn { display: none !important; }
 
     </style>
 </head>
 <body>
 
     <div class="toolbar">
-        <h1><i class="fas fa-chalkboard"></i> הלוח השבועי שלנו</h1>
+        <h1><i class="fas fa-camera-retro"></i> יוצר המזכרות הכיתתי</h1>
         <div class="toolbar-actions">
-            <button class="btn btn-capture" onclick="captureBoard()">
-                <i class="fas fa-camera"></i> הורד תמונה כיתתית
-            </button>
             <button class="btn btn-danger" onclick="clearBoard()">
                 <i class="fas fa-trash-alt"></i> נקה לוח
+            </button>
+            <button class="btn btn-capture" onclick="captureBeautifulBoard()">
+                <i class="fas fa-download"></i> הפק תמונה למזכרת
             </button>
         </div>
     </div>
 
-    <div class="paste-area-container">
+    <!-- אזור העבודה וההדבקה -->
+    <div class="admin-area">
         <h3><i class="fab fa-whatsapp" style="color:#25D366;"></i> הדביקי כאן את ההודעות מהוואטסאפ:</h3>
-        <textarea id="pasteArea" placeholder="אפשר להעתיק כמה הודעות ברצף מוואטסאפ-ווב ולהדביק הכל כאן..."></textarea>
+        <textarea id="pasteArea" placeholder="העתיקי מוואטסאפ-ווב כמה הודעות שבא לך (שמתחילות ב-'🌟 הפתק שלי 🌟') והדביקי כאן..."></textarea>
         <button class="btn btn-primary" onclick="processText()">
-            <i class="fas fa-magic"></i> צור פתקים מהטקסט
+            <i class="fas fa-magic"></i> הוסף פתקים ללוח
         </button>
     </div>
 
-    <div class="board-container" id="board">
-        <!-- הפתקים יופיעו כאן -->
+    <!-- הקנבס שיצולם וישלח לתלמידים -->
+    <div class="export-wrapper" id="exportWrapper">
+        
+        <div class="board-title-container">
+            <!-- כותרת ניתנת לעריכה -->
+            <input type="text" class="board-title-input" id="boardTitle" value="סיכום השבוע שלנו - כיתה ד'2!" placeholder="הקלידי כותרת ללוח...">
+            <br>
+            <!-- תאריך אוטומטי -->
+            <div class="board-date" id="displayDate"></div>
+        </div>
+
+        <div class="board-grid" id="boardGrid">
+            <!-- הפתקים יופיעו כאן -->
+        </div>
+
+        <div class="board-footer" id="boardFooter">
+            נוצר באהבה 💖 סיכום שבועי
+        </div>
     </div>
 
     <script>
         let notesArray = [];
         
-        // טעינת פתקים קיימים
+        // צבעי סיכות אפשריים (אדום, כחול, ירוק, צהוב, סגול)
+        const pinColors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6'];
+
         window.onload = () => {
-            const saved = localStorage.getItem('class_notes');
+            // הגדרת התאריך של היום
+            const today = new Date();
+            document.getElementById('displayDate').textContent = today.toLocaleDateString('he-IL');
+
+            // טעינת נתונים קודמים
+            const saved = localStorage.getItem('class_notes_v2');
+            const savedTitle = localStorage.getItem('board_title');
+            
+            if(savedTitle) document.getElementById('boardTitle').value = savedTitle;
             if(saved) { notesArray = JSON.parse(saved); renderBoard(); }
             else { renderBoard(); }
+
+            // שמירת הכותרת בעת שינוי
+            document.getElementById('boardTitle').addEventListener('input', (e) => {
+                localStorage.setItem('board_title', e.target.value);
+            });
         }
 
-        // פונקציית הקסם: מפענחת את הטקסט שמודבק מוואטסאפ
+        // פונקציית פענוח הטקסט מהוואטסאפ
         function processText() {
             const text = document.getElementById('pasteArea').value;
             if(!text.trim()) return alert("התיבה ריקה. הדביקי טקסט תחילה.");
 
-            // מחלקים את הטקסט לבלוקים לפי הכותרת הקבועה שהגדרנו באפליקציית התלמיד
             const blocks = text.split('🌟 הפתק שלי 🌟');
             let addedCount = 0;
 
             blocks.forEach(block => {
                 if(!block.trim()) return;
 
-                // חיפוש חכם של השדות באמצעות ביטויים רגולריים (Regex)
                 const nameMatch = block.match(/שם:\s*([^\n]+)/);
                 const colorMatch = block.match(/צבע:\s*(#[0-9a-fA-F]{3,6})/i);
-                
-                // התוכן הוא כל מה שאחרי "תוכן:" ועד סוף הבלוק (או ההודעה הבאה)
                 const contentMatch = block.match(/תוכן:\s*([\s\S]+)/);
 
                 if(nameMatch && contentMatch) {
                     let content = contentMatch[1].trim();
-                    // ניקוי שאריות של ווטסאפ (כמו שעות הדפסה אם הועתקו בטעות)
                     content = content.replace(/\d{1,2}:\d{2}.*/g, '').trim();
+
+                    // בחירת צבע סיכה אקראי לפתק
+                    const randomPinColor = pinColors[Math.floor(Math.random() * pinColors.length)];
 
                     notesArray.push({
                         id: Date.now() + Math.random(),
                         studentName: nameMatch[1].trim(),
-                        color: colorMatch ? colorMatch[1] : '#fffacd', // ברירת מחדל לצהוב
-                        content: content
+                        color: colorMatch ? colorMatch[1] : '#fffacd',
+                        content: content,
+                        pinColor: randomPinColor
                     });
                     addedCount++;
                 }
             });
 
             if(addedCount > 0) {
-                localStorage.setItem('class_notes', JSON.stringify(notesArray));
+                localStorage.setItem('class_notes_v2', JSON.stringify(notesArray));
                 renderBoard();
-                document.getElementById('pasteArea').value = ''; // ניקוי התיבה
-                alert(`מעולה! נוספו ${addedCount} פתקים חדשים ללוח.`);
+                document.getElementById('pasteArea').value = ''; 
             } else {
-                alert("לא נמצאו פתקים בפורמט התקין. ודאי שהעתקת את ההודעה המלאה שמתחילה ב-'🌟 הפתק שלי 🌟'.");
+                alert("לא נמצאו פתקים. ודאי שהעתקת את ההודעה בדיוק כפי שהתלמיד שלח.");
             }
         }
 
         function renderBoard() {
-            const board = document.getElementById('board');
+            const board = document.getElementById('boardGrid');
             board.innerHTML = '';
 
             if(notesArray.length === 0) {
-                board.innerHTML = '<div class="empty-state">הלוח ריק. הדביקי טקסט מהוואטסאפ למעלה.</div>';
+                board.innerHTML = '<div class="empty-state"><i class="fas fa-thumbtack" style="font-size:40px; margin-bottom:15px; color:#5C4033;"></i><br>הלוח ריק ומחכה לפתקים...</div>';
                 return;
             }
 
-            notesArray.forEach(note => {
+            notesArray.forEach((note, index) => {
                 const el = document.createElement('div');
                 el.className = 'note';
                 el.style.backgroundColor = note.color;
                 
-                // זווית אקראית למראה טבעי
-                const angle = (Math.random() * 6) - 3;
+                // תן לכל פתק זווית ייחודית ועקבית (לפי ה-ID כדי שלא ירקדו בריענון)
+                const angle = (parseFloat(note.id.toString().substring(10,13)) % 6) - 3;
                 el.style.transform = `rotate(${angle}deg)`;
 
+                // צבע הסיכה
+                const pinBg = note.pinColor || '#e74c3c';
+
                 el.innerHTML = `
-                    <button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-times"></i></button>
+                    <div class="note-pin" style="background-color: ${pinBg};"></div>
+                    <button class="delete-btn" onclick="deleteNote(${note.id})" title="מחק פתק"><i class="fas fa-times"></i></button>
                     <div class="note-header">${note.studentName}</div>
                     <div class="note-content">${note.content}</div>
                 `;
@@ -187,36 +376,68 @@
 
         window.deleteNote = function(id) {
             notesArray = notesArray.filter(n => n.id !== id);
-            localStorage.setItem('class_notes', JSON.stringify(notesArray));
+            localStorage.setItem('class_notes_v2', JSON.stringify(notesArray));
             renderBoard();
         }
 
         window.clearBoard = function() {
-            if(confirm("למחוק את כל הלוח?")) {
+            if(confirm("בטוחה שאת רוצה למחוק את כל הלוח ולהתחיל שבוע חדש?")) {
                 notesArray = [];
-                localStorage.setItem('class_notes', JSON.stringify([]));
+                localStorage.setItem('class_notes_v2', JSON.stringify([]));
                 renderBoard();
             }
         }
 
-        // צילום הלוח
-        window.captureBoard = function() {
-            if(notesArray.length === 0) return alert("אין פתקים לצלם.");
+        // --- מנוע צילום מתקדם ---
+        window.captureBeautifulBoard = function() {
+            if(notesArray.length === 0) return alert("אין פתקים על הלוח לצלם!");
             
-            const boardEl = document.getElementById('board');
-            // מחיקת כפתורי ה-X זמנית לצילום
-            const deleteBtns = document.querySelectorAll('.delete-btn');
-            deleteBtns.forEach(btn => btn.style.display = 'none');
+            const wrapper = document.getElementById('exportWrapper');
+            const originalBtnText = document.querySelector('.btn-capture').innerHTML;
+            
+            // שינוי סטטוס כפתור כדי לתת חיווי למשתמש
+            document.querySelector('.btn-capture').innerHTML = '<i class="fas fa-spinner fa-spin"></i> מכין מזכרת...';
+            
+            // 1. הוספת מחלקה שמסתירה כפתורי מחיקה ומעצבת את הכותרת לתמונה
+            wrapper.classList.add('export-mode');
+            
+            // 2. הבטחה שהרכיב נמתח לגובה המלא שלו גם אם הוא מוסתר בגלילה
+            const originalHeight = wrapper.style.height;
+            const originalMaxHeight = wrapper.style.maxHeight;
+            wrapper.style.height = 'auto';
+            wrapper.style.maxHeight = 'none';
 
-            html2canvas(boardEl, { scale: 2, backgroundColor: '#d2b48c' }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `לוח_סיכום_כיתתי.png`;
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-                
-                // החזרת הכפתורים
-                deleteBtns.forEach(btn => btn.style.display = 'block');
-            });
+            // המתנה קלה כדי לאפשר לדפדפן לרנדר את שינויי ה-CSS לפני הצילום
+            setTimeout(() => {
+                // קריאה לספרייה עם הגדרות לאיכות מקסימלית (HD)
+                html2canvas(wrapper, { 
+                    scale: 3, // רזולוציה גבוהה מאוד לטובת זום בטלפון
+                    useCORS: true,
+                    backgroundColor: null, // שומר על העיצוב שלנו
+                    logging: false
+                }).then(canvas => {
+                    // יצירת התמונה ושמירתה
+                    const link = document.createElement('a');
+                    const titleText = document.getElementById('boardTitle').value.replace(/[^א-תa-zA-Z0-9]/g, '_');
+                    link.download = `מזכרת_${titleText}.png`;
+                    
+                    // המרה ל-JPEG באיכות גבוהה כדי שהקובץ לא ישקול יותר מדי
+                    link.href = canvas.toDataURL("image/jpeg", 0.95);
+                    link.click();
+                    
+                    // 3. החזרת המצב לקדמותו
+                    wrapper.classList.remove('export-mode');
+                    wrapper.style.height = originalHeight;
+                    wrapper.style.maxHeight = originalMaxHeight;
+                    document.querySelector('.btn-capture').innerHTML = originalBtnText;
+                    
+                }).catch(err => {
+                    console.error("שגיאה ביצירת התמונה:", err);
+                    alert("אופס, אירעה שגיאה. נסי שוב.");
+                    wrapper.classList.remove('export-mode');
+                    document.querySelector('.btn-capture').innerHTML = originalBtnText;
+                });
+            }, 300);
         }
     </script>
 </body>
