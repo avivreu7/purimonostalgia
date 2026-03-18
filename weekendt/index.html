@@ -4,605 +4,221 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>לוח סיכום שבועי - מורה</title>
-    <!-- שימוש בפונט גוגל למראה כתב יד -->
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Heebo:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- הוספת ספריית html2canvas לצילום הלוח -->
+    <!-- ספרייה לצילום המסך -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         :root {
-            /* צבע רקע דמוי שעם */
-            --board-bg: #d2b48c; 
-            /* תבנית רקע ללוח השעם - משתמשים בתמונת base64 קטנה לטקסטורה */
+            --board-bg: #d2b48c;
             --cork-texture: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.1"><rect width="100" height="100" fill="%23a0522d"/><path d="M10 10h10v10H10zM30 30h10v10H30zM50 10h10v10H50zM70 30h10v10H70zM10 50h10v10H10zM30 70h10v10H30zM50 50h10v10H50zM70 70h10v10H70zM90 10h10v10H90zM90 50h10v10H90zM90 90h10v10H90zM10 90h10v10H10zM50 90h10v10H50z" fill="%238b4513"/></svg>');
-            --text-main: #333;
-            --border-color: #8b4513;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Heebo', sans-serif; background-color: #f4f4f4; display: flex; flex-direction: column; min-height: 100vh; }
 
-        body {
-            font-family: 'Heebo', sans-serif;
-            background-color: #f4f4f4;
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* סרגל כלים עליון למורה */
         .toolbar {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 10; /* להבטיח שהוא מעל הלוח */
+            background-color: #2c3e50; color: white; padding: 15px 20px; display: flex; 
+            justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10;
         }
 
-        .toolbar h1 {
-            font-size: 24px;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .toolbar-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        /* אזור הגרירה (Dropzone) */
-        .upload-area {
-            position: relative;
-            background-color: rgba(255, 255, 255, 0.1);
-            border: 2px dashed #ecf0f1;
-            border-radius: 8px;
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .upload-area:hover, .upload-area.dragover {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-color: #3498db;
-        }
-
-        /* החבאת קלט הקובץ האמיתי */
-        #fileInput {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
+        .toolbar h1 { font-size: 24px; display: flex; align-items: center; gap: 10px; margin: 0; }
+        .toolbar-actions { display: flex; gap: 10px; }
 
         .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background 0.2s;
-            font-family: 'Heebo', sans-serif;
+            padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;
+            display: flex; align-items: center; gap: 8px; font-family: 'Heebo', sans-serif; transition: 0.2s;
         }
+        .btn-primary { background-color: #3498db; color: white; }
+        .btn-primary:hover { background-color: #2980b9; }
+        .btn-capture { background-color: #27ae60; color: white; }
+        .btn-capture:hover { background-color: #2ecc71; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+        .btn-danger:hover { background-color: #c0392b; }
 
-        .btn-danger {
-            background-color: #e74c3c;
-            color: white;
+        /* אזור ההדבקה */
+        .paste-area-container {
+            background-color: white; padding: 20px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        .paste-area-container h3 { margin-bottom: 10px; color: #333; }
+        textarea#pasteArea {
+            width: 100%; height: 80px; padding: 10px; border: 2px dashed #ccc; border-radius: 5px; font-size: 16px; margin-bottom: 10px; resize: vertical;
+        }
+        textarea#pasteArea:focus { border-color: #3498db; outline: none; }
 
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-        
-        .btn-capture {
-            background-color: #27ae60;
-            color: white;
-        }
-        
-        .btn-capture:hover {
-            background-color: #2ecc71;
-        }
-
-        /* לוח השעם המרכזי */
+        /* לוח השעם */
         .board-container {
-            flex-grow: 1;
-            background-color: var(--board-bg);
-            background-image: var(--cork-texture);
-            border: 15px solid var(--border-color);
-            border-radius: 10px;
-            margin: 20px;
+            flex-grow: 1; background-color: var(--board-bg); background-image: var(--cork-texture);
+            border: 15px solid #8b4513; border-radius: 10px; margin: 0 20px 20px 20px;
             box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.3);
-            position: relative;
-            padding: 40px;
-            /* שימוש ב-Grid לסידור נוח של הפתקים */
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 30px;
-            align-items: start; /* שפתקים קצרים לא יימתחו */
-            overflow-y: auto; /* גלילה אם יש הרבה פתקים */
+            padding: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 30px; align-items: start; position: relative;
         }
 
-        /* הודעה כשאין פתקים */
-        .empty-state {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: rgba(0,0,0,0.4);
-            font-size: 24px;
-            font-weight: bold;
-            pointer-events: none; /* שלא יפריע לגרירה */
-            background-color: rgba(255,255,255,0.7);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
+        .empty-state { text-align: center; color: rgba(0,0,0,0.5); font-size: 20px; grid-column: 1 / -1; padding: 50px; }
 
-        /* עיצוב הפתקית (Sticky Note) */
+        /* הפתקיות */
         .note {
-            background-color: #fffacd; /* ברירת מחדל */
-            padding: 20px;
-            box-shadow: 2px 4px 8px rgba(0,0,0,0.2);
-            position: relative;
-            transition: transform 0.2s, box-shadow 0.2s;
-            /* זווית אקראית קלה תינתן ב-JS, אבל הנה בסיס */
-            transform: rotate(-1deg);
-            word-wrap: break-word;
-            min-height: 150px;
-            display: flex;
-            flex-direction: column;
+            padding: 20px; box-shadow: 2px 4px 8px rgba(0,0,0,0.2); position: relative;
+            transition: transform 0.2s; word-wrap: break-word; min-height: 150px;
         }
-
-        .note:hover {
-            transform: scale(1.05) rotate(0deg) !important; /* דריסת הזווית האקראית בהובר */
-            box-shadow: 5px 10px 15px rgba(0,0,0,0.3);
-            z-index: 5;
-        }
-
-        /* "הנעץ" למעלה */
         .note::before {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 12px;
-            height: 12px;
-            background-color: #e74c3c;
-            border-radius: 50%;
-            box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3), 1px 1px 2px rgba(0,0,0,0.2);
+            content: ''; position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+            width: 12px; height: 12px; background-color: #e74c3c; border-radius: 50%; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3);
         }
-
-        /* קיפול קטן בפינה (אופציונלי למראה יותר ריאליסטי) */
-        .note::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            border-width: 15px 15px 0 0;
-            border-style: solid;
-            border-color: rgba(0,0,0,0.1) #fff rgba(0,0,0,0) rgba(0,0,0,0);
-            display: block;
-            width: 0;
-        }
-
-        /* תוכן הפתק */
-        .note-header {
-            font-family: 'Amatic SC', cursive;
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            border-bottom: 2px dashed rgba(0,0,0,0.1);
-            padding-bottom: 5px;
-            text-align: center;
-        }
-
-        .note-content {
-            font-size: 16px;
-            line-height: 1.4;
-            flex-grow: 1; /* לוקח את כל המקום הפנוי */
-            /* טיפוגרפיה נעימה לתוכן */
-            font-family: 'Heebo', sans-serif;
-        }
+        .note-header { font-family: 'Amatic SC', cursive; font-size: 28px; font-weight: bold; margin-bottom: 10px; border-bottom: 2px dashed rgba(0,0,0,0.1); padding-bottom: 5px; text-align: center; }
+        .note-content { font-size: 16px; line-height: 1.4; white-space: pre-wrap; }
         
-        .note-date {
-            font-size: 10px;
-            color: rgba(0,0,0,0.5);
-            text-align: left;
-            margin-top: 15px;
+        .delete-btn {
+            position: absolute; top: 5px; right: 5px; background: none; border: none; color: rgba(0,0,0,0.3);
+            cursor: pointer; opacity: 0; transition: 0.2s;
         }
-
-        /* כפתור מחיקה קטן על כל פתק (מופיע רק ברחרוף) */
-        .delete-note-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: none;
-            border: none;
-            color: rgba(0,0,0,0.3);
-            cursor: pointer;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.2s, color 0.2s;
-        }
-        
-        .note:hover .delete-note-btn {
-            opacity: 1;
-        }
-        
-        .delete-note-btn:hover {
-            color: #e74c3c;
-        }
-
-        /* התראות (Toasts) */
-        #toast-container {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-        }
-        
-        .toast {
-            background-color: #333;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .toast-success i { color: #2ecc71; }
-        .toast-error i { color: #e74c3c; }
+        .note:hover .delete-btn { opacity: 1; color: #e74c3c; }
 
     </style>
 </head>
 <body>
 
-    <!-- סרגל כלים -->
     <div class="toolbar">
         <h1><i class="fas fa-chalkboard"></i> הלוח השבועי שלנו</h1>
-        
         <div class="toolbar-actions">
-            <!-- אזור העלאת הקבצים -->
-            <div class="upload-area" id="dropZone" title="לחצי לבחירת קבצים או גררי קבצים לכאן">
-                <i class="fas fa-file-upload"></i>
-                <span>העלאת פתקים (גרירה/לחיצה)</span>
-                <!-- מאפשר בחירה של מספר קבצים יחד -->
-                <input type="file" id="fileInput" accept=".json" multiple>
-            </div>
-            
-            <!-- כפתור צילום המסך -->
-            <button class="btn btn-capture" onclick="captureBoard()" title="שמור את הלוח כתמונה">
-                <i class="fas fa-camera"></i> שמור כתמונה
+            <button class="btn btn-capture" onclick="captureBoard()">
+                <i class="fas fa-camera"></i> הורד תמונה כיתתית
             </button>
-            
-            <!-- כפתור לאיפוס הלוח -->
-            <button class="btn btn-danger" onclick="clearAllNotes()" title="מחיקת כל הפתקים מהלוח">
+            <button class="btn btn-danger" onclick="clearBoard()">
                 <i class="fas fa-trash-alt"></i> נקה לוח
             </button>
         </div>
     </div>
 
-    <!-- לוח השעם -->
-    <div class="board-container" id="board">
-        <div id="emptyState" class="empty-state">
-            <i class="fas fa-inbox fa-3x" style="color: #ccc; margin-bottom: 15px;"></i><br>
-            הלוח ריק כרגע.<br>
-            <span style="font-size: 16px; font-weight: normal;">גררי לכאן את קבצי הפתקים שקיבלת מהתלמידים.</span>
-        </div>
-        <!-- פתקים ייווצרו כאן דינמית על ידי JS -->
+    <div class="paste-area-container">
+        <h3><i class="fab fa-whatsapp" style="color:#25D366;"></i> הדביקי כאן את ההודעות מהוואטסאפ:</h3>
+        <textarea id="pasteArea" placeholder="אפשר להעתיק כמה הודעות ברצף מוואטסאפ-ווב ולהדביק הכל כאן..."></textarea>
+        <button class="btn btn-primary" onclick="processText()">
+            <i class="fas fa-magic"></i> צור פתקים מהטקסט
+        </button>
     </div>
 
-    <!-- מיכל להתראות קופצות -->
-    <div id="toast-container"></div>
+    <div class="board-container" id="board">
+        <!-- הפתקים יופיעו כאן -->
+    </div>
 
     <script>
-        // --- ניהול הנתונים (Local Storage) ---
-        
-        // מפתח לשמירה ב-LocalStorage
-        const STORAGE_KEY = 'class_weekly_notes';
-        
-        // מערך לשמירת הפתקים הנוכחיים
         let notesArray = [];
+        
+        // טעינת פתקים קיימים
+        window.onload = () => {
+            const saved = localStorage.getItem('class_notes');
+            if(saved) { notesArray = JSON.parse(saved); renderBoard(); }
+            else { renderBoard(); }
+        }
 
-        // פונקציה לטעינת הפתקים מהאחסון המקומי בעת עליית הדף
-        function loadNotes() {
-            const savedNotes = localStorage.getItem(STORAGE_KEY);
-            if (savedNotes) {
-                try {
-                    notesArray = JSON.parse(savedNotes);
-                    renderBoard();
-                } catch (e) {
-                    console.error("שגיאה בטעינת נתונים קודמים:", e);
-                    showToast("שגיאה בטעינת פתקים קודמים.", "error");
+        // פונקציית הקסם: מפענחת את הטקסט שמודבק מוואטסאפ
+        function processText() {
+            const text = document.getElementById('pasteArea').value;
+            if(!text.trim()) return alert("התיבה ריקה. הדביקי טקסט תחילה.");
+
+            // מחלקים את הטקסט לבלוקים לפי הכותרת הקבועה שהגדרנו באפליקציית התלמיד
+            const blocks = text.split('🌟 הפתק שלי 🌟');
+            let addedCount = 0;
+
+            blocks.forEach(block => {
+                if(!block.trim()) return;
+
+                // חיפוש חכם של השדות באמצעות ביטויים רגולריים (Regex)
+                const nameMatch = block.match(/שם:\s*([^\n]+)/);
+                const colorMatch = block.match(/צבע:\s*(#[0-9a-fA-F]{3,6})/i);
+                
+                // התוכן הוא כל מה שאחרי "תוכן:" ועד סוף הבלוק (או ההודעה הבאה)
+                const contentMatch = block.match(/תוכן:\s*([\s\S]+)/);
+
+                if(nameMatch && contentMatch) {
+                    let content = contentMatch[1].trim();
+                    // ניקוי שאריות של ווטסאפ (כמו שעות הדפסה אם הועתקו בטעות)
+                    content = content.replace(/\d{1,2}:\d{2}.*/g, '').trim();
+
+                    notesArray.push({
+                        id: Date.now() + Math.random(),
+                        studentName: nameMatch[1].trim(),
+                        color: colorMatch ? colorMatch[1] : '#fffacd', // ברירת מחדל לצהוב
+                        content: content
+                    });
+                    addedCount++;
                 }
-            } else {
-                renderBoard(); // יציג את המצב הריק
-            }
-        }
-
-        // פונקציה לשמירת המערך המעודכן באחסון המקומי
-        function saveNotes() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(notesArray));
-        }
-
-        // --- טיפול בהעלאת קבצים ---
-
-        const fileInput = document.getElementById('fileInput');
-        const dropZone = document.getElementById('dropZone');
-
-        // האזנה לשינוי באינפוט (לחיצה ובחירת קבצים)
-        fileInput.addEventListener('change', handleFileSelect);
-
-        // האזנה לאירועי גרירה מעל אזור ה-Dropzone
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                processFiles(e.dataTransfer.files);
-            }
-        });
-
-        // פונקציה המטפלת בבחירת קבצים מהאינפוט
-        function handleFileSelect(event) {
-            const files = event.target.files;
-            if (files.length > 0) {
-                processFiles(files);
-            }
-            // איפוס האינפוט כדי שיהיה אפשר להעלות את אותו קובץ שוב אם נמחק
-            fileInput.value = ''; 
-        }
-
-        // פונקציה לעיבוד מערך של קבצים נבחרים
-        function processFiles(files) {
-            let processedCount = 0;
-            let errorCount = 0;
-
-            Array.from(files).forEach(file => {
-                // בדיקה שזה קובץ JSON
-                if (file.type !== "application/json" && !file.name.endsWith('.json')) {
-                    errorCount++;
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const noteData = JSON.parse(e.target.result);
-                        
-                        // בדיקה בסיסית שזה אכן המבנה שלנו (יש שם ותוכן)
-                        if (noteData.studentName && noteData.content) {
-                            // בדיקה למניעת כפילויות לפי ה-ID
-                            const exists = notesArray.some(note => note.id === noteData.id);
-                            if (!exists) {
-                                notesArray.push(noteData);
-                                processedCount++;
-                            } else {
-                                console.log("פתק של " + noteData.studentName + " כבר קיים בלוח.");
-                            }
-                        } else {
-                            errorCount++;
-                        }
-                    } catch (error) {
-                        console.error("שגיאה בקריאת הקובץ " + file.name, error);
-                        errorCount++;
-                    }
-
-                    // כשהגענו לקובץ האחרון, מעדכנים את המסך ושומרים
-                    if (processedCount + errorCount === files.length) {
-                        if (processedCount > 0) {
-                            saveNotes();
-                            renderBoard();
-                            showToast(`נוספו ${processedCount} פתקים חדשים בהצלחה!`, "success");
-                        }
-                        if (errorCount > 0) {
-                            showToast(`${errorCount} קבצים לא תקינים לא נטענו.`, "error");
-                        }
-                    }
-                };
-                reader.readAsText(file);
             });
+
+            if(addedCount > 0) {
+                localStorage.setItem('class_notes', JSON.stringify(notesArray));
+                renderBoard();
+                document.getElementById('pasteArea').value = ''; // ניקוי התיבה
+                alert(`מעולה! נוספו ${addedCount} פתקים חדשים ללוח.`);
+            } else {
+                alert("לא נמצאו פתקים בפורמט התקין. ודאי שהעתקת את ההודעה המלאה שמתחילה ב-'🌟 הפתק שלי 🌟'.");
+            }
         }
-
-        // --- רינדור (ציור) הלוח ---
-
-        const board = document.getElementById('board');
-        const emptyState = document.getElementById('emptyState');
 
         function renderBoard() {
-            // ניקוי הלוח הנוכחי (משאירים רק את אלמנט מצב ריק אם הוא שם)
-            const existingNotes = document.querySelectorAll('.note');
-            existingNotes.forEach(note => note.remove());
+            const board = document.getElementById('board');
+            board.innerHTML = '';
 
-            if (notesArray.length === 0) {
-                emptyState.style.display = 'block';
+            if(notesArray.length === 0) {
+                board.innerHTML = '<div class="empty-state">הלוח ריק. הדביקי טקסט מהוואטסאפ למעלה.</div>';
                 return;
             }
 
-            // הסתרת ההודעה "הלוח ריק"
-            emptyState.style.display = 'none';
-
-            // יצירת אלמנטים לכל פתק
-            notesArray.forEach((noteData, index) => {
-                const noteElement = document.createElement('div');
-                noteElement.className = 'note';
+            notesArray.forEach(note => {
+                const el = document.createElement('div');
+                el.className = 'note';
+                el.style.backgroundColor = note.color;
                 
-                // החלת הצבע שהתלמיד בחר
-                if (noteData.color) {
-                    noteElement.style.backgroundColor = noteData.color;
-                }
+                // זווית אקראית למראה טבעי
+                const angle = (Math.random() * 6) - 3;
+                el.style.transform = `rotate(${angle}deg)`;
 
-                // הגרלת זווית קלה (-3 עד 3 מעלות) למראה טבעי
-                const randomAngle = (Math.random() * 6) - 3;
-                noteElement.style.transform = `rotate(${randomAngle}deg)`;
-
-                // פורמט תאריך נחמד
-                let dateString = "";
-                if(noteData.dateCreated) {
-                    const dateObj = new Date(noteData.dateCreated);
-                    dateString = dateObj.toLocaleDateString('he-IL') + " " + dateObj.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
-                }
-
-                // תוכן הפתק (שימוש ב-textContent למניעת הזרקת קוד זדוני - XSS)
-                noteElement.innerHTML = `
-                    <button class="delete-note-btn" onclick="deleteNote('${noteData.id}')" title="מחק פתק זה"><i class="fas fa-times"></i></button>
-                    <div class="note-header"></div>
-                    <div class="note-content"></div>
-                    <div class="note-date">${dateString}</div>
+                el.innerHTML = `
+                    <button class="delete-btn" onclick="deleteNote(${note.id})"><i class="fas fa-times"></i></button>
+                    <div class="note-header">${note.studentName}</div>
+                    <div class="note-content">${note.content}</div>
                 `;
-                
-                // הכנסת הטקסט בבטחה
-                noteElement.querySelector('.note-header').textContent = noteData.studentName;
-                noteElement.querySelector('.note-content').textContent = noteData.content;
-
-                board.appendChild(noteElement);
+                board.appendChild(el);
             });
         }
 
-        // --- פעולות על פתקים ---
+        window.deleteNote = function(id) {
+            notesArray = notesArray.filter(n => n.id !== id);
+            localStorage.setItem('class_notes', JSON.stringify(notesArray));
+            renderBoard();
+        }
 
-        // מחיקת פתק בודד
-        window.deleteNote = function(noteId) {
-            if(confirm("האם את בטוחה שברצונך למחוק פתק זה?")) {
-                notesArray = notesArray.filter(note => note.id !== noteId);
-                saveNotes();
-                renderBoard();
-                showToast("הפתק נמחק.", "success");
-            }
-        };
-
-        // מחיקת כל הלוח
-        window.clearAllNotes = function() {
-            if (notesArray.length === 0) return;
-            
-            if (confirm("שימי לב! פעולה זו תמחק את כל הפתקים מהלוח. האם להמשיך?")) {
+        window.clearBoard = function() {
+            if(confirm("למחוק את כל הלוח?")) {
                 notesArray = [];
-                saveNotes();
+                localStorage.setItem('class_notes', JSON.stringify([]));
                 renderBoard();
-                showToast("הלוח נוקה בהצלחה.", "success");
             }
-        };
+        }
 
-        // פונקציה לצילום הלוח ושמירתו כתמונה
+        // צילום הלוח
         window.captureBoard = function() {
-            if (notesArray.length === 0) {
-                showToast("הלוח ריק, אין מה לצלם.", "error");
-                return;
-            }
-
-            const boardElement = document.getElementById('board');
-            showToast("מכין את התמונה, אנא המתן...", "success");
-
-            // שומרים את ההגדרות המקוריות כדי שהעיצוב לא ייהרס אחרי הצילום
-            const originalOverflow = boardElement.style.overflowY;
-            const originalHeight = boardElement.style.height;
+            if(notesArray.length === 0) return alert("אין פתקים לצלם.");
             
-            // משנים זמנית את הגלילה כדי שהספרייה תצלם גם פתקים שנמצאים למטה
-            boardElement.style.overflowY = 'visible';
-            boardElement.style.height = 'auto';
+            const boardEl = document.getElementById('board');
+            // מחיקת כפתורי ה-X זמנית לצילום
+            const deleteBtns = document.querySelectorAll('.delete-btn');
+            deleteBtns.forEach(btn => btn.style.display = 'none');
 
-            // קריאה לספרייה עם הגדרות איכות גבוהה (scale: 2)
-            html2canvas(boardElement, {
-                scale: 2,
-                backgroundColor: '#d2b48c', // רקע תואם לשעם
-                logging: false
-            }).then(canvas => {
-                // החזרת העיצוב המקורי
-                boardElement.style.overflowY = originalOverflow;
-                boardElement.style.height = originalHeight;
-
-                // הפיכת הקנבס לתמונה ויצירת קישור להורדה
-                const image = canvas.toDataURL("image/png");
+            html2canvas(boardEl, { scale: 2, backgroundColor: '#d2b48c' }).then(canvas => {
                 const link = document.createElement('a');
-                
-                // בניית שם הקובץ עם התאריך של היום
-                const today = new Date();
-                const dateStr = today.toLocaleDateString('he-IL').replace(/\./g, '-');
-                link.download = `לוח_סיכום_כיתתי_${dateStr}.png`;
-                
-                link.href = image;
+                link.download = `לוח_סיכום_כיתתי.png`;
+                link.href = canvas.toDataURL("image/png");
                 link.click();
                 
-                showToast("התמונה נשמרה בהצלחה! 🎉", "success");
-            }).catch(err => {
-                console.error("שגיאה בצילום המסך:", err);
-                showToast("אירעה שגיאה בשמירת התמונה.", "error");
-                
-                // במקרה של שגיאה, מחזירים גם כן למצב תקין
-                boardElement.style.overflowY = originalOverflow;
-                boardElement.style.height = originalHeight;
+                // החזרת הכפתורים
+                deleteBtns.forEach(btn => btn.style.display = 'block');
             });
-        };
-
-        // --- מערכת התראות (Toasts) ---
-        
-        function showToast(message, type = "success") {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            
-            const icon = type === "success" ? "fa-check-circle" : "fa-exclamation-circle";
-            toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
-            
-            container.appendChild(toast);
-            
-            // טריגר לאנימציית כניסה
-            setTimeout(() => toast.classList.add('show'), 10);
-            
-            // הסרה אוטומטית אחרי 3 שניות
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300); // מחכה לאנימציית יציאה
-            }, 3000);
         }
-
-        // --- אתחול האפליקציה ---
-        // קריאה ראשונית לטעינת נתונים
-        loadNotes();
-
     </script>
 </body>
 </html>
-
 
