@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&family=Secular+One&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <style>
         body {
             font-family: 'Heebo', sans-serif;
@@ -64,6 +66,16 @@
             70% { box-shadow: 0 0 0 12px rgba(105, 240, 174, 0); }
             100% { box-shadow: 0 0 0 0 rgba(105, 240, 174, 0); }
         }
+        .map-pulse {
+            animation: map-pulse-anim 1.5s infinite;
+            border-color: #ff5252;
+            border-width: 4px;
+        }
+        @keyframes map-pulse-anim {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
         
         /* Done state styling */
         .station-done {
@@ -93,17 +105,13 @@
             white-space: nowrap;
             padding-right: 100%;
             box-sizing: content-box;
-            animation-iteration-count: infinite;
-            animation-timing-function: linear;
-            animation-name: ticker;
-            animation-duration: 25s;
+            animation: ticker 25s linear infinite;
         }
         @keyframes ticker {
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(100%, 0, 0); }
         }
 
-        /* Fix for time breakdown list */
         .time-breakdown-list {
             display: flex;
             flex-wrap: wrap;
@@ -122,10 +130,15 @@
             gap: 0.25rem;
         }
 
+        /* Loading Screen */
+        #loading-screen {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
         /* Print Styles */
         @media print {
             body { background: white; background-image: none; }
-            #view-grade-select, #view-class-select, .no-print, .ticker-wrap { display: none !important; }
+            #loading-screen, #view-grade-select, #view-class-select, .no-print, .ticker-wrap, #victory-modal { display: none !important; }
             .retro-box, .retro-tag { box-shadow: none !important; border: 2px solid black !important; }
             #view-schedule { display: block !important; padding-bottom: 0; }
             .timeline-line::before { background-color: #ccc; }
@@ -134,15 +147,28 @@
 </head>
 <body class="text-slate-800 pb-20">
 
-    <!-- Header -->
-    <header class="retro-box bg-[#ffcc00] text-[#3e2723] mx-4 mt-6 mb-8 p-6 text-center no-print">
+    <div id="loading-screen" class="fixed inset-0 bg-[#3e2723] z-[100] flex flex-col items-center justify-center text-[#69f0ae]">
+        <h1 class="text-3xl sm:text-5xl mb-6 font-bold text-center animate-pulse tracking-widest">NOSTALGON OS</h1>
+        <div class="text-lg sm:text-2xl mb-2 font-bold" id="loading-text">טוען נתונים...</div>
+        <div class="text-xl sm:text-2xl font-bold" id="loading-bar">[          ] 0%</div>
+    </div>
+
+    <div id="victory-modal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="retro-box bg-[#ffeb3b] text-center p-8 max-w-sm w-full transform scale-90 transition-transform duration-300" id="victory-content">
+            <h2 class="text-5xl retro-font text-[#3e2723] mb-4">🏆</h2>
+            <h2 class="text-3xl retro-font text-[#3e2723] mb-2">כל הכבוד!</h2>
+            <p class="text-lg font-bold text-[#3e2723] mb-6">סיימתם את כל תחנות נוסטלגון בהצלחה. אתם אלופים אמיתיים!</p>
+            <button onclick="closeVictoryModal()" class="retro-box bg-white text-[#3e2723] font-bold py-2 px-8 text-lg cursor-pointer">המשך</button>
+        </div>
+    </div>
+
+    <header class="retro-box bg-[#ffcc00] text-[#3e2723] mx-4 mt-6 mb-8 p-6 text-center no-print hidden" id="main-header">
         <h1 class="text-4xl font-extrabold mb-2 tracking-tight retro-font">תחנות נוסטלגון</h1>
         <p class="font-bold text-lg border-t-2 border-[#3e2723] pt-2 inline-block">יום ראשון 12.4 • חטיבת הביניים</p>
     </header>
 
-    <main class="max-w-md mx-auto px-4">
+    <main class="max-w-md mx-auto px-4 hidden" id="main-content">
         
-        <!-- Info Card -->
         <div class="retro-box p-5 mb-8 bg-[#e1f5fe] no-print">
             <div class="flex items-center gap-2 mb-3">
                 <i data-lucide="info" class="text-[#3e2723] w-6 h-6"></i>
@@ -154,7 +180,6 @@
                 <div>כל תחנה אורכת <b>10 דקות</b> סך הכל, המחולקות כך:</div>
             </div>
             
-            <!-- Fixed breakdown list to prevent wrapping issues -->
             <div class="time-breakdown-list mr-5">
                 <div class="time-badge">
                     <div class="w-2 h-2 rounded-full bg-[#448aff]"></div> 2 דק' התמקמות
@@ -168,9 +193,7 @@
             </div>
         </div>
 
-        <!-- App Container -->
         <div id="app">
-            <!-- Step 1: Select Grade -->
             <div id="view-grade-select" class="fade-in">
                 <h2 class="text-2xl font-bold mb-4 px-1 retro-font">בחר/י שכבה:</h2>
                 <div class="grid grid-cols-2 gap-5">
@@ -189,18 +212,15 @@
                 </div>
             </div>
 
-            <!-- Step 2: Select Class -->
             <div id="view-class-select" class="fade-in hidden">
                 <button onclick="goBack('view-grade-select')" class="flex items-center gap-2 text-[#3e2723] mb-6 font-bold hover:underline bg-white px-3 py-1 rounded-lg border-2 border-[#3e2723] retro-tag inline-flex cursor-pointer active:translate-y-1">
                     <i data-lucide="arrow-right" class="w-5 h-5"></i> חזור
                 </button>
                 <h2 class="text-2xl font-bold mb-4 px-1 retro-font" id="class-select-title">איזו כיתה?</h2>
                 <div id="class-grid" class="grid grid-cols-3 gap-4">
-                    <!-- Buttons generated by JS -->
-                </div>
+                    </div>
             </div>
 
-            <!-- Step 3: Schedule View -->
             <div id="view-schedule" class="fade-in hidden">
                 <div class="flex items-center justify-between mb-4 px-1 no-print">
                     <button onclick="goBack('view-class-select')" class="flex items-center gap-2 text-[#3e2723] font-bold hover:underline bg-white px-3 py-1 rounded-lg border-2 border-[#3e2723] retro-tag inline-flex cursor-pointer active:translate-y-1">
@@ -211,7 +231,16 @@
                     </button>
                 </div>
 
-                <!-- Live Timer Header -->
+                <div class="mb-6 retro-box bg-white p-4 no-print">
+                    <div class="flex justify-between text-sm font-bold text-[#3e2723] mb-2">
+                        <span class="flex items-center gap-1"><i data-lucide="flag" class="w-4 h-4"></i> התקדמות מסלול:</span>
+                        <span id="progress-text" class="retro-font">0/6 תחנות</span>
+                    </div>
+                    <div class="w-full bg-[#fcf8f2] border-2 border-[#3e2723] h-6 rounded-full overflow-hidden p-0.5">
+                        <div id="progress-bar-fill" class="bg-[#4caf50] h-full rounded-sm transition-all duration-500 w-0"></div>
+                    </div>
+                </div>
+
                 <div id="live-timer-container" class="retro-box bg-[#3e2723] text-white p-3 mb-6 hidden no-print flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <i data-lucide="clock" class="w-5 h-5 text-[#ffeb3b]"></i>
@@ -226,29 +255,32 @@
                         <div class="bg-[#ffeb3b] text-[#3e2723] px-3 py-1 font-bold retro-tag text-sm" id="schedule-time-range"></div>
                     </div>
                     
-                    <div class="text-center mb-4 text-xs font-bold text-slate-500 no-print">
-                        💡 טיפ: לחצו על תחנה בסיום כדי לסמן "בוצע"
+                    <div class="text-center mb-4 text-xs font-bold text-slate-500 no-print bg-slate-50 p-2 rounded">
+                        💡 לחצו על תחנה שסיימתם כדי לסמן "בוצע" ולהתקדם במסלול!
                     </div>
 
                     <div id="timeline-container" class="relative">
-                        <!-- Timeline items generated by JS -->
-                    </div>
+                        </div>
                 </div>
 
-                <!-- Visual Route Map -->
                 <div class="mt-8 retro-box bg-[#ffe082] p-5 text-[#3e2723] no-print">
                     <div class="flex items-center gap-2 mb-4 font-bold text-lg retro-font">
-                        <i data-lucide="map" class="w-5 h-5"></i> כיוון התנועה
+                        <i data-lucide="map" class="w-5 h-5"></i> מפת המבנים (מתעדכן חי)
                     </div>
-                    <div class="bg-white border-2 border-[#3e2723] rounded-xl p-4">
-                        <div class="flex flex-wrap justify-center items-center gap-2 text-sm font-bold text-center">
-                            <span class="bg-[#b2ebf2] px-2 py-1 border border-[#3e2723] rounded whitespace-nowrap">ח1 פיסטוק</span>
-                            <span>➔</span>
-                            <span class="bg-[#c8e6c9] px-2 py-1 border border-[#3e2723] rounded whitespace-nowrap">בית תחתון (ח4,ח6,ח7)</span>
-                            <span>➔</span>
-                            <span class="bg-[#ffccbc] px-2 py-1 border border-[#3e2723] rounded whitespace-nowrap">בית עליון (ח3,ח5,ח2)</span>
-                            <span>➔</span>
-                            <span class="text-xl">↺</span>
+                    <div class="bg-white border-2 border-[#3e2723] rounded-xl p-4 flex flex-col items-center gap-2">
+                        <div id="map-b1" class="retro-box w-full max-w-xs text-center p-3 bg-[#b2ebf2] font-bold flex justify-between items-center transition-all">
+                            <span>יבילה</span>
+                            <span class="text-xs bg-white px-2 py-1 rounded border border-[#3e2723]">ח1 פיסטוק</span>
+                        </div>
+                        <div class="text-xl font-bold text-[#3e2723]">⬇️</div>
+                        <div id="map-b2" class="retro-box w-full max-w-xs text-center p-3 bg-[#c8e6c9] font-bold flex justify-between items-center transition-all">
+                            <span>בית תחתון</span>
+                            <span class="text-xs bg-white px-2 py-1 rounded border border-[#3e2723]">ח4, ח6, ח7</span>
+                        </div>
+                        <div class="text-xl font-bold text-[#3e2723]">⬇️</div>
+                        <div id="map-b3" class="retro-box w-full max-w-xs text-center p-3 bg-[#ffccbc] font-bold flex justify-between items-center transition-all">
+                            <span>בית עליון</span>
+                            <span class="text-xs bg-white px-2 py-1 rounded border border-[#3e2723]">ח3, ח5, ח2</span>
                         </div>
                     </div>
                 </div>
@@ -256,18 +288,42 @@
         </div>
     </main>
 
-    <!-- 90s Retro Ticker - Uplifting Messages -->
-    <div class="ticker-wrap no-print py-2">
+    <div class="ticker-wrap no-print py-2 hidden" id="main-ticker">
         <div class="ticker text-white font-bold text-lg retro-font tracking-wide">
             🌟 איזה יום מדהים מחכה לנו! • 🚀 אתם פשוט אלופים! • 💥 תעשו חיים ותיהנו מכל רגע! • 🤩 איזו אנרגיה מטורפת! • 🎈 יום נוסטלגון שמח לכולם! 🌟
         </div>
     </div>
 
     <script>
+        // Initialization
         lucide.createIcons();
 
+        // ----------------------------------------------------
+        // LOADING SCREEN LOGIC
+        // ----------------------------------------------------
+        let loadProgress = 0;
+        const loadInterval = setInterval(() => {
+            loadProgress += 5;
+            const filled = Math.floor(loadProgress / 10);
+            const empty = 10 - filled;
+            document.getElementById('loading-bar').innerText = `[${'='.repeat(filled)}${' '.repeat(empty)}] ${loadProgress}%`;
+            
+            if (loadProgress >= 100) {
+                clearInterval(loadInterval);
+                document.getElementById('loading-text').innerText = "מוכן!";
+                setTimeout(() => {
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    document.getElementById('main-header').classList.remove('hidden');
+                    document.getElementById('main-content').classList.remove('hidden');
+                    document.getElementById('main-ticker').classList.remove('hidden');
+                }, 400);
+            }
+        }, 100);
+
+        // ----------------------------------------------------
+        // DATA DEFINITIONS
+        // ----------------------------------------------------
         const timesGrade7 = ["12:50-13:00", "13:00-13:10", "13:10-13:20", "13:20-13:30", "13:30-13:40", "13:40-13:50"];
-        // Updated times for Grade 8 to accommodate 7 stations (7 rounds)
         const timesGrade8 = ["11:30-11:40", "11:40-11:50", "11:50-12:00", "12:00-12:10", "12:10-12:20", "12:20-12:30", "12:30-12:40"];
 
         const stations = {
@@ -289,7 +345,6 @@
             "ז6": ["ח5", "ח2", "ח1", "ח4", "ח6", "ח7"]
         };
 
-        // Updated schedule for Grade 8 so every class visits all 7 stations
         const scheduleGrade8 = {
             "ח1": ["ח1", "ח4", "ח6", "ח7", "ח3", "ח5", "ח2"],
             "ח4": ["ח4", "ח6", "ח7", "ח3", "ח5", "ח2", "ח1"],
@@ -301,10 +356,16 @@
         };
 
         let currentGrade = null;
+        let currentRouteLength = 0;
+        let currentRouteIds = [];
         let updateInterval = null;
         let countdownInterval = null;
         let doneStations = new Set(); 
+        let victoryTriggered = false;
 
+        // ----------------------------------------------------
+        // UI NAVIGATION
+        // ----------------------------------------------------
         function hideAllViews() {
             document.getElementById('view-grade-select').classList.add('hidden');
             document.getElementById('view-class-select').classList.add('hidden');
@@ -327,7 +388,6 @@
             const title = document.getElementById('class-select-title');
             classGrid.innerHTML = '';
 
-            // Using "כיתה" for both grades now
             title.innerText = `איזו כיתה?`;
 
             const classes = grade === 'ז' ? Object.keys(scheduleGrade7) : Object.keys(scheduleGrade8);
@@ -338,6 +398,7 @@
                 btn.innerText = `כיתה ${cls}`;
                 btn.onclick = () => {
                     doneStations.clear(); 
+                    victoryTriggered = false;
                     renderSchedule(cls);
                 };
                 classGrid.appendChild(btn);
@@ -346,6 +407,9 @@
             document.getElementById('view-class-select').classList.remove('hidden');
         }
 
+        // ----------------------------------------------------
+        // LOGIC & UPDATES
+        // ----------------------------------------------------
         function isTimeCurrent(timeStr) {
             const now = new Date();
             const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -360,12 +424,57 @@
             return currentMinutes >= startMinutes && currentMinutes < endMinutes;
         }
 
+        function updateProgressBar() {
+            const fill = document.getElementById('progress-bar-fill');
+            const text = document.getElementById('progress-text');
+            const percentage = (doneStations.size / currentRouteLength) * 100;
+            
+            fill.style.width = `${percentage}%`;
+            text.innerText = `${doneStations.size}/${currentRouteLength} תחנות`;
+
+            // Victory logic
+            if (doneStations.size === currentRouteLength && !victoryTriggered) {
+                victoryTriggered = true;
+                showVictory();
+            }
+        }
+
+        function showVictory() {
+            // Fire Confetti
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ffcc00', '#ff5252', '#4caf50', '#448aff']
+            });
+            
+            // Show Modal
+            const modal = document.getElementById('victory-modal');
+            const content = document.getElementById('victory-content');
+            modal.classList.remove('hidden');
+            // Small delay to allow display:block to apply before animating opacity/transform
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-90');
+                content.classList.add('scale-100');
+            }, 50);
+        }
+
+        function closeVictoryModal() {
+            const modal = document.getElementById('victory-modal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
         function toggleStationDone(index, boxElement) {
             if (doneStations.has(index)) {
                 doneStations.delete(index);
                 boxElement.classList.remove('station-done');
                 const check = boxElement.querySelector('.done-check');
                 if(check) check.remove();
+                victoryTriggered = false; // Reset if unchecking
             } else {
                 doneStations.add(index);
                 boxElement.classList.add('station-done');
@@ -373,17 +482,39 @@
                 headerDiv.innerHTML += `<div class="done-check text-[#4caf50] bg-white rounded-full border border-[#4caf50] p-0.5 ml-2 shadow-sm"><i data-lucide="check" class="w-4 h-4"></i></div>`;
                 lucide.createIcons();
             }
+            updateProgressBar();
         }
 
-        function updateLiveTimer(times) {
+        function updateMapHighlight(activeStationId) {
+            const b1 = document.getElementById('map-b1');
+            const b2 = document.getElementById('map-b2');
+            const b3 = document.getElementById('map-b3');
+            
+            // Reset all
+            [b1, b2, b3].forEach(el => el.classList.remove('map-pulse'));
+
+            if (!activeStationId) return;
+
+            if (activeStationId === 'ח1') {
+                b1.classList.add('map-pulse');
+            } else if (['ח4', 'ח6', 'ח7'].includes(activeStationId)) {
+                b2.classList.add('map-pulse');
+            } else if (['ח3', 'ח5', 'ח2'].includes(activeStationId)) {
+                b3.classList.add('map-pulse');
+            }
+        }
+
+        function updateLiveTimer(times, routeIds) {
             const now = new Date();
             const currentMinutes = now.getHours() * 60 + now.getMinutes();
             const currentSeconds = now.getSeconds();
             
             let activeTimeStr = null;
             let endMinutes = null;
+            let activeStationId = null;
 
-            for (let timeStr of times) {
+            for (let i = 0; i < times.length; i++) {
+                const timeStr = times[i];
                 const [startStr, endStr] = timeStr.split('-');
                 const [startH, startM] = startStr.split(':').map(Number);
                 const [endH, endM] = endStr.split(':').map(Number);
@@ -394,12 +525,16 @@
                 if (currentMinutes >= startMins && currentMinutes < endMins) {
                     activeTimeStr = timeStr;
                     endMinutes = endMins;
+                    activeStationId = routeIds[i];
                     break;
                 }
             }
 
             const timerContainer = document.getElementById('live-timer-container');
             const timerDisplay = document.getElementById('timer-countdown');
+
+            // Update Map Graphics
+            updateMapHighlight(activeStationId);
 
             if (activeTimeStr && endMinutes) {
                 timerContainer.classList.remove('hidden');
@@ -437,15 +572,17 @@
             const container = document.getElementById('timeline-container');
             
             title.innerText = `לו"ז כיתה ${cls}`;
-            // Updated end time for Grade 8 to 12:40
             timeRange.innerText = currentGrade === 'ז' ? "12:50 - 13:50" : "11:30 - 12:40";
             
             const times = currentGrade === 'ז' ? timesGrade7 : timesGrade8;
-            const route = currentGrade === 'ז' ? scheduleGrade7[cls] : scheduleGrade8[cls];
+            currentRouteIds = currentGrade === 'ז' ? scheduleGrade7[cls] : scheduleGrade8[cls];
+            currentRouteLength = currentRouteIds.length;
+            
+            updateProgressBar(); // Initialize progress bar
 
             const buildTimeline = () => {
                 container.innerHTML = '';
-                route.forEach((stationId, index) => {
+                currentRouteIds.forEach((stationId, index) => {
                     const time = times[index];
                     const stationName = stations[stationId];
                     const stationParts = stationName.split('(');
@@ -498,10 +635,10 @@
             };
 
             buildTimeline();
-            updateLiveTimer(times);
+            updateLiveTimer(times, currentRouteIds);
             
             updateInterval = setInterval(() => {
-                route.forEach((_, index) => {
+                currentRouteIds.forEach((_, index) => {
                     const time = times[index];
                     const isLive = isTimeCurrent(time);
                     const isDone = doneStations.has(index);
@@ -528,7 +665,7 @@
             }, 60000);
 
             countdownInterval = setInterval(() => {
-                updateLiveTimer(times);
+                updateLiveTimer(times, currentRouteIds);
             }, 1000);
 
             document.getElementById('view-schedule').classList.remove('hidden');
