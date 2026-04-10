@@ -1,0 +1,276 @@
+```html
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תחנות נוסטלגון - לו"ז אישי</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800&family=Secular+One&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #fcf8f2;
+            background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
+            background-size: 100% 2rem;
+            color: #3e2723;
+            -webkit-tap-highlight-color: transparent;
+        }
+        h1, h2, h3, .retro-font {
+            font-family: 'Secular One', sans-serif;
+        }
+        .retro-box {
+            background-color: #fff;
+            border: 3px solid #3e2723;
+            box-shadow: 5px 5px 0px #3e2723;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        .retro-box:active {
+            transform: translate(3px, 3px);
+            box-shadow: 2px 2px 0px #3e2723;
+        }
+        .retro-tag {
+            border: 2px solid #3e2723;
+            box-shadow: 2px 2px 0px #3e2723;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            right: 1.1rem;
+            top: 2rem;
+            bottom: -1rem;
+            width: 2px;
+            background-color: #e2e8f0;
+            z-index: 0;
+        }
+        .timeline-item:last-child .timeline-line::before {
+            display: none;
+        }
+    </style>
+</head>
+<body class="text-slate-800 pb-10">
+
+    <!-- Header -->
+    <header class="retro-box bg-[#ffcc00] text-[#3e2723] mx-4 mt-6 mb-8 p-6 text-center">
+        <h1 class="text-4xl font-extrabold mb-2 tracking-tight retro-font">תחנות נוסטלגון</h1>
+        <p class="font-bold text-lg border-t-2 border-[#3e2723] pt-2 inline-block">יום ראשון 12.4 • חטיבת הביניים</p>
+    </header>
+
+    <main class="max-w-md mx-auto px-4">
+        
+        <!-- Info Card -->
+        <div class="retro-box p-5 mb-8 bg-[#e1f5fe]">
+            <div class="flex items-center gap-2 mb-3">
+                <i data-lucide="info" class="text-[#3e2723] w-6 h-6"></i>
+                <h2 class="font-bold text-xl retro-font">איך זה עובד?</h2>
+            </div>
+            <ul class="space-y-3 text-sm font-medium">
+                <li class="flex items-center gap-2"><div class="w-3 h-3 border-2 border-[#3e2723] bg-[#ff5252]"></div> כל תחנה אורכת <b>10 דקות</b> סך הכל.</li>
+                <li class="flex items-center gap-2"><div class="w-3 h-3 border-2 border-[#3e2723] bg-[#448aff]"></div> <b>2 דק'</b> התמקמות | <b>5 דק'</b> פעילות | <b>3 דק'</b> מעבר.</li>
+                <li class="flex items-start gap-2"><div class="w-3 h-3 border-2 border-[#3e2723] bg-[#69f0ae] mt-1"></div> <div>המעבר בין התחנות נעשה <b>במסלול קבוע מראש</b> כדי למנוע עומס.</div></li>
+            </ul>
+        </div>
+
+        <!-- App Container (Dynamic Content) -->
+        <div id="app">
+            <!-- Step 1: Select Grade -->
+            <div id="view-grade-select" class="fade-in">
+                <h2 class="text-2xl font-bold mb-4 px-1 retro-font">בחר/י שכבה:</h2>
+                <div class="grid grid-cols-2 gap-5">
+                    <button onclick="selectGrade('ז')" class="retro-box bg-[#b2ebf2] text-[#3e2723] p-6 flex flex-col items-center justify-center gap-3">
+                        <div class="bg-white border-2 border-[#3e2723] p-3 rounded-full retro-tag">
+                            <i data-lucide="users" class="w-8 h-8"></i>
+                        </div>
+                        <span class="text-2xl font-bold retro-font">שכבה ז'</span>
+                    </button>
+                    <button onclick="selectGrade('ח')" class="retro-box bg-[#c8e6c9] text-[#3e2723] p-6 flex flex-col items-center justify-center gap-3">
+                        <div class="bg-white border-2 border-[#3e2723] p-3 rounded-full retro-tag">
+                            <i data-lucide="users" class="w-8 h-8"></i>
+                        </div>
+                        <span class="text-2xl font-bold retro-font">שכבה ח'</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Select Class -->
+            <div id="view-class-select" class="fade-in hidden">
+                <button onclick="goBack('view-grade-select')" class="flex items-center gap-2 text-[#3e2723] mb-6 font-bold hover:underline bg-white px-3 py-1 rounded-lg border-2 border-[#3e2723] retro-tag inline-flex">
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i> חזור
+                </button>
+                <h2 class="text-2xl font-bold mb-4 px-1 retro-font" id="class-select-title">איזו כיתה/קבוצה?</h2>
+                <div id="class-grid" class="grid grid-cols-3 gap-4">
+                    <!-- Buttons generated by JS -->
+                </div>
+            </div>
+
+            <!-- Step 3: Schedule View -->
+            <div id="view-schedule" class="fade-in hidden">
+                <div class="flex items-center justify-between mb-6 px-1">
+                    <button onclick="goBack('view-class-select')" class="flex items-center gap-2 text-[#3e2723] font-bold hover:underline bg-white px-3 py-1 rounded-lg border-2 border-[#3e2723] retro-tag inline-flex">
+                        <i data-lucide="arrow-right" class="w-5 h-5"></i> חזור
+                    </button>
+                    <div class="bg-[#ffeb3b] text-[#3e2723] px-4 py-2 font-bold retro-tag" id="schedule-time-range">
+                        <!-- Time range injected here -->
+                    </div>
+                </div>
+
+                <div class="retro-box bg-white p-6">
+                    <h2 class="text-3xl font-extrabold text-center mb-6 pb-4 border-b-4 border-[#3e2723] retro-font" id="schedule-title">לו"ז</h2>
+                    
+                    <div id="timeline-container" class="relative">
+                        <!-- Timeline items generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Route Reminder -->
+                <div class="mt-8 retro-box bg-[#ffe082] p-5 text-[#3e2723]">
+                    <div class="flex items-center gap-2 mb-3 font-bold text-lg retro-font">
+                        <i data-lucide="map" class="w-5 h-5"></i> מפת המסלול המעגלי
+                    </div>
+                    <p class="font-medium leading-relaxed text-sm bg-white p-3 border-2 border-[#3e2723] rounded-lg">
+                        ח1 פיסטוק ← ח4 בוטן ← ח6 שקד ← ח7 שקד לוז ← ח3 חומוס ← ח5 קשיו ← ח2 פקאן ← חזרה לפיסטוק...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Data Definitions
+        const timesGrade7 = ["12:50-13:00", "13:00-13:10", "13:10-13:20", "13:20-13:30", "13:30-13:40", "13:40-13:50"];
+        const timesGrade8 = ["11:30-11:40", "11:40-11:50", "11:50-12:00", "12:00-12:10", "12:10-12:20", "12:20-12:30"];
+
+        const stations = {
+            "ח1": "ח1 פיסטוק (יבילה)",
+            "ח4": "ח4 בוטן (בית תחתון ימין)",
+            "ח6": "ח6 שקד (בית תחתון אמצע)",
+            "ח7": "ח7 לוז (בית תחתון שמאל)",
+            "ח3": "ח3 חומוס (בית עליון שמאל)",
+            "ח5": "ח5 קשיו (בית עליון אמצע)",
+            "ח2": "ח2 פקאן (בית עליון ימין)"
+        };
+
+        const scheduleGrade7 = {
+            "ז1": ["ח1", "ח4", "ח6", "ח7", "ח3", "ח5"],
+            "ז2": ["ח4", "ח6", "ח7", "ח3", "ח5", "ח2"],
+            "ז3": ["ח6", "ח7", "ח3", "ח5", "ח2", "ח1"],
+            "ז4": ["ח7", "ח3", "ח5", "ח2", "ח1", "ח4"],
+            "ז5": ["ח3", "ח5", "ח2", "ח1", "ח4", "ח6"],
+            "ז6": ["ח5", "ח2", "ח1", "ח4", "ח6", "ח7"]
+        };
+
+        const scheduleGrade8 = {
+            "ח1": ["ח4", "ח6", "ח7", "ח3", "ח5", "ח2"],
+            "ח4": ["ח6", "ח7", "ח3", "ח5", "ח2", "ח1"],
+            "ח6": ["ח7", "ח3", "ח5", "ח2", "ח1", "ח4"],
+            "ח7": ["ח3", "ח5", "ח2", "ח1", "ח4", "ח6"],
+            "ח3": ["ח5", "ח2", "ח1", "ח4", "ח6", "ח7"],
+            "ח5": ["ח2", "ח1", "ח4", "ח6", "ח7", "ח3"],
+            "ח2": ["ח1", "ח4", "ח6", "ח7", "ח3", "ח5"]
+        };
+
+        let currentGrade = null;
+
+        // Functions
+        function hideAllViews() {
+            document.getElementById('view-grade-select').classList.add('hidden');
+            document.getElementById('view-class-select').classList.add('hidden');
+            document.getElementById('view-schedule').classList.add('hidden');
+        }
+
+        function goBack(viewId) {
+            hideAllViews();
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function selectGrade(grade) {
+            currentGrade = grade;
+            hideAllViews();
+            
+            const classGrid = document.getElementById('class-grid');
+            const title = document.getElementById('class-select-title');
+            classGrid.innerHTML = '';
+
+            title.innerText = `איזו ${grade === 'ז' ? 'כיתה' : 'קבוצה'}?`;
+
+            const classes = grade === 'ז' ? Object.keys(scheduleGrade7) : Object.keys(scheduleGrade8);
+
+            classes.forEach(cls => {
+                const btn = document.createElement('button');
+                btn.className = `retro-box bg-white text-[#3e2723] font-bold py-4 text-lg hover:bg-[#ffeb3b]`;
+                btn.innerText = grade === 'ז' ? `כיתה ${cls}` : `קבוצת ${cls}`;
+                btn.onclick = () => renderSchedule(cls);
+                classGrid.appendChild(btn);
+            });
+
+            document.getElementById('view-class-select').classList.remove('hidden');
+        }
+
+        function renderSchedule(cls) {
+            hideAllViews();
+            
+            const title = document.getElementById('schedule-title');
+            const timeRange = document.getElementById('schedule-time-range');
+            const container = document.getElementById('timeline-container');
+            
+            title.innerText = currentGrade === 'ז' ? `לו"ז כיתה ${cls}` : `לו"ז קבוצת ${cls}`;
+            timeRange.innerText = currentGrade === 'ז' ? "12:50 - 13:50" : "11:30 - 12:30";
+            
+            const times = currentGrade === 'ז' ? timesGrade7 : timesGrade8;
+            const route = currentGrade === 'ז' ? scheduleGrade7[cls] : scheduleGrade8[cls];
+            const themeColor = currentGrade === 'ז' ? 'blue' : 'indigo';
+
+            container.innerHTML = '';
+
+            route.forEach((stationId, index) => {
+                const time = times[index];
+                const stationName = stations[stationId];
+                
+                const item = document.createElement('div');
+                item.className = 'timeline-item relative pl-4 pr-10 mb-6 last:mb-0';
+                
+                // Extract location text for styling
+                const stationParts = stationName.split('(');
+                const mainName = stationParts[0].trim();
+                const location = stationParts[1] ? `(${stationParts[1]}` : '';
+
+                item.innerHTML = `
+                    <div class="timeline-line" style="background-color: #3e2723; width: 3px; right: 1.15rem;"></div>
+                    <div class="absolute right-0 top-1 w-6 h-6 rounded-full bg-white border-4 border-[#3e2723] flex items-center justify-center z-10 retro-tag">
+                        <div class="w-2 h-2 rounded-full bg-[#ff5252]"></div>
+                    </div>
+                    <div class="retro-box bg-[#f8f9fa] p-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                            <span class="text-[#3e2723] font-bold text-sm tracking-wide retro-font bg-[#ffeb3b] px-2 py-0.5 rounded border border-[#3e2723]">סבב ${index + 1}</span>
+                            <span class="text-[#3e2723] text-sm font-bold font-mono bg-white px-2 py-1 border-2 border-[#3e2723] retro-tag inline-block w-max">${time}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-[#3e2723] mt-2 retro-font">${mainName}</h3>
+                        ${location ? `<p class="text-[#5d4037] font-medium text-sm mt-1 flex items-center gap-1"><i data-lucide="map-pin" class="w-4 h-4"></i> ${location.replace('(','').replace(')','')}</p>` : ''}
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+
+            // Re-initialize icons for newly added HTML
+            lucide.createIcons();
+
+            document.getElementById('view-schedule').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
+
+
+```
