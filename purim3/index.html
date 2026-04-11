@@ -245,7 +245,7 @@
                 <div class="mb-6 retro-box bg-white p-4 no-print">
                     <div class="flex justify-between text-sm font-bold text-[#3e2723] mb-2">
                         <span class="flex items-center gap-1"><i data-lucide="flag" class="w-4 h-4"></i> התקדמות מסלול:</span>
-                        <span id="progress-text" class="retro-font">0/6 תחנות</span>
+                        <span id="progress-text" class="retro-font">0/0 תחנות</span>
                     </div>
                     <div class="w-full bg-[#fcf8f2] border-2 border-[#3e2723] h-6 rounded-full overflow-hidden p-0.5">
                         <div id="progress-bar-fill" class="bg-[#4caf50] h-full rounded-sm transition-all duration-500 w-0"></div>
@@ -338,9 +338,11 @@
         // ----------------------------------------------------
         // DATA DEFINITIONS (Mathematically verified for 0 overlaps)
         // ----------------------------------------------------
-        const timesGrade7 = ["12:50-13:00", "13:00-13:10", "13:10-13:20", "13:20-13:30", "13:30-13:40", "13:40-13:50"];
         
-        // Reverted to 6 slots (11:30 - 12:30) because they skip their own station
+        // שכבה ז' - 7 סבבים עכשיו כדי לעבור בכל 7 התחנות (סיום 14:00)
+        const timesGrade7 = ["12:50-13:00", "13:00-13:10", "13:10-13:20", "13:20-13:30", "13:30-13:40", "13:40-13:50", "13:50-14:00"];
+        
+        // שכבה ח' - 6 סבבים עקב דילוג על תחנת האם (סיום 12:30)
         const timesGrade8 = ["11:30-11:40", "11:40-11:50", "11:50-12:00", "12:00-12:10", "12:10-12:20", "12:20-12:30"];
 
         const stations = {
@@ -353,17 +355,17 @@
             "ח2": "ח2 פקאן (בית עליון ימין)"
         };
 
+        // שכבה ז' עוברת בכל ה-7 תחנות, משמרת מעגל תנועה מלא
         const scheduleGrade7 = {
-            "ז1": ["ח1", "ח4", "ח6", "ח7", "ח3", "ח5"],
-            "ז2": ["ח4", "ח6", "ח7", "ח3", "ח5", "ח2"],
-            "ז3": ["ח6", "ח7", "ח3", "ח5", "ח2", "ח1"],
-            "ז4": ["ח7", "ח3", "ח5", "ח2", "ח1", "ח4"],
-            "ז5": ["ח3", "ח5", "ח2", "ח1", "ח4", "ח6"],
-            "ז6": ["ח5", "ח2", "ח1", "ח4", "ח6", "ח7"]
+            "ז1": ["ח1", "ח4", "ח6", "ח7", "ח3", "ח5", "ח2"],
+            "ז2": ["ח4", "ח6", "ח7", "ח3", "ח5", "ח2", "ח1"],
+            "ז3": ["ח6", "ח7", "ח3", "ח5", "ח2", "ח1", "ח4"],
+            "ז4": ["ח7", "ח3", "ח5", "ח2", "ח1", "ח4", "ח6"],
+            "ז5": ["ח3", "ח5", "ח2", "ח1", "ח4", "ח6", "ח7"],
+            "ז6": ["ח5", "ח2", "ח1", "ח4", "ח6", "ח7", "ח3"]
         };
 
-        // Each class follows the cycle but skips its home station. 
-        // Zero overlap guaranteed.
+        // שכבה ח' מבקרת ב-6 תחנות, כל כיתה מדלגת על תחנת האם שלה
         const scheduleGrade8 = {
             "ח1": ["ח4", "ח6", "ח7", "ח3", "ח5", "ח2"],
             "ח4": ["ח6", "ח7", "ח3", "ח5", "ח2", "ח1"],
@@ -589,7 +591,8 @@
             const container = document.getElementById('timeline-container');
             
             title.innerText = `לו"ז כיתה ${cls}`;
-            timeRange.innerText = currentGrade === 'ז' ? "12:50 - 13:50" : "11:30 - 12:30";
+            // ח' מסיימים ב12:30 (6 תחנות), ז' מסיימים ב14:00 (7 תחנות)
+            timeRange.innerText = currentGrade === 'ז' ? "12:50 - 14:00" : "11:30 - 12:30";
             
             const times = currentGrade === 'ז' ? timesGrade7 : timesGrade8;
             currentRouteIds = currentGrade === 'ז' ? scheduleGrade7[cls] : scheduleGrade8[cls];
